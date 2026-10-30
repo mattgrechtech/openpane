@@ -121,6 +121,7 @@ mode: single
 
 - `192.168.1.50:8123` is a placeholder: use your Home Assistant address, as the TV reaches it.
 - `id: doorbell` makes a second press replace the pop-up instead of stacking another.
+- **Live instead of a snapshot:** add `camera: camera.front_door_live_view` (keep `image` as the first picture) and set `duration` to 30 or so: the pop-up shows the camera live until it closes. Any camera whose live view works in Home Assistant can do this; for the smoothest picture, point `stream` at a go2rtc or Frigate MJPEG link. Live view hasn't been tested on a Ring doorbell yet.
 - `sound: doorbell` plays a ding-dong on the TV. Other built-in sounds: `chime`, `alert`. Add `tts: "Someone's at the front door"` to have the TV say it too.
 - A button can also act in Home Assistant, for example `{label: Unlock, event: unlock_front}` with an automation on the `tv_kiosk_action` event: see [Buttons that tell Home Assistant](api.md#pop-ups).
 - The button is optional; change `/lovelace/cameras` to a dashboard page of yours, or remove `actions`. Back closes the pop-up.

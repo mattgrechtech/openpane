@@ -125,11 +125,12 @@ class ApiHandlerTest {
         val compat = TvOverlayCompatHandler({ setOf("10.0.0.5") }) { shown += it; CommandResult.ok() }
         fun call(path: String, method: String = "POST", type: String? = "application/json; charset=utf-8") = compat(HttpServer.Request(
             method, path, emptyMap(), listOfNotNull("host" to "10.0.0.5:5001", type?.let { "content-type" to it }).toMap(),
-            """{"title":"Bins","actions":[{"label":"Open","url":"https://evil.test"}]}""".toByteArray(), "x",
+            """{"title":"Bins","camera":"camera.front","actions":[{"label":"Open","url":"https://evil.test"}]}""".toByteArray(), "x",
         ))
         assertEquals(200, call("/notify").status)
         assertEquals("Bins", shown.single().getString("title"))
         assertEquals(false, shown.single().has("actions"))
+        assertEquals(false, shown.single().has("camera"))
         assertEquals(501, call("/notify_fixed").status)
         assertEquals(404, call("/api/v1/reload").status)
         assertEquals(405, call("/notify", "GET").status)

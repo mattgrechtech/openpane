@@ -203,8 +203,10 @@ class TvOverlayCompatHandler(
                 val type = request.header("content-type")?.substringBefore(';')?.trim()?.lowercase()
                 if (type != "application/json") return ApiHandler.error(415, "send the body as application/json")
                 val args = ApiHandler.body(request) ?: return ApiHandler.error(400, "body must be a JSON object")
-                // No token here, so no buttons: a button could open any page on the dashboard.
+                // No token here, so nothing that acts with the TV's own sign-in: no buttons (they
+                // could open any page or fire events) and no live cameras by entity.
                 args.remove("actions")
+                args.remove("camera")
                 ApiHandler.result(notify(args))
             }
             "/notify_fixed", "/set/overlay", "/set/notifications", "/set/settings", "/set/mqtt" ->

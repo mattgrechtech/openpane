@@ -13,7 +13,7 @@ import io.github.mattgrechtech.tvkiosk.settings.Keys
 import io.github.mattgrechtech.tvkiosk.settings.Settings
 import io.github.mattgrechtech.tvkiosk.settings.createSettings
 import io.github.mattgrechtech.tvkiosk.web.HaAuth
-import io.github.mattgrechtech.tvkiosk.web.HaEvents
+import io.github.mattgrechtech.tvkiosk.web.HaApi
 import java.security.SecureRandom
 
 class KioskApp : Application() {
@@ -37,8 +37,9 @@ class KioskApp : Application() {
         state = KioskState()
         controller = KioskController(this, settings, state)
         auth = HaAuth(settings)
-        val events = HaEvents(settings, auth)
-        controller.actionListeners += { data -> events.fire(HaEvents.ACTION_EVENT, data) }
+        val ha = HaApi(settings, auth)
+        controller.actionListeners += { data -> ha.fire(HaApi.ACTION_EVENT, data) }
+        controller.cameraStream = ha::cameraStream
         KioskService.start(this)
         applyHomeScreen()
         // Turning a control channel on or off starts or stops the service.

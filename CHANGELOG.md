@@ -4,6 +4,7 @@
 
 First public version. Pre-alpha: tested on one TCL Google TV (Android 14), including a 72-hour run.
 
+- Live camera pop-ups: `camera` (a Home Assistant camera entity, streamed through Home Assistant with the TV's sign-in) or `stream` (any MJPEG URL, e.g. go2rtc or Frigate), shown at up to 10 frames a second over any app, with the snapshot as a placeholder. Ignored on the token-less TvOverlay port.
 - Runs on Android 7.0 and newer (was 10), so older TV boxes, tablets and wall displays can use it. For tablets: an orientation setting, *Use as the home screen*, and a black screen that also turns the backlight down where the device allows it. Not yet tested below Android 14.
 - Web admin page at `http://<tv-ip>:2424/`: status, controls, pop-ups, speech, every setting, the log and diagnostics, from any browser on the network. The TV's QR code opens it already connected. Strict Content-Security-Policy, no framing, nothing loaded from the internet. New `GET /api/v1/settings/schema`.
 - `return_after` on `url` and `navigate` goes back to the start page after a set time ("laundry done → laundry view for 2 minutes"). A `brightness` command (and MQTT number) for screens that allow it. A burn-in guard moves the page a few pixels every 2 minutes for OLED screens.

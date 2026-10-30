@@ -105,6 +105,17 @@ class PopupTest {
         )
     }
 
+    @Test fun liveStreamAndCameraAreChecked() {
+        val ok = Popup.fromJson(JSONObject("""{"title":"T","stream":"http://go2rtc.test:1984/api/stream.mjpeg?src=door","camera":"Camera.Front_Door"}"""))!!
+        assertEquals("http://go2rtc.test:1984/api/stream.mjpeg?src=door", ok.stream)
+        assertEquals("camera.front_door", ok.camera)
+        assertEquals(true, ok.hasPicture)
+        val bad = Popup.fromJson(JSONObject("""{"title":"T","stream":"file:///etc/passwd","camera":"light.kitchen"}"""))!!
+        assertNull(bad.stream)
+        assertNull(bad.camera)
+        assertEquals(false, bad.hasPicture)
+    }
+
     @Test fun mdiNamesMapToEmoji() {
         assertEquals("📹", MdiIcons.emojiFor("mdi:cctv"))
         assertEquals("🗑️", MdiIcons.emojiFor("mdi:trash-can-outline"))

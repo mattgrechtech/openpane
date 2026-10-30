@@ -54,7 +54,9 @@ class PopupManager(private val context: Context) {
         var focusable = false
     }
 
-    private class Entry(val popup: Popup, val view: View, val corner: Popup.Corner, val dismiss: Runnable)
+    private class Entry(val popup: Popup, val view: View, val corner: Popup.Corner, val dismiss: Runnable) {
+        var stream: LiveStream? = null
+    }
 
     private val main = Handler(Looper.getMainLooper())
     private val windowManager = context.getSystemService(WindowManager::class.java)
@@ -156,7 +158,23 @@ class PopupManager(private val context: Context) {
         if (!focusable) row.findFocus()?.clearFocus()
     }
 
+    /** Plays [url] (MJPEG) in pop-up [id]'s picture area until the pop-up goes. */
+    fun playStream(id: String, url: String) {
+        val entry = entries[id] ?: return
+        val image = entry.view.findViewWithTag<ImageView>(PICTURE) ?: return
+        entry.stream?.stop()
+        entry.stream = LiveStream(url, maxSidePx = 1280) { frame ->
+            main.post {
+                if (entries[id] === entry && image.isAttachedToWindow) {
+                    image.setImageBitmap(frame)
+                    image.visibility = View.VISIBLE
+                }
+            }
+        }.also { it.start() }
+    }
+
     private fun remove(entry: Entry) {
+        entry.stream?.stop()
         main.removeCallbacks(entry.dismiss)
         val corner = corners[entry.corner] ?: return
         corner.container.removeView(entry.view)
@@ -231,13 +249,15 @@ class PopupManager(private val context: Context) {
             elevation = dp(8).toFloat()
         }
 
-        if (popup.image != null) {
+        if (popup.hasPicture) {
             val image = ImageView(context).apply {
                 scaleType = ImageView.ScaleType.CENTER_CROP
-                visibility = View.GONE
+                visibility = if (popup.image == null) View.VISIBLE else View.GONE
+                setBackgroundColor(0xFF000000.toInt())
+                tag = PICTURE
             }
             card.addView(image, LinearLayout.LayoutParams(width, dp(size.imageHeightDp)))
-            ImageLoader.load(popup.image, maxSidePx = 1280) { bitmap ->
+            if (popup.image != null) ImageLoader.load(popup.image, maxSidePx = 1280) { bitmap ->
                 main.post {
                     if (bitmap != null && image.isAttachedToWindow) {
                         image.setImageBitmap(bitmap)
@@ -364,6 +384,7 @@ class PopupManager(private val context: Context) {
 
     private companion object {
         const val TAG = "PopupManager"
+        const val PICTURE = "picture"
 
         /** The window type for drawing over other apps; Android 7 only has the older one. */
         @Suppress("DEPRECATION")

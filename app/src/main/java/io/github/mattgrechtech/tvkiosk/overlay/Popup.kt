@@ -29,7 +29,14 @@ data class Popup(
     val opacity: Int,
     val largeText: Boolean,
     val actions: List<Action>,
+    /** A live MJPEG stream URL shown where the picture goes (the picture shows until it starts). */
+    val stream: String? = null,
+    /** A Home Assistant camera entity to stream live, e.g. camera.front_door. */
+    val camera: String? = null,
 ) {
+    /** True when the pop-up has a picture area: a still, a stream or a camera. */
+    val hasPicture get() = image != null || stream != null || camera != null
+
     enum class Size(val apiName: String, val widthDp: Int, val imageHeightDp: Int, val scale: Float) {
         SMALL("small", 320, 180, 0.9f), MEDIUM("medium", 400, 225, 1f), LARGE("large", 520, 293, 1.15f);
 
@@ -68,6 +75,7 @@ data class Popup(
         const val MAX_ACTIONS = 3
         const val MAX_STICKY = 3600
         private val EVENT_NAME = Regex("[a-z0-9_]{1,50}")
+        private val CAMERA_ENTITY = Regex("camera\\.[a-z0-9_]{1,100}")
 
         /** Returns null when there is nothing to show (no title and no message). */
         fun fromJson(json: JSONObject, defaults: Defaults = Defaults()): Popup? {
@@ -95,6 +103,8 @@ data class Popup(
                     else -> defaults.largeText
                 },
                 actions = actions(json),
+                stream = text(json, "stream").takeIf { it.startsWith("http://") || it.startsWith("https://") },
+                camera = text(json, "camera").lowercase().takeIf { CAMERA_ENTITY.matches(it) },
             )
         }
 

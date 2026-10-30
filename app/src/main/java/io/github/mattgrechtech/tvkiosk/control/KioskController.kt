@@ -73,6 +73,9 @@ class KioskController(
         largeText = settings[Keys.POPUP_TEXT_SIZE] == "large",
     )
 
+    /** Finds a live stream link for a camera entity (Home Assistant), or null. */
+    var cameraStream: (String, (String?) -> Unit) -> Unit = { _, callback -> callback(null) }
+
     /** Pop-up button events go to these: Home Assistant's event bus and MQTT. */
     val actionListeners = CopyOnWriteArrayList<(JSONObject) -> Unit>()
 
@@ -349,7 +352,9 @@ class KioskController(
     private fun notify(args: JSONObject): CommandResult {
         val popup = Popup.fromJson(args, popupDefaults()) ?: return CommandResult.error(400, "a title or message is required")
         announce(args.optString("sound").trim(), args.optString("tts").trim(), args)
-        return when (popups.show(popup)) {
+        val shown = popups.show(popup)
+        if (shown != PopupManager.Shown.NOWHERE) startLive(popup)
+        return when (shown) {
             PopupManager.Shown.OVER_EVERYTHING -> CommandResult.ok(JSONObject().put("id", popup.id))
             PopupManager.Shown.IN_DASHBOARD -> CommandResult.ok(
                 JSONObject().put("id", popup.id)
@@ -445,6 +450,13 @@ class KioskController(
             stopSound()
             CommandResult.error(400, "can't play $url: ${e.message}")
         }
+    }
+
+    /** A pop-up's live picture: a stream URL straight away, or a camera's stream once Home Assistant gives its link. */
+    private fun startLive(popup: Popup) {
+        popup.stream?.let { return popups.playStream(popup.id, it) }
+        val camera = popup.camera ?: return
+        cameraStream(camera) { url -> if (url != null) main.post { popups.playStream(popup.id, url) } }
     }
 
     /**

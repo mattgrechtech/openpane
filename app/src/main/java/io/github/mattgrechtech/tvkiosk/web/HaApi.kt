@@ -6,8 +6,8 @@ import org.json.JSONObject
 import java.net.HttpURLConnection
 import java.net.URL
 
-/** Fires events on Home Assistant's event bus with the TV's own sign-in. */
-class HaEvents(private val settings: Settings, private val auth: HaAuth) {
+/** Calls Home Assistant's REST API with the TV's own sign-in: events, camera stream links. */
+class HaApi(private val settings: Settings, private val auth: HaAuth) {
 
     /**
      * Fires [type] with [data], off the main thread. Does nothing in web mode or without a sign-in;
@@ -45,10 +45,42 @@ class HaEvents(private val settings: Settings, private val auth: HaAuth) {
         }
     }
 
+    /**
+     * A live MJPEG link for [entity] (a camera), from its current access token, or null (off the
+     * main thread; [callback] runs there too). The link works without a sign-in until the token
+     * rotates, like a camera's entity_picture.
+     */
+    fun cameraStream(entity: String, callback: (String?) -> Unit) {
+        val base = settings.haBaseUrl()
+        if (settings.isWebMode() || base == null) return callback(null)
+        Thread({
+            val url = try {
+                val token = auth.accessToken(force = false).accessToken
+                val connection = URL("$base/api/states/$entity").openConnection() as HttpURLConnection
+                try {
+                    connection.connectTimeout = TIMEOUT_MILLIS
+                    connection.readTimeout = TIMEOUT_MILLIS
+                    connection.setRequestProperty("Authorization", "Bearer $token")
+                    if (connection.responseCode != 200) throw IllegalStateException("Home Assistant answered ${connection.responseCode}")
+                    val state = JSONObject(connection.inputStream.bufferedReader().readText())
+                    val access = state.optJSONObject("attributes")?.optString("access_token").orEmpty()
+                    if (access.isEmpty()) throw IllegalStateException("$entity has no access token")
+                    "$base/api/camera_proxy_stream/$entity?token=$access"
+                } finally {
+                    connection.disconnect()
+                }
+            } catch (e: Exception) {
+                AppLog.w(TAG, "No live stream for $entity: ${e.message}")
+                null
+            }
+            callback(url)
+        }, "ha-camera").start()
+    }
+
     companion object {
         /** The event pop-up buttons fire; `event_data.action` names the button's event. */
         const val ACTION_EVENT = "tv_kiosk_action"
-        private const val TAG = "HaEvents"
+        private const val TAG = "HaApi"
         private const val TIMEOUT_MILLIS = 8000
     }
 }

@@ -114,9 +114,13 @@ For example `{"pages": ["http://192.168.1.50:8123/cameras"], "rotate_seconds": 6
 | `opacity` | | Background opacity in percent, 40–100. Images and text stay solid |
 | `text_size` | | `normal` or `large` |
 | `actions` | | Up to 3 buttons: `[{"label": "Open camera", "navigate": "/lovelace/cameras"}]`. `navigate` opens a Home Assistant path, `url` opens a web page, `event` tells Home Assistant (see below), none of them just closes the pop-up. A Close button is always added |
+| `camera` | | A Home Assistant camera to show **live** in the picture area, e.g. `camera.front_door`. The TV asks Home Assistant for the camera's stream with its own sign-in. Give `image` too, and the snapshot shows until the stream starts |
+| `stream` | | Any live MJPEG URL instead, e.g. go2rtc's `http://<host>:1984/api/stream.mjpeg?src=front_door` or Frigate's. Played at up to 10 frames a second, scaled to fit, until the pop-up closes |
 | `sound` | | `chime`, `doorbell` or `alert` (built in), or an http(s) URL. Plays when the pop-up appears |
 | `tts` | | Text the TV speaks when the pop-up appears, after the sound. `language` (e.g. `en-AU`) picks the voice |
 | `id` | | Same id replaces the pop-up on screen; `POST /notify/clear` with it closes it early |
+
+The token-less TvOverlay-compatible port ignores `camera` and `actions`, because they act with the TV's own sign-in.
 
 **Buttons that tell Home Assistant.** A button with `"event": "unlock_front"` (lower case letters, digits and `_`) fires a `tv_kiosk_action` event in Home Assistant when pressed, with `action`, `label`, `popup_id`, `title`, `device_id` and `device_name`. The TV sends it with its own sign-in, so nothing else is needed. Over MQTT the TV's *Pop-up button* event entity fires too. An automation acts on it:
 

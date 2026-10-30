@@ -44,10 +44,10 @@ Two options. Start with REST if you don't run MQTT already.
      args:
        title: Front door
        message: Someone is at the door
-       image: "{{ state_attr('camera.front_door', 'entity_picture') }}"
+       image: "http://192.168.1.50:8123{{ state_attr('camera.front_door', 'entity_picture') }}"
        duration: 20
    ```
-   `image` must be a full URL the TV can reach; for a camera, prefix the `entity_picture` path with your HA URL (the kit's `script.tv_popup` already does this).
+   `image` must be a full URL the TV can reach. A camera's `entity_picture` is only a path, so put your Home Assistant address in front of it as above (the kit's `script.tv_popup` does this for you).
 
 Other commands: `{command: reload}`, `{command: screen, args: {mode: dim, level: 60}}`, `{command: url, args: {url: "http://..."}}`, `{command: navigate, args: {path: /lovelace/cameras}}`, `{command: wake}`.
 
@@ -82,6 +82,48 @@ data:
   topic: tvkiosk/<device-id>/cmd/notify
   payload: '{"title":"Front door","message":"Motion","image":"http://192.168.1.50:8123/local/x.png"}'
 ```
+
+## Doorbell pop-up with a camera picture
+
+When someone presses the doorbell, the TV shows a pop-up with a picture from the camera, over the dashboard or whatever is playing. Tested with a Ring doorbell; any doorbell or camera that Home Assistant shows works the same way.
+
+**What you need:**
+
+- Your doorbell in Home Assistant (for Ring: Settings → Devices & services → Add integration → Ring). Note two entity names, from the doorbell's device page:
+  - the **press event**, for example `event.front_door_ding` (Ring), or a `binary_sensor` that turns on when pressed;
+  - the **camera**, for example `camera.front_door_live_view`. For a battery doorbell, the "last recording" camera often gives a picture faster.
+- The `rest_command` from [Option A](#option-a-rest-commands-no-broker), steps 1 to 3.
+
+**The automation** (Settings → Automations → Create → ⋮ → Edit in YAML, paste, change the names and the address, save):
+
+```yaml
+alias: Doorbell on the TV
+triggers:
+  - trigger: state
+    entity_id: event.front_door_ding
+    not_from: [unavailable, unknown]
+actions:
+  - action: rest_command.tv_kiosk_living_room
+    data:
+      command: notify
+      args:
+        id: doorbell
+        title: Front door
+        message: "Someone's at the door ({{ now().strftime('%-I:%M %p') }})"
+        image: "http://192.168.1.50:8123{{ state_attr('camera.front_door_live_view', 'entity_picture') }}"
+        duration: 20
+        actions:
+          - label: Open camera
+            navigate: /lovelace/cameras
+mode: single
+```
+
+- `192.168.1.50:8123` is a placeholder: use your Home Assistant address, as the TV reaches it.
+- `id: doorbell` makes a second press replace the pop-up instead of stacking another.
+- The button is optional; change `/lovelace/cameras` to a dashboard page of yours, or remove `actions`. Back closes the pop-up.
+- The picture link carries a short-lived access token from Home Assistant, so the TV loads it without signing in. Don't copy camera pictures into `/config/www`: anyone on your network can read that folder without a login.
+
+**Using ha-tv-kit?** Its [doorbell blueprint](https://github.com/mattgrechtech/ha-tv-kit/blob/main/homeassistant/blueprints/automation/ha-tv-kit/camera_motion_tv_popup.yaml) does this for every TV that's on, with a cooldown and an optional phone alert. It's what the Ring test used.
 
 ## Wake on doorbell (outline)
 

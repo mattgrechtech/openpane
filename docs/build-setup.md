@@ -104,6 +104,6 @@ keyPassword=...
 
 or set the environment variables `TVKIOSK_KEYSTORE`, `TVKIOSK_KEYSTORE_PASSWORD`, `TVKIOSK_KEY_ALIAS` and `TVKIOSK_KEY_PASSWORD`. `.\gradlew.bat assembleRelease` then writes `app/build/outputs/apk/release/app-release.apk`. Without a key it writes an unsigned APK, which Android won't install.
 
-GitHub builds a signed APK for every version tag (`v0.1.0`) when the repository has these secrets: `KEYSTORE_BASE64` (the .jks file, base64), `KEYSTORE_PASSWORD`, `KEY_ALIAS`, `KEY_PASSWORD`. See `.github/workflows/release.yml`.
+GitHub builds a signed APK for every version tag (`v0.1.0`) when the repository has these secrets: `KEYSTORE_BASE64` (the .jks file, base64), `KEYSTORE_PASSWORD`, `KEY_ALIAS`, `KEY_PASSWORD`. See `.github/workflows/release.yml`, and [releasing.md](releasing.md) for the whole release checklist.
 
 Version numbers: `versionName` in `app/build.gradle.kts` is the only one to change; `versionCode` is worked out from it (1.2.3 → 10203), so every release installs over the last.

@@ -1,6 +1,14 @@
 # TV Kiosk
 
-**TV Kiosk for Android TV and Google TV: shows a Home Assistant dashboard, or any web page, full screen, and lets Home Assistant control the TV.** One free, open-source app instead of a kiosk browser, adb scripts and a separate pop-up app.
+**TV Kiosk for Android TV and Google TV: shows a Home Assistant dashboard, or any web page, full screen, and lets Home Assistant control the TV.** One free, open-source app instead of a kiosk browser (such as Fully Kiosk), adb scripts and a separate pop-up app (such as TvOverlay).
+
+## Home Assistant on your TV, in one app
+
+1. **Install TV Kiosk** on the TV ([Install](#install)).
+2. **Open it and follow setup with the remote.** It finds Home Assistant on your network, you sign in once, and you pick a dashboard from a list. No URLs to type.
+3. **Add pop-ups.** Home Assistant can show a pop-up on the TV over whatever is playing, for example a doorbell press with a picture from the camera: [Doorbell pop-up with a camera picture](docs/home-assistant.md#doorbell-pop-up-with-a-camera-picture).
+
+That's the dashboard, the pop-ups and remote control of the TV, without a second app. Tested with a Ring doorbell (Home Assistant's Ring integration) on one TV; any camera Home Assistant shows should work the same way.
 
 > Status: **pre-alpha.** Tested on one TCL Google TV (Android 14), including a 72-hour run. Reports from other TVs are very welcome: see [Contributing](CONTRIBUTING.md). Companion to [ha-tv-kit](https://github.com/mattgrechtech/ha-tv-kit).
 
@@ -30,7 +38,7 @@ Not included on purpose: remote shell or script injection, camera motion detecti
 ## Install
 
 1. On the TV, allow apps from unknown sources for the app you'll install with (Settings → Apps → Security & restrictions, or Settings → Privacy → Security, depending on the TV).
-2. Get the APK from [Releases](https://github.com/mattgrechtech/ha-tv-kiosk/releases):
+2. Get the APK from [Releases](https://github.com/mattgrechtech/ha-tv-kiosk/releases) (the first one, v0.1.0, is on its way; until it's there, build it as below):
    - with the **Downloader** app on the TV: enter the APK's link, then install;
    - or from a computer with adb: `adb connect 192.168.1.60:5555`, then `adb install tv-kiosk-v0.1.0.apk`.
 3. Open **TV Kiosk**. Setup asks whether the TV shows Home Assistant or a web page, finds Home Assistant on your network and signs in.
@@ -51,10 +59,10 @@ The app talks only to the addresses you give it (Home Assistant, the web pages y
 
 ## Docs
 
-- [Home Assistant set-up](docs/home-assistant.md): REST commands, MQTT, moving TvOverlay or ha-tv-kit pop-ups over, wake on doorbell.
+- [Home Assistant set-up](docs/home-assistant.md): doorbell pop-ups with a camera picture, REST commands, MQTT, moving TvOverlay or ha-tv-kit pop-ups over, wake on doorbell.
 - [API](docs/api.md): REST routes, every setting, pop-up fields, MQTT topics and entities, adb, remote keys for your own pages.
 - [Troubleshooting](docs/troubleshooting.md): setup, sign-in, pop-ups, a forgotten PIN, updating and uninstalling.
-- [Build set-up](docs/build-setup.md) and [Contributing](CONTRIBUTING.md).
+- [Build set-up](docs/build-setup.md), [Releasing](docs/releasing.md) and [Contributing](CONTRIBUTING.md).
 - [Security](SECURITY.md) and [Changelog](CHANGELOG.md).
 
 ## Requirements

@@ -29,7 +29,10 @@ class Planner(private val settings: Settings, private val ha: HaApi) {
         }
         val start = now.toLocalDate().atStartOfDay(now.zone)
         val end = start.plusDays(span.toLong())
-        val calendars = chosen(ha.getJson("/api/calendars") as? JSONArray ?: JSONArray(), Keys.PLANNER_CALENDARS)
+        // No answer at all means Home Assistant is down or refused us: say so, rather than "no calendars".
+        val all = ha.getJson("/api/calendars") as? JSONArray
+            ?: return JSONObject().put("ok", false).put("error", "can't reach Home Assistant")
+        val calendars = chosen(all, Keys.PLANNER_CALENDARS)
         val events = JSONArray()
         for (i in 0 until calendars.length()) {
             val calendar = calendars.getJSONObject(i)

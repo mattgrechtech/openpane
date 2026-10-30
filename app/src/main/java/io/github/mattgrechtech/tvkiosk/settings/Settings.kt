@@ -79,6 +79,8 @@ object Keys {
     val ORIENTATION = oneOf("orientation", "auto") { ORIENTATIONS }
     /** Offer TV Kiosk as the device's home screen (tablets and wall displays). */
     val HOME_APP = Key("home_app", false)
+    /** Do not disturb: pop-ups (and their sounds) wait unless they say "priority": "high". */
+    val DO_NOT_DISTURB = Key("do_not_disturb", false)
     /** The colour keys and digits tell Home Assistant when pressed (dashboard in front only). */
     val KEY_EVENTS = Key("key_events", false)
     /** Moves the page a few pixels every couple of minutes, against burn-in on OLED screens. */
@@ -162,7 +164,7 @@ object Keys {
     val ALL: List<Key<*>> = listOf(
         MODE, START_URL, HA_URL, AUTH_MODE, HA_KIOSK_MODE, KEEP_SCREEN_ON, BOOT_START, REMOTE_MODE,
         PAGES, ROTATE_SECONDS, SCREEN_OFF_FROM, SCREEN_OFF_TO,
-        CHECK_UPDATES, REST_AFTER_MINUTES, REST_STYLE, REST_PAGE, MOTION_AT_NIGHT, MOTION_FRONT, BURN_IN_GUARD, ORIENTATION, HOME_APP, KEY_EVENTS,
+        CHECK_UPDATES, REST_AFTER_MINUTES, REST_STYLE, REST_PAGE, MOTION_AT_NIGHT, MOTION_FRONT, BURN_IN_GUARD, ORIENTATION, HOME_APP, KEY_EVENTS, DO_NOT_DISTURB,
         POPUP_SIZE, POPUP_OPACITY, POPUP_TEXT_SIZE, POPUP_CORNER, POPUP_DURATION, POPUP_MAX_PER_CORNER, POPUP_TAKE_REMOTE,
         RELOAD_ON_NETWORK, RELOAD_ON_DISCONNECT_SECONDS, NIGHTLY_RELOAD_HOUR,
         API_ENABLED, API_PORT, TVOVERLAY_COMPAT, TVOVERLAY_PORT,

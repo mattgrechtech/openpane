@@ -132,7 +132,7 @@ class KioskService : Service() {
                 config,
                 discovery,
                 execute = { name, args -> controller.executeBlocking(name, args) },
-                stateJson = { app.state.toJson(this) },
+                stateJson = { app.state.toJson(this).put("do_not_disturb", settings[Keys.DO_NOT_DISTURB]) },
             ).also { it.start() }
             controller.eventListeners -= eventListener
             controller.eventListeners += eventListener

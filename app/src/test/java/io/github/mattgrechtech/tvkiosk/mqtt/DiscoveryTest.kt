@@ -41,6 +41,7 @@ class DiscoveryTest {
                 config.has("payload_press") -> config.getString("payload_press")
                 name == "screen_mode" -> "dim"
                 name == "dim_level" || name == "brightness_level" -> "40"
+                name == "dnd_switch" || name == "present_switch" -> "ON"
                 name == "pointer_switch" -> "ON"
                 name == "url_text" -> "http://ha.test"
                 else -> "hello"

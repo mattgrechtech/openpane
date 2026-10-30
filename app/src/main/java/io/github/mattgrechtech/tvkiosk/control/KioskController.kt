@@ -176,6 +176,7 @@ class KioskController(
     private fun dispatch(name: String, args: JSONObject): CommandResult = when (name) {
         "state" -> CommandResult.ok(
             state.toJson(context).put("device_id", settings[Keys.DEVICE_ID]).put("device_name", settings[Keys.DEVICE_NAME])
+                .put("do_not_disturb", settings[Keys.DO_NOT_DISTURB])
         )
         "url" -> loadUrl(args)
         "start_page" -> {
@@ -197,6 +198,12 @@ class KioskController(
                 })
                 CommandResult.ok()
             }
+        }
+        "do_not_disturb" -> {
+            val enabled = if (args.has("enabled")) args.optBoolean("enabled") else !settings[Keys.DO_NOT_DISTURB]
+            settings[Keys.DO_NOT_DISTURB] = enabled
+            state.update { }
+            CommandResult.ok(JSONObject().put("do_not_disturb", enabled))
         }
         "now_playing_stop" -> {
             nowPlaying.stop()
@@ -407,6 +414,10 @@ class KioskController(
 
     private fun notify(args: JSONObject): CommandResult {
         val popup = Popup.fromJson(args, popupDefaults()) ?: return CommandResult.error(400, "a title or message is required")
+        if (settings[Keys.DO_NOT_DISTURB] && args.optString("priority") != "high") {
+            AppLog.i(TAG, "Do not disturb: pop-up held back")
+            return CommandResult.ok(JSONObject().put("id", popup.id).put("shown", false).put("reason", "do not disturb"))
+        }
         announce(args.optString("sound").trim(), args.optString("tts").trim(), args)
         val shown = popups.show(popup)
         if (shown != PopupManager.Shown.NOWHERE) startLive(popup)

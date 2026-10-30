@@ -69,6 +69,7 @@ The same names work in `POST /settings`, adb `CONFIGURE` and a settings export. 
 | `keep_screen_on` | `true` | Stop the TV's screensaver over the dashboard |
 | `orientation` | `auto` | `auto`, `landscape`, `portrait`, `reverse_landscape`, `reverse_portrait` |
 | `home_app` | `false` | Offer TV Kiosk as the home screen (tablets, wall displays); then press Home and choose it |
+| `do_not_disturb` | `false` | Pop-ups and their sounds are held back unless `priority` is `high`. Also `POST /do_not_disturb` `{"enabled"}`, the MQTT switch and the integration's switch |
 | `key_events` | `false` | While the dashboard is in front, the colour keys (`red`, `green`, `yellow`, `blue`) and digits `0`–`9` fire a `tv_kiosk_key` event in Home Assistant (`key`, `long`, `device_id`, `device_name`) and the MQTT event entity (`event_type: key`). Navigation, Back, Home, volume and media keys are never taken |
 | `burn_in_guard` | `false` | Move the page a few pixels every 2 minutes, against burn-in on OLED screens |
 | `check_updates` | `false` | Once a day, ask GitHub whether a newer release is out; shown in Settings, the admin page, `/state` (`update`) and the integration's update entity. Never installs anything |
@@ -121,6 +122,7 @@ For example `{"pages": ["http://192.168.1.50:8123/cameras"], "rotate_seconds": 6
 | `actions` | | Up to 3 buttons: `[{"label": "Open camera", "navigate": "/lovelace/cameras"}]`. `navigate` opens a Home Assistant path, `url` opens a web page, `event` tells Home Assistant (see below), none of them just closes the pop-up. A Close button is always added |
 | `camera` | | A Home Assistant camera to show **live** in the picture area, e.g. `camera.front_door`. The TV asks Home Assistant for the camera's stream with its own sign-in. Give `image` too, and the snapshot shows until the stream starts |
 | `stream` | | Any live MJPEG URL instead, e.g. go2rtc's `http://<host>:1984/api/stream.mjpeg?src=front_door` or Frigate's. Played at up to 10 frames a second, scaled to fit, until the pop-up closes |
+| `priority` | | `high` still shows (with its sound) during *Do not disturb*; anything else waits |
 | `qr` | | Text shown as a QR code beside the message (up to 500 characters): a guest Wi-Fi login (`WIFI:T:WPA;S:Guest;P:password;;`), a link |
 | `countdown` | | Seconds counting down to 0:00 in the pop-up, e.g. `300` for "Pizza ready in 4:59" |
 | `progress` | | 0–100: a progress bar under the text. Send it again with the same `id` to move it ("Washing 75 %") |

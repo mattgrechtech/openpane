@@ -142,6 +142,7 @@ class ApiHandler(
             "/now_playing" to "now_playing",
             "/now_playing/stop" to "now_playing_stop",
             "/brightness" to "brightness",
+            "/do_not_disturb" to "do_not_disturb",
             "/pointer" to "pointer",
             "/notify" to "notify",
             "/notify/clear" to "notify_clear",

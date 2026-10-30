@@ -17,6 +17,7 @@ import io.github.mattgrechtech.tvkiosk.settings.Settings
 import io.github.mattgrechtech.tvkiosk.web.KioskActivity
 import org.json.JSONObject
 import java.util.Locale
+import java.util.concurrent.CopyOnWriteArrayList
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 import io.github.mattgrechtech.tvkiosk.diag.AppLog
@@ -53,7 +54,7 @@ class KioskController(
     val popups = PopupManager(context).apply {
         maxPerCorner = { settings[Keys.POPUP_MAX_PER_CORNER] }
         takeRemote = { settings[Keys.POPUP_TAKE_REMOTE] }
-        onAction = { action -> runPopupAction(action) }
+        onAction = { popup, action -> runPopupAction(popup, action) }
     }
     /** Wake on motion: when the screen rests and what wakes it. */
     val presence = Presence()
@@ -70,8 +71,26 @@ class KioskController(
         largeText = settings[Keys.POPUP_TEXT_SIZE] == "large",
     )
 
-    /** A pop-up button: open a Home Assistant path or a web page on the dashboard, bringing it forward. */
-    private fun runPopupAction(action: Popup.Action) {
+    /** Pop-up button events go to these: Home Assistant's event bus and MQTT. */
+    val actionListeners = CopyOnWriteArrayList<(JSONObject) -> Unit>()
+
+    /**
+     * A pop-up button: open a Home Assistant path or a web page on the dashboard (bringing it
+     * forward), or tell Home Assistant which button was pressed.
+     */
+    private fun runPopupAction(popup: Popup, action: Popup.Action) {
+        action.event?.let { event ->
+            val data = JSONObject()
+                .put("action", event)
+                .put("label", action.label)
+                .put("popup_id", popup.id)
+                .put("title", popup.title)
+                .put("device_id", settings[Keys.DEVICE_ID])
+                .put("device_name", settings[Keys.DEVICE_NAME])
+            AppLog.i(TAG, "Pop-up button: $event")
+            actionListeners.forEach { listener -> runCatching { listener(data) } }
+            return
+        }
         val target = action.url ?: action.navigate?.let { path -> settings.haBaseUrl()?.let { it + path } } ?: return
         execute("url", JSONObject().put("url", target))
     }
@@ -299,6 +318,7 @@ class KioskController(
 
     private fun notify(args: JSONObject): CommandResult {
         val popup = Popup.fromJson(args, popupDefaults()) ?: return CommandResult.error(400, "a title or message is required")
+        announce(args.optString("sound").trim(), args.optString("tts").trim(), args)
         return when (popups.show(popup)) {
             PopupManager.Shown.OVER_EVERYTHING -> CommandResult.ok(JSONObject().put("id", popup.id))
             PopupManager.Shown.IN_DASHBOARD -> CommandResult.ok(
@@ -394,6 +414,27 @@ class KioskController(
         } catch (e: Exception) {
             stopSound()
             CommandResult.error(400, "can't play $url: ${e.message}")
+        }
+    }
+
+    /**
+     * A pop-up's `sound` (a built-in chime name or an http(s) URL) and `tts` (text to speak),
+     * the speech after the sound.
+     */
+    private fun announce(sound: String, speech: String, args: JSONObject) {
+        val speak = {
+            if (speech.isNotEmpty()) {
+                speak(JSONObject().put("message", speech).put("language", args.optString("language")))
+            }
+        }
+        val chime = sound.lowercase(Locale.ROOT)
+        when {
+            chime in Chimes.NAMES -> Chimes.play(chime) { main.post(speak) }
+            sound.startsWith("http://") || sound.startsWith("https://") -> {
+                sound(JSONObject().put("url", sound))
+                player?.setOnCompletionListener { if (player === it) stopSound(); speak() }
+            }
+            else -> speak()
         }
     }
 

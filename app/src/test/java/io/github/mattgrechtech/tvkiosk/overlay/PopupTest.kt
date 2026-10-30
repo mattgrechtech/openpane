@@ -85,6 +85,26 @@ class PopupTest {
         assertEquals(emptyList<Popup.Action>(), Popup.fromJson(JSONObject("""{"title":"T"}"""))!!.actions)
     }
 
+    @Test fun durationZeroStaysUntilClosed() {
+        assertEquals(0, Popup.fromJson(JSONObject("""{"title":"T","duration":0}"""))!!.durationSeconds)
+        assertEquals(0, Popup.fromJson(JSONObject("""{"title":"T","duration":-5}"""))!!.durationSeconds)
+    }
+
+    @Test fun buttonsCanSendAnEventToHomeAssistant() {
+        val popup = Popup.fromJson(JSONObject("""{"title":"T","actions":[
+            {"label":"Unlock","event":"Unlock_Front"},
+            {"label":"Bad name","event":"rm -rf"},
+            {"label":"Open","navigate":"/house","event":"ignored"}
+        ]}"""))!!
+        assertEquals(
+            listOf(
+                Popup.Action("Unlock", null, null, "unlock_front"),
+                Popup.Action("Open", "/house", null),
+            ),
+            popup.actions,
+        )
+    }
+
     @Test fun mdiNamesMapToEmoji() {
         assertEquals("📹", MdiIcons.emojiFor("mdi:cctv"))
         assertEquals("🗑️", MdiIcons.emojiFor("mdi:trash-can-outline"))

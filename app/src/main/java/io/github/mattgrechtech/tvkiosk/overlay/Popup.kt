@@ -22,6 +22,7 @@ data class Popup(
     /** ARGB colour for the icon and the accent strip. */
     val color: Int?,
     val corner: Corner,
+    /** Seconds on screen; 0 stays until it's closed (by id, a button or Back), at most [MAX_STICKY]. */
     val durationSeconds: Int,
     val size: Size,
     /** Background opacity, percent. */
@@ -38,10 +39,11 @@ data class Popup(
     }
 
     /**
-     * A button on the pop-up. It acts on the TV only: open a Home Assistant path ([navigate]),
-     * open a web page ([url]), or, with neither, just close the pop-up.
+     * A button on the pop-up: open a Home Assistant path ([navigate]), open a web page ([url]),
+     * or send [event] to Home Assistant (a `tv_kiosk_action` event, and the MQTT pop-up button
+     * entity) for an automation to act on. Every button closes the pop-up.
      */
-    data class Action(val label: String, val navigate: String?, val url: String?)
+    data class Action(val label: String, val navigate: String?, val url: String?, val event: String? = null)
 
     /** The pop-up settings, used for anything the payload leaves out. */
     data class Defaults(
@@ -64,6 +66,8 @@ data class Popup(
         const val DEFAULT_DURATION = 10
         const val MAX_DURATION = 600
         const val MAX_ACTIONS = 3
+        const val MAX_STICKY = 3600
+        private val EVENT_NAME = Regex("[a-z0-9_]{1,50}")
 
         /** Returns null when there is nothing to show (no title and no message). */
         fun fromJson(json: JSONObject, defaults: Defaults = Defaults()): Popup? {
@@ -82,7 +86,7 @@ data class Popup(
                 icon = firstNonBlank(json, "icon", "smallIcon"),
                 color = parseColor(firstNonBlank(json, "color", "smallIconColor")),
                 corner = Corner.parse(text(json, "corner")) ?: defaults.corner,
-                durationSeconds = duration.coerceIn(1, MAX_DURATION),
+                durationSeconds = if (duration <= 0) 0 else duration.coerceIn(1, MAX_DURATION),
                 size = Size.parse(text(json, "size")) ?: defaults.size,
                 opacity = opacity.coerceIn(40, 100),
                 largeText = when (text(json, "text_size").lowercase()) {
@@ -102,11 +106,15 @@ data class Popup(
                 val label = text(item, "label").take(30)
                 val navigate = text(item, "navigate").ifEmpty { null }
                 val url = text(item, "url").ifEmpty { null }
+                val event = text(item, "event").lowercase().ifEmpty { null }
                 when {
                     label.isEmpty() -> null
                     navigate != null && !navigate.startsWith("/") -> null
                     url != null && !url.startsWith("http://") && !url.startsWith("https://") -> null
-                    else -> Action(label, navigate, if (navigate == null) url else null)
+                    event != null && !EVENT_NAME.matches(event) -> null
+                    navigate != null -> Action(label, navigate, null)
+                    url != null -> Action(label, null, url)
+                    else -> Action(label, null, null, event)
                 }
             }.take(MAX_ACTIONS)
         }

@@ -100,12 +100,26 @@ For example `{"pages": ["http://192.168.1.50:8123/cameras"], "rotate_seconds": 6
 | `icon` | `smallIcon` | `mdi:name`, URL or base64. MDI names show as a matching emoji for now |
 | `color` | `smallIconColor` | Accent colour, `#RRGGBB` or `#AARRGGBB` |
 | `corner` | | `top_start`, `top_end`, `bottom_start`, `bottom_end` |
-| `duration` | | Seconds, 1–600 |
+| `duration` | | Seconds, 1–600. `0` stays until it's closed: by its `id`, a button, or Back (at most an hour) |
 | `size` | | `small`, `medium`, `large` |
 | `opacity` | | Background opacity in percent, 40–100. Images and text stay solid |
 | `text_size` | | `normal` or `large` |
-| `actions` | | Up to 3 buttons: `[{"label": "Open camera", "navigate": "/lovelace/cameras"}]`. `navigate` opens a Home Assistant path, `url` opens a web page, neither just closes the pop-up. A Close button is always added |
+| `actions` | | Up to 3 buttons: `[{"label": "Open camera", "navigate": "/lovelace/cameras"}]`. `navigate` opens a Home Assistant path, `url` opens a web page, `event` tells Home Assistant (see below), none of them just closes the pop-up. A Close button is always added |
+| `sound` | | `chime`, `doorbell` or `alert` (built in), or an http(s) URL. Plays when the pop-up appears |
+| `tts` | | Text the TV speaks when the pop-up appears, after the sound. `language` (e.g. `en-AU`) picks the voice |
 | `id` | | Same id replaces the pop-up on screen; `POST /notify/clear` with it closes it early |
+
+**Buttons that tell Home Assistant.** A button with `"event": "unlock_front"` (lower case letters, digits and `_`) fires a `tv_kiosk_action` event in Home Assistant when pressed, with `action`, `label`, `popup_id`, `title`, `device_id` and `device_name`. The TV sends it with its own sign-in, so nothing else is needed. Over MQTT the TV's *Pop-up button* event entity fires too. An automation acts on it:
+
+```yaml
+triggers:
+  - trigger: event
+    event_type: tv_kiosk_action
+    event_data: { action: unlock_front }
+actions:
+  - action: lock.unlock
+    target: { entity_id: lock.front_door }
+```
 
 Anything left out comes from Settings → Pop-ups and API → Look and behaviour (defaults: top right, 10 s, medium, 93 %, normal text).
 

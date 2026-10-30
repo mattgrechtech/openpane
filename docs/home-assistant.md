@@ -112,6 +112,7 @@ actions:
         message: "Someone's at the door ({{ now().strftime('%-I:%M %p') }})"
         image: "http://192.168.1.50:8123{{ state_attr('camera.front_door_live_view', 'entity_picture') }}"
         duration: 20
+        sound: doorbell
         actions:
           - label: Open camera
             navigate: /lovelace/cameras
@@ -120,6 +121,8 @@ mode: single
 
 - `192.168.1.50:8123` is a placeholder: use your Home Assistant address, as the TV reaches it.
 - `id: doorbell` makes a second press replace the pop-up instead of stacking another.
+- `sound: doorbell` plays a ding-dong on the TV. Other built-in sounds: `chime`, `alert`. Add `tts: "Someone's at the front door"` to have the TV say it too.
+- A button can also act in Home Assistant, for example `{label: Unlock, event: unlock_front}` with an automation on the `tv_kiosk_action` event: see [Buttons that tell Home Assistant](api.md#pop-ups).
 - The button is optional; change `/lovelace/cameras` to a dashboard page of yours, or remove `actions`. Back closes the pop-up.
 - The picture link carries a short-lived access token from Home Assistant, so the TV loads it without signing in. Don't copy camera pictures into `/config/www`: anyone on your network can read that folder without a login.
 

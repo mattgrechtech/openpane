@@ -47,6 +47,7 @@ class KioskService : Service() {
         }
     }
     private val stateListener: () -> Unit = { mqtt?.stateChanged() }
+    private val actionListener: (org.json.JSONObject) -> Unit = { data -> mqtt?.publishEvent(data) }
     private val restart = Runnable {
         stopChannels()
         startChannels()
@@ -127,6 +128,8 @@ class KioskService : Service() {
                 execute = { name, args -> controller.executeBlocking(name, args) },
                 stateJson = { app.state.toJson(this) },
             ).also { it.start() }
+            controller.actionListeners -= actionListener
+            controller.actionListeners += actionListener
         }
     }
 
@@ -150,6 +153,7 @@ class KioskService : Service() {
         compat = null
         mqtt?.stop()
         mqtt = null
+        app.controller.actionListeners -= actionListener
     }
 
     private fun goForeground() {

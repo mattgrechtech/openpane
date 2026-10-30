@@ -76,6 +76,18 @@ class MqttBridge(
         }
     }
 
+    /** A pop-up button press, for the MQTT event entity. */
+    fun publishEvent(data: JSONObject) {
+        if (stopped) return
+        scheduler.execute {
+            val mqtt = client ?: return@execute
+            if (!mqtt.isConnected) return@execute
+            val payload = JSONObject(data.toString()).put("event_type", Discovery.EVENT_PRESSED)
+            runCatching { mqtt.publish(discovery.eventTopic, payload.toString().toByteArray(Charsets.UTF_8), 1, false) }
+                .onFailure { AppLog.w(TAG, "MQTT event publish failed", it) }
+        }
+    }
+
     private fun connect() {
         if (stopped) return
         status = "connecting"

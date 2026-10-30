@@ -23,6 +23,7 @@ class Discovery(
     val root = "$baseTopic/$deviceId"
     val stateTopic = "$root/state"
     val availabilityTopic = "$root/availability"
+    val eventTopic = "$root/event"
     val commandFilter = "$root/cmd/+"
 
     fun commandTopic(name: String) = "$root/cmd/$name"
@@ -92,6 +93,11 @@ class Discovery(
                 .put("value_template", "{{ value_json.url[:255] }}")
                 .put("max", 255)
                 .put("icon", "mdi:web")
+        },
+        entity("event", "popup_button", "Pop-up button") {
+            put("state_topic", eventTopic)
+                .put("event_types", JSONArray(listOf(EVENT_PRESSED)))
+                .put("icon", "mdi:gesture-tap-button")
         },
         entity("notify", "popup", "Pop-up") {
             put("command_topic", commandTopic("notify")).put("icon", "mdi:message-badge")
@@ -163,6 +169,7 @@ class Discovery(
 
     companion object {
         const val ONLINE = "online"
+        const val EVENT_PRESSED = "pressed"
         const val OFFLINE = "offline"
 
         /**

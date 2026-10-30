@@ -39,7 +39,7 @@ class PopupManager(private val context: Context) {
     /** Whether pop-ups with buttons may take the remote from other apps. */
     var takeRemote: () -> Boolean = { false }
     /** Runs a pop-up button's action; the pop-up closes afterwards. */
-    var onAction: (Popup.Action) -> Unit = {}
+    var onAction: (Popup, Popup.Action) -> Unit = { _, _ -> }
 
     /** Set by the dashboard: while it's in front, pop-ups with buttons always take the remote. */
     var dashboardInFront = false
@@ -96,7 +96,9 @@ class PopupManager(private val context: Context) {
 
         val dismiss = Runnable { entries[popup.id]?.let { if (it.view === view) clear(popup.id) } }
         entries[popup.id] = Entry(popup, view, popup.corner, dismiss)
-        main.postDelayed(dismiss, popup.durationSeconds * 1000L)
+        // 0 means until it's closed; even then, never forever.
+        val seconds = if (popup.durationSeconds > 0) popup.durationSeconds else Popup.MAX_STICKY
+        main.postDelayed(dismiss, seconds * 1000L)
         updateFocus()
         return if (corner.inWindow) Shown.OVER_EVERYTHING else Shown.IN_DASHBOARD
     }
@@ -281,7 +283,7 @@ class PopupManager(private val context: Context) {
             setPadding(dp(16), 0, dp(16), dp(14))
             tag = BUTTON_ROW
         }
-        val all = popup.actions.map { it.label to { onAction(it) } } + (CLOSE_LABEL to {})
+        val all = popup.actions.map { it.label to { onAction(popup, it) } } + (CLOSE_LABEL to {})
         val views = all.mapIndexed { index, (label, run) ->
             TvUi.button(context, label, primary = index == 0) {
                 run()

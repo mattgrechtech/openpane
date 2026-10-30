@@ -116,6 +116,20 @@ class PopupTest {
         assertEquals(false, bad.hasPicture)
     }
 
+    @Test fun qrCountdownAndProgress() {
+        val p = Popup.fromJson(JSONObject("""{"title":"Guest Wi-Fi","qr":"WIFI:T:WPA;S:Guest;P:pass;;","countdown":299,"progress":75.6}"""))!!
+        assertEquals("WIFI:T:WPA;S:Guest;P:pass;;", p.qr)
+        assertEquals(299, p.countdownSeconds)
+        assertEquals(75, p.progress)
+        val bad = Popup.fromJson(JSONObject("""{"title":"T","qr":"${"x".repeat(501)}","countdown":0,"progress":180}"""))!!
+        assertNull(bad.qr)
+        assertNull(bad.countdownSeconds)
+        assertEquals(100, bad.progress)
+        assertEquals("4:59", PopupManager.formatCountdown(299))
+        assertEquals("0:05", PopupManager.formatCountdown(5))
+        assertEquals("1:02:03", PopupManager.formatCountdown(3723))
+    }
+
     @Test fun mdiNamesMapToEmoji() {
         assertEquals("📹", MdiIcons.emojiFor("mdi:cctv"))
         assertEquals("🗑️", MdiIcons.emojiFor("mdi:trash-can-outline"))

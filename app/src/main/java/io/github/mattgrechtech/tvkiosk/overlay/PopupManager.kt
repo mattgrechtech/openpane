@@ -7,6 +7,7 @@ import android.graphics.Typeface
 import android.graphics.drawable.GradientDrawable
 import android.os.Handler
 import android.os.Looper
+import android.os.SystemClock
 import android.provider.Settings
 import android.text.TextUtils
 import android.util.TypedValue
@@ -18,8 +19,10 @@ import android.view.WindowManager
 import android.widget.FrameLayout
 import android.widget.ImageView
 import android.widget.LinearLayout
+import android.widget.ProgressBar
 import android.widget.TextView
 import io.github.mattgrechtech.tvkiosk.diag.AppLog
+import io.github.mattgrechtech.tvkiosk.ui.Dialogs
 import io.github.mattgrechtech.tvkiosk.ui.TvUi
 
 /**
@@ -281,7 +284,14 @@ class PopupManager(private val context: Context) {
         if (popup.title.isNotEmpty()) texts.addView(text(popup.title, 21f * textScale, Color.WHITE, bold = true, maxLines = 2))
         if (popup.message.isNotEmpty()) texts.addView(text(popup.message, 17f * textScale, 0xFFE0E0E0.toInt(), bold = false, maxLines = 5))
         if (popup.source.isNotEmpty()) texts.addView(text(popup.source, 13f * textScale, 0xFF9E9E9E.toInt(), bold = false, maxLines = 1))
+        popup.countdownSeconds?.let { seconds -> texts.addView(countdown(seconds, 30f * textScale, accent)) }
+        popup.progress?.let { percent -> texts.addView(progressBar(percent, accent), LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, dp(8)).apply { topMargin = dp(8) }) }
         row.addView(texts, LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f))
+        popup.qr?.let { content ->
+            runCatching { Dialogs.qrBitmap(content, dp(QR_DP)) }.getOrNull()?.let { bitmap ->
+                row.addView(ImageView(context).apply { setImageBitmap(bitmap) }, LinearLayout.LayoutParams(dp(QR_DP), dp(QR_DP)).apply { marginStart = dp(12) })
+            }
+        }
 
         card.addView(row, LinearLayout.LayoutParams(width, ViewGroup.LayoutParams.WRAP_CONTENT))
         if (popup.actions.isNotEmpty()) card.addView(buttons(popup, textScale), LinearLayout.LayoutParams(width, ViewGroup.LayoutParams.WRAP_CONTENT))
@@ -337,6 +347,29 @@ class PopupManager(private val context: Context) {
         return row
     }
 
+    /** m:ss, ticking down to 0:00 while the pop-up is up. */
+    private fun countdown(seconds: Int, sizeSp: Float, colour: Int): TextView {
+        val view = text(formatCountdown(seconds), sizeSp, colour, bold = true, maxLines = 1)
+        val endsAt = SystemClock.elapsedRealtime() + seconds * 1000L
+        val tick = object : Runnable {
+            override fun run() {
+                if (!view.isAttachedToWindow && view.tag == TICKING) return
+                view.tag = TICKING
+                val left = ((endsAt - SystemClock.elapsedRealtime() + 999) / 1000).toInt().coerceAtLeast(0)
+                view.text = formatCountdown(left)
+                if (left > 0) main.postDelayed(this, 250)
+            }
+        }
+        main.post(tick)
+        return view
+    }
+
+    private fun progressBar(percent: Int, colour: Int): View = ProgressBar(context, null, android.R.attr.progressBarStyleHorizontal).apply {
+        max = 100
+        progress = percent
+        progressTintList = android.content.res.ColorStateList.valueOf(colour)
+    }
+
     private fun iconView(popup: Popup, accent: Int, emojiSp: Float): View? {
         val icon = popup.icon ?: return null
         if (icon.startsWith("mdi:")) {
@@ -385,6 +418,16 @@ class PopupManager(private val context: Context) {
     private companion object {
         const val TAG = "PopupManager"
         const val PICTURE = "picture"
+        const val TICKING = "ticking"
+        const val QR_DP = 120
+
+        /** 4:59, 1:02:03. */
+        fun formatCountdown(seconds: Int): String {
+            val h = seconds / 3600
+            val m = seconds % 3600 / 60
+            val s = seconds % 60
+            return if (h > 0) "%d:%02d:%02d".format(h, m, s) else "%d:%02d".format(m, s)
+        }
 
         /** The window type for drawing over other apps; Android 7 only has the older one. */
         @Suppress("DEPRECATION")

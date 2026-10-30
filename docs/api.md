@@ -118,6 +118,9 @@ For example `{"pages": ["http://192.168.1.50:8123/cameras"], "rotate_seconds": 6
 | `actions` | | Up to 3 buttons: `[{"label": "Open camera", "navigate": "/lovelace/cameras"}]`. `navigate` opens a Home Assistant path, `url` opens a web page, `event` tells Home Assistant (see below), none of them just closes the pop-up. A Close button is always added |
 | `camera` | | A Home Assistant camera to show **live** in the picture area, e.g. `camera.front_door`. The TV asks Home Assistant for the camera's stream with its own sign-in. Give `image` too, and the snapshot shows until the stream starts |
 | `stream` | | Any live MJPEG URL instead, e.g. go2rtc's `http://<host>:1984/api/stream.mjpeg?src=front_door` or Frigate's. Played at up to 10 frames a second, scaled to fit, until the pop-up closes |
+| `qr` | | Text shown as a QR code beside the message (up to 500 characters): a guest Wi-Fi login (`WIFI:T:WPA;S:Guest;P:password;;`), a link |
+| `countdown` | | Seconds counting down to 0:00 in the pop-up, e.g. `300` for "Pizza ready in 4:59" |
+| `progress` | | 0–100: a progress bar under the text. Send it again with the same `id` to move it ("Washing 75 %") |
 | `sound` | | `chime`, `doorbell` or `alert` (built in), or an http(s) URL. Plays when the pop-up appears |
 | `tts` | | Text the TV speaks when the pop-up appears, after the sound. `language` (e.g. `en-AU`) picks the voice |
 | `id` | | Same id replaces the pop-up on screen; `POST /notify/clear` with it closes it early |

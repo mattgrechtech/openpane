@@ -33,6 +33,12 @@ data class Popup(
     val stream: String? = null,
     /** A Home Assistant camera entity to stream live, e.g. camera.front_door. */
     val camera: String? = null,
+    /** Text shown as a QR code (a guest Wi-Fi login, a link), at most [MAX_QR] characters. */
+    val qr: String? = null,
+    /** Seconds to count down to zero, shown as m:ss. */
+    val countdownSeconds: Int? = null,
+    /** 0-100: a progress bar under the text. */
+    val progress: Int? = null,
 ) {
     /** True when the pop-up has a picture area: a still, a stream or a camera. */
     val hasPicture get() = image != null || stream != null || camera != null
@@ -74,6 +80,7 @@ data class Popup(
         const val MAX_DURATION = 600
         const val MAX_ACTIONS = 3
         const val MAX_STICKY = 3600
+        const val MAX_QR = 500
         private val EVENT_NAME = Regex("[a-z0-9_]{1,50}")
         private val CAMERA_ENTITY = Regex("camera\\.[a-z0-9_]{1,100}")
 
@@ -105,6 +112,9 @@ data class Popup(
                 actions = actions(json),
                 stream = text(json, "stream").takeIf { it.startsWith("http://") || it.startsWith("https://") },
                 camera = text(json, "camera").lowercase().takeIf { CAMERA_ENTITY.matches(it) },
+                qr = text(json, "qr").takeIf { it.isNotEmpty() && it.length <= MAX_QR },
+                countdownSeconds = if (json.has("countdown")) json.optInt("countdown", -1).takeIf { it in 1..86_400 } else null,
+                progress = if (json.has("progress")) json.optDouble("progress", -1.0).takeIf { it >= 0 }?.toInt()?.coerceAtMost(100) else null,
             )
         }
 

@@ -8,6 +8,7 @@ import android.media.MediaPlayer
 import android.os.Handler
 import android.os.Looper
 import android.os.SystemClock
+import android.view.KeyEvent
 import android.provider.Settings as AndroidSettings
 import android.speech.tts.TextToSpeech
 import io.github.mattgrechtech.tvkiosk.overlay.Popup
@@ -40,6 +41,10 @@ interface DashboardSurface {
     fun applyBrightness(level: Int)
     /** Resting starts ([style]: black, dim, clock or page) or ends (null). */
     fun restChanged(style: String?)
+    /** A remote key from the phone remote, as if pressed on the TV's remote. */
+    fun remoteKey(code: Int)
+    /** Types [text] into the page's focused field; false if no field has focus. */
+    fun typeText(text: String, callback: (Boolean) -> Unit)
 }
 
 /**
@@ -219,6 +224,7 @@ class KioskController(
             CommandResult.ok()
         }
         "pointer" -> pointer(args)
+        "remote" -> remote(args)
         "notify" -> notify(args)
         "notify_clear" -> {
             popups.clear(args.optString("id").ifEmpty { null })
@@ -432,6 +438,24 @@ class KioskController(
         return CommandResult.ok(JSONObject().put("pointer", enabled))
     }
 
+    /**
+     * The phone remote: `key` (up, down, left, right, ok, back, menu, play_pause, enter, backspace)
+     * is pressed as if on the TV's remote; `text` is typed into the page's focused field.
+     */
+    private fun remote(args: JSONObject): CommandResult {
+        val current = surface ?: return CommandResult.error(409, "the dashboard isn't open")
+        val text = args.optString("text")
+        if (text.isNotEmpty()) {
+            if (text.length > MAX_TYPED) return CommandResult.error(400, "text is limited to $MAX_TYPED characters")
+            current.typeText(text) { typed -> if (!typed) AppLog.i(TAG, "Phone remote: no text field has focus") }
+            return CommandResult.ok()
+        }
+        val key = args.optString("key").lowercase(Locale.ROOT)
+        val code = REMOTE_KEYS[key] ?: return CommandResult.error(400, "key must be one of ${REMOTE_KEYS.keys.joinToString()}")
+        current.remoteKey(code)
+        return CommandResult.ok()
+    }
+
     private fun notify(args: JSONObject): CommandResult {
         val popup = Popup.fromJson(args, popupDefaults()) ?: return CommandResult.error(400, "a title or message is required")
         if (settings[Keys.DO_NOT_DISTURB] && args.optString("priority") != "high") {
@@ -583,6 +607,14 @@ class KioskController(
         private const val TAG = "KioskController"
         private const val REST_DIM_LEVEL = 80
         private val MEDIA_PLAYER = Regex("media_player\\.[a-z0-9_]{1,100}")
+        private const val MAX_TYPED = 500
+        private val REMOTE_KEYS = mapOf(
+            "up" to KeyEvent.KEYCODE_DPAD_UP, "down" to KeyEvent.KEYCODE_DPAD_DOWN,
+            "left" to KeyEvent.KEYCODE_DPAD_LEFT, "right" to KeyEvent.KEYCODE_DPAD_RIGHT,
+            "ok" to KeyEvent.KEYCODE_DPAD_CENTER, "back" to KeyEvent.KEYCODE_BACK, "menu" to KeyEvent.KEYCODE_MENU,
+            "play_pause" to KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE, "enter" to KeyEvent.KEYCODE_ENTER,
+            "backspace" to KeyEvent.KEYCODE_DEL,
+        )
         const val ACTION_EVENT = "tv_kiosk_action"
         const val KEY_EVENT = "tv_kiosk_key"
         private val PAGE_COMMANDS = setOf("url", "navigate", "start_page")

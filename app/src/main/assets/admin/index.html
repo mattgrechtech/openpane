@@ -39,6 +39,27 @@
   </section>
 
   <section id="control" class="panel" hidden>
+    <h2>Remote</h2>
+    <div class="remote" aria-label="Remote control">
+      <button data-key="up" class="r-up" aria-label="Up">▲</button>
+      <button data-key="left" class="r-left" aria-label="Left">◀</button>
+      <button data-key="ok" class="r-ok primary">OK</button>
+      <button data-key="right" class="r-right" aria-label="Right">▶</button>
+      <button data-key="down" class="r-down" aria-label="Down">▼</button>
+    </div>
+    <div class="buttons remote-row">
+      <button data-key="back">Back</button>
+      <button data-key="menu">Menu</button>
+      <button data-key="play_pause">Play/pause</button>
+      <button data-cmd="pointer">Pointer on/off</button>
+    </div>
+    <form id="type-form" class="row">
+      <input id="type-text" placeholder="Type into the field selected on the TV" aria-label="Text to type on the TV" autocomplete="off" autocapitalize="off">
+      <button type="submit">Type</button>
+      <button type="button" data-key="backspace" aria-label="Delete">⌫</button>
+      <button type="button" data-key="enter">Enter</button>
+    </form>
+    <p class="muted small">Arrow keys on a computer keyboard work too while this tab is open.</p>
     <h2>Screen</h2>
     <div class="buttons">
       <button data-cmd="wake">Wake</button>

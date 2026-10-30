@@ -144,6 +144,7 @@ class ApiHandler(
             "/brightness" to "brightness",
             "/do_not_disturb" to "do_not_disturb",
             "/pointer" to "pointer",
+            "/remote" to "remote",
             "/notify" to "notify",
             "/notify/clear" to "notify_clear",
             "/launch" to "launch",

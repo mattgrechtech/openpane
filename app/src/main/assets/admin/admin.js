@@ -81,6 +81,23 @@ async function command(name, args) {
   }
 }
 
+// ---- phone remote ----------------------------------------------------------------------
+
+// No toast or state refresh per key: a remote has to feel immediate.
+async function key(name) {
+  try { await api("/remote", { key: name }); } catch (e) { toast(e.message); }
+}
+
+const KEYBOARD = { ArrowUp: "up", ArrowDown: "down", ArrowLeft: "left", ArrowRight: "right", Enter: "ok", Escape: "back", Backspace: "back" };
+
+function keyboardRemote(e) {
+  if ($("control").hidden || e.target.closest("input, textarea, select")) return;
+  const name = KEYBOARD[e.key];
+  if (!name) return;
+  e.preventDefault();
+  key(name);
+}
+
 // ---- connect ---------------------------------------------------------------------------
 
 function forget() {
@@ -322,6 +339,14 @@ async function downloadDiagnostics(event) {
 
 document.addEventListener("DOMContentLoaded", () => {
   for (const tab of document.querySelectorAll("#tabs button")) tab.addEventListener("click", () => show(tab.dataset.tab));
+  for (const button of document.querySelectorAll("[data-key]")) button.addEventListener("click", () => key(button.dataset.key));
+  document.addEventListener("keydown", keyboardRemote);
+  $("type-form").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const text = $("type-text").value;
+    if (!text) return;
+    try { await api("/remote", { text: text }); $("type-text").value = ""; } catch (err) { toast(err.message); }
+  });
   for (const button of document.querySelectorAll("[data-cmd]")) {
     button.addEventListener("click", () => command(button.dataset.cmd, button.dataset.args ? JSON.parse(button.dataset.args) : {}));
   }

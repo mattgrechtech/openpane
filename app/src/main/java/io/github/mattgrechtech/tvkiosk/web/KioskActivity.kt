@@ -801,6 +801,33 @@ class KioskActivity : Activity(), DashboardSurface {
 
     override fun navigateHa(path: String): Boolean = bridge?.navigate(path) ?: false
 
+    override fun remoteKey(code: Int) {
+        // Through the same path as the TV's remote: wakes a rest, moves the highlight, long-press rules.
+        val now = SystemClock.uptimeMillis()
+        dispatchKeyEvent(KeyEvent(now, now, KeyEvent.ACTION_DOWN, code, 0))
+        dispatchKeyEvent(KeyEvent(now, SystemClock.uptimeMillis(), KeyEvent.ACTION_UP, code, 0))
+    }
+
+    override fun typeText(text: String, callback: (Boolean) -> Unit) {
+        val view = webView ?: return callback(false)
+        lastInteraction = SystemClock.elapsedRealtime()
+        // Finds the focused field, through Home Assistant's shadow roots, and inserts the text as typing would.
+        val script = """
+            (function (text) {
+              var el = document.activeElement;
+              while (el && el.shadowRoot && el.shadowRoot.activeElement) el = el.shadowRoot.activeElement;
+              if (!el || !(el.isContentEditable || /^(INPUT|TEXTAREA)$/.test(el.tagName))) return false;
+              if (document.execCommand && document.execCommand('insertText', false, text)) return true;
+              var start = el.selectionStart != null ? el.selectionStart : el.value.length;
+              var end = el.selectionEnd != null ? el.selectionEnd : el.value.length;
+              el.value = el.value.slice(0, start) + text + el.value.slice(end);
+              el.dispatchEvent(new Event('input', { bubbles: true, composed: true }));
+              return true;
+            })(${org.json.JSONObject.quote(text)})
+        """.trimIndent()
+        view.evaluateJavascript(script) { result -> callback(result == "true") }
+    }
+
     // ---- keys --------------------------------------------------------------------------------
 
     override fun dispatchKeyEvent(event: KeyEvent): Boolean {

@@ -46,6 +46,12 @@ button.link { border: 0; background: none; color: var(--accent); padding: 0; }
 .card { border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; min-width: 0; }
 .card .k { color: var(--muted); font-size: 13px; }
 .card .v { font-weight: 600; overflow-wrap: anywhere; }
+.remote { display: grid; grid-template-columns: repeat(3, 64px); grid-template-rows: repeat(3, 64px); gap: 8px; justify-content: center; margin: 4px 0 12px; }
+.remote button { font-size: 20px; padding: 0; touch-action: manipulation; }
+.r-up { grid-column: 2; grid-row: 1; } .r-left { grid-column: 1; grid-row: 2; } .r-ok { grid-column: 2; grid-row: 2; }
+.r-right { grid-column: 3; grid-row: 2; } .r-down { grid-column: 2; grid-row: 3; }
+.remote-row { justify-content: center; margin-bottom: 12px; }
+.small { font-size: 13px; }
 .ok { color: var(--ok); } .warn { color: var(--warn); } .bad { color: var(--bad); }
 .group { border-top: 1px solid var(--line); padding-top: 6px; margin-top: 14px; }
 .setting { display: grid; grid-template-columns: minmax(180px, 1fr) minmax(200px, 1.4fr); gap: 4px 16px; align-items: center; padding: 6px 0; }

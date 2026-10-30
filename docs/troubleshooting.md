@@ -26,6 +26,13 @@ adb shell appops set io.github.mattgrechtech.tvkiosk SYSTEM_ALERT_WINDOW allow
 
 **A live camera stays black.** `camera` needs the TV signed in to Home Assistant (not web mode) and a camera whose live view works in Home Assistant. For the smoothest picture use `stream` with a go2rtc or Frigate MJPEG link. The log (Settings → Status and about) says why a stream stopped.
 
+## Pop-ups stop after an update or a restart
+
+Some TVs (TCL, and likely other makes with their own app managers) stop apps restarting themselves. After an update or a reboot, the app may not come back by itself, or may run without protection from being closed, so pop-ups stop arriving until the dashboard is opened. In the admin page's Overview, **Auto-start** and **Background service** say whether that's happening.
+
+- Allow auto-start once over adb (below, or run the provisioning script again).
+- After an update, open the dashboard once (or let motion bring it forward): starting it from the front gives the background service its protection back, even on TCL.
+
 ## Wake on motion
 
 **Motion doesn't wake the screen.** Settings → Screen → *Ready to wake* names what's missing. Also check: is it the night hours (motion is ignored then unless *Motion wakes it at night* is on), and is something playing (the dashboard stays behind a film unless *Motion brings the dashboard back* is *Always*)?
@@ -42,6 +49,9 @@ adb shell appops set io.github.mattgrechtech.tvkiosk SYSTEM_ALERT_WINDOW allow
 ```
 
 ```bash
+# TCL: let boot and updates restart the app (TCL blocks it by default)
+adb shell appops set <package> AUTO_START allow
+
 # Android 14+: wake on motion may turn the screen on
 adb shell appops set io.github.mattgrechtech.tvkiosk TURN_SCREEN_ON allow
 ```

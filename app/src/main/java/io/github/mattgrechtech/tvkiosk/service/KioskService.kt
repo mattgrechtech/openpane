@@ -188,9 +188,17 @@ class KioskService : Service() {
         } else {
             startForeground(NOTIFICATION_ID, notification)
         }
+        // Some makes (TCL) silently refuse a foreground service started from the background, after
+        // an update or at boot. Then Android may close it, and pop-ups with it, until the dashboard
+        // is next shown (which starts it from the front, where it's allowed). Report it.
+        protectedNow = Build.VERSION.SDK_INT < Build.VERSION_CODES.Q || foregroundServiceType != 0
+        if (!protectedNow) AppLog.w(TAG, "Running without foreground protection: the device refused it; open the dashboard once")
     }
 
     companion object {
+        /** True while the service runs as a foreground service (protected from being closed). */
+        @Volatile var protectedNow = false
+            private set
         private const val TAG = "KioskService"
         private const val CHANNEL = "service"
         private const val NOTIFICATION_ID = 1

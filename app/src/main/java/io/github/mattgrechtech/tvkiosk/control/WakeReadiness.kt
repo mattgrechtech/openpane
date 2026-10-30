@@ -14,6 +14,8 @@ object WakeReadiness {
 
     private const val TAG = "Wake"
     private const val OP_TURN_SCREEN_ON = "android:turn_screen_on"
+    /** TCL's own auto-start control (not in stock Android): without it, updates and boot can't restart the app. */
+    private const val OP_AUTO_START = "android:auto_start"
     private const val WAKE_LOCK_MILLIS = 3_000L
 
     /**
@@ -53,6 +55,17 @@ object WakeReadiness {
         }
     }
 
+    /** "allowed", "denied", or "not needed" on devices without an auto-start control. */
+    fun autoStart(context: Context): String = if (Build.VERSION.SDK_INT < 29) "not needed" else try {
+        val ops = context.getSystemService(AppOpsManager::class.java)
+        when (ops.unsafeCheckOpNoThrow(OP_AUTO_START, Process.myUid(), context.packageName)) {
+            AppOpsManager.MODE_ALLOWED, AppOpsManager.MODE_DEFAULT -> "allowed"
+            else -> "denied"
+        }
+    } catch (e: Exception) {
+        "not needed" // Unknown op: stock Android has no such control.
+    }
+
     fun toJson(context: Context): JSONObject {
         val power = context.getSystemService(PowerManager::class.java)
         val json = JSONObject()
@@ -60,6 +73,8 @@ object WakeReadiness {
             .put("overlay_permission", AndroidSettings.canDrawOverlays(context))
             .put("turn_screen_on", turnScreenOnPermission(context))
             .put("battery_optimization_exempt", power.isIgnoringBatteryOptimizations(context.packageName))
+            .put("auto_start", autoStart(context))
+            .put("service_protected", io.github.mattgrechtech.tvkiosk.service.KioskService.protectedNow)
         if (Build.VERSION.SDK_INT >= 33) json.put("low_power_standby", power.isLowPowerStandbyEnabled)
         if (Build.VERSION.SDK_INT >= 34) json.put("low_power_standby_exempt", power.isExemptFromLowPowerStandby)
         return json

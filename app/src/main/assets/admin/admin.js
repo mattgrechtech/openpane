@@ -187,6 +187,8 @@ async function refreshState() {
     card("Show over other apps", w.overlay_permission ? "allowed" : "missing: grant over adb", w.overlay_permission ? "ok" : "bad"),
     card("Turn the screen on", w.turn_screen_on, w.turn_screen_on === "denied" ? "bad" : "ok"),
     card("Battery optimisation", w.battery_optimization_exempt ? "exempt" : "may be stopped", w.battery_optimization_exempt ? "ok" : "warn"),
+    card("Auto-start", w.auto_start === "denied" ? "blocked: updates and boot can't restart it" : w.auto_start || "-", w.auto_start === "denied" ? "bad" : "ok"),
+    card("Background service", w.service_protected ? "protected" : "unprotected: open the dashboard once", w.service_protected ? "ok" : "warn"),
   ];
   if (w.low_power_standby !== undefined) {
     const cut = w.low_power_standby && !w.low_power_standby_exempt;

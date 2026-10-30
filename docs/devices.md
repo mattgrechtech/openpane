@@ -13,6 +13,8 @@ What has actually been tried, where, and when. "Built" features not listed for a
 
 Built, but not yet tried on any device:
 
+- Anything below Android 14, and any tablet or wall display (support for Android 7-13, touch, orientation and the home-screen option is new).
+
 - Wake on motion: waking from rest, from the screensaver, and from standby through the blueprint.
 - Night screen, page rotation over a long run, MQTT discovery, start after boot, start after a power cut.
 
@@ -20,6 +22,7 @@ Devices we'd most like reports from: Chromecast with Google TV, Google TV Stream
 
 ## What a TV needs
 
-- Android 10 or newer (Android TV or Google TV), with Android System WebView or Chrome kept up to date.
+- Android 7.0 or newer (TV, tablet or wall display), with Android System WebView or Chrome kept up to date. Home Assistant's frontend needs a recent engine: if the dashboard stays blank on an old tablet, its WebView is too old (Settings → Status and about shows the version).
+- Tablets and wall displays: Settings → Screen has the orientation and *Use as the home screen*.
 - For pop-ups over other apps: "display over other apps" (many TVs only allow it over adb: see [Troubleshooting](troubleshooting.md#pop-ups)).
 - For wake on motion on Android 14+: the turn-screen-on permission (the provisioning script grants it). To wake from standby: see [Wake on motion](home-assistant.md#wake-on-motion).

@@ -161,14 +161,17 @@ class KioskService : Service() {
     }
 
     private fun goForeground() {
-        val manager = getSystemService(NotificationManager::class.java)
-        manager.createNotificationChannel(
-            NotificationChannel(CHANNEL, getString(R.string.service_channel), NotificationManager.IMPORTANCE_MIN)
-        )
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            getSystemService(NotificationManager::class.java).createNotificationChannel(
+                NotificationChannel(CHANNEL, getString(R.string.service_channel), NotificationManager.IMPORTANCE_MIN)
+            )
+        }
         val open = PendingIntent.getActivity(
             this, 0, Intent(this, KioskActivity::class.java), PendingIntent.FLAG_IMMUTABLE,
         )
-        val notification = Notification.Builder(this, CHANNEL)
+        @Suppress("DEPRECATION")
+        val builder = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) Notification.Builder(this, CHANNEL) else Notification.Builder(this)
+        val notification = builder
             .setSmallIcon(R.drawable.ic_notification)
             .setContentTitle(getString(R.string.app_name))
             .setContentText(getString(R.string.service_text))
@@ -200,7 +203,11 @@ class KioskService : Service() {
             val wanted = s[Keys.API_ENABLED] || s[Keys.TVOVERLAY_COMPAT] || s[Keys.MQTT_ENABLED]
             val intent = Intent(context, KioskService::class.java)
             try {
-                if (wanted) context.startForegroundService(intent) else context.stopService(intent)
+                when {
+                    !wanted -> context.stopService(intent)
+                    Build.VERSION.SDK_INT >= Build.VERSION_CODES.O -> context.startForegroundService(intent)
+                    else -> context.startService(intent)
+                }
             } catch (e: Exception) {
                 // Android 12+ refuses to start a foreground service from the background (on 15,
                 // even with "display over other apps"); the dashboard starts it on resume instead.

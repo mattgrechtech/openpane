@@ -36,7 +36,7 @@ android {
     defaultConfig {
         // Permanent: changing it makes Android treat the app as new (users would have to reinstall).
         applicationId = "io.github.mattgrechtech.tvkiosk"
-        minSdk = 29
+        minSdk = 24
         targetSdk = 35
         versionName = appVersion
         versionCode = appVersion.split(".").map { it.toInt() }.let { (major, minor, patch) -> major * 10000 + minor * 100 + patch }
@@ -67,6 +67,8 @@ android {
     }
 
     compileOptions {
+        // java.time and java.util.Base64 on Android 7 (API 24-25).
+        isCoreLibraryDesugaringEnabled = true
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
     }
@@ -85,6 +87,7 @@ android {
 }
 
 dependencies {
+    coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.4")
     implementation("androidx.webkit:webkit:1.12.1")
     implementation("org.eclipse.paho:org.eclipse.paho.client.mqttv3:1.2.5")
     implementation("com.google.zxing:core:3.5.3")

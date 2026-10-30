@@ -1,6 +1,8 @@
 package io.github.mattgrechtech.tvkiosk
 
 import android.app.Application
+import android.content.ComponentName
+import android.content.pm.PackageManager
 import android.os.Build
 import io.github.mattgrechtech.tvkiosk.control.KioskController
 import io.github.mattgrechtech.tvkiosk.control.KioskState
@@ -38,10 +40,22 @@ class KioskApp : Application() {
         val events = HaEvents(settings, auth)
         controller.actionListeners += { data -> events.fire(HaEvents.ACTION_EVENT, data) }
         KioskService.start(this)
+        applyHomeScreen()
         // Turning a control channel on or off starts or stops the service.
         settings.addListener { changed ->
             if (changed.any { it in SERVICE_KEYS }) KioskService.start(this)
+            if (Keys.HOME_APP.name in changed) applyHomeScreen()
         }
+    }
+
+    /** Offers the dashboard as a home screen, or stops offering it. The user then picks it once. */
+    private fun applyHomeScreen() {
+        val state = if (settings[Keys.HOME_APP]) PackageManager.COMPONENT_ENABLED_STATE_ENABLED
+        else PackageManager.COMPONENT_ENABLED_STATE_DISABLED
+        // The alias's class name uses the code's namespace, which debug builds don't change.
+        val alias = ComponentName(packageName, KioskApp::class.java.name.substringBeforeLast('.') + ".HomeScreen")
+        runCatching { packageManager.setComponentEnabledSetting(alias, state, PackageManager.DONT_KILL_APP) }
+            .onFailure { AppLog.w("KioskApp", "Can't change the home screen setting", it) }
     }
 
     companion object {

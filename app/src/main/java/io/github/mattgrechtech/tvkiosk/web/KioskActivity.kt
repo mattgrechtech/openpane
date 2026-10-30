@@ -7,6 +7,8 @@ import android.graphics.Bitmap
 import android.graphics.Color
 import android.net.ConnectivityManager
 import android.net.Network
+import android.content.pm.ActivityInfo
+import android.os.Build
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
@@ -150,6 +152,7 @@ class KioskActivity : Activity(), DashboardSurface {
 
         applyScreen(app.state.screen, app.state.dimLevel)
         applyBrightness(app.state.brightness)
+        applyOrientation()
         burnInGuard()
         startDashboard(launchSetup = true)
         if (CrashGuard.takeUnseen(this)) {
@@ -343,6 +346,7 @@ class KioskActivity : Activity(), DashboardSurface {
             }
         }
 
+        @android.annotation.TargetApi(Build.VERSION_CODES.O) // Only ever called on Android 8+.
         override fun onRenderProcessGone(view: WebView, detail: RenderProcessGoneDetail): Boolean {
             AppLog.e(TAG, "WebView renderer gone (crashed: ${detail.didCrash()})")
             if (view !== webView) return true
@@ -485,6 +489,16 @@ class KioskActivity : Activity(), DashboardSurface {
     }
 
     /** Nudges the page a few pixels now and then, so an OLED never shows the same pixels all day. */
+    private fun applyOrientation() {
+        requestedOrientation = when (app.settings[Keys.ORIENTATION]) {
+            "landscape" -> ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE
+            "portrait" -> ActivityInfo.SCREEN_ORIENTATION_SENSOR_PORTRAIT
+            "reverse_landscape" -> ActivityInfo.SCREEN_ORIENTATION_REVERSE_LANDSCAPE
+            "reverse_portrait" -> ActivityInfo.SCREEN_ORIENTATION_REVERSE_PORTRAIT
+            else -> ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
+        }
+    }
+
     private fun burnInGuard() {
         val (x, y) = if (app.settings[Keys.BURN_IN_GUARD]) {
             Schedule.burnInOffset(SystemClock.elapsedRealtime(), (BURN_IN_DP * resources.displayMetrics.density).toInt())
@@ -623,6 +637,13 @@ class KioskActivity : Activity(), DashboardSurface {
                 dim.alpha = level / 100f
                 dim.visibility = View.VISIBLE
             }
+        }
+        // Black is also the lowest backlight where the device allows it (most tablets; many TVs
+        // ignore it), so an LCD doesn't glow. Back to the chosen brightness when it lights up.
+        if (mode == KioskState.Screen.BLANK) {
+            window.attributes = window.attributes.apply { screenBrightness = 0f }
+        } else {
+            applyBrightness(app.state.brightness)
         }
     }
 
@@ -788,6 +809,7 @@ class KioskActivity : Activity(), DashboardSurface {
     private fun onSettingsChanged(changed: Set<String>) {
         if (changed.contains(Keys.KEEP_SCREEN_ON.name)) applyWindowFlags()
         if (changed.contains(Keys.BURN_IN_GUARD.name)) burnInGuard()
+        if (changed.contains(Keys.ORIENTATION.name)) applyOrientation()
         if (changed.contains(Keys.REMOTE_MODE.name)) applyRemoteMode(app.settings[Keys.REMOTE_MODE])
         if (changed.any { it in ROTATION_KEYS }) {
             pageShownAt = SystemClock.elapsedRealtime()

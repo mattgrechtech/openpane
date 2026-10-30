@@ -501,6 +501,10 @@ class SettingsActivity : Activity() {
         Row.Toggle(getString(R.string.label_keep_screen_on), getString(R.string.row_keep_screen_on_sub), Keys.KEEP_SCREEN_ON),
         Row.Toggle(getString(R.string.label_boot_start), getString(R.string.row_boot_start_sub), Keys.BOOT_START),
         Row.Toggle(getString(R.string.row_burn_in), getString(R.string.row_burn_in_sub), Keys.BURN_IN_GUARD),
+        Row.Value(getString(R.string.row_orientation), orientationLabel(app.settings[Keys.ORIENTATION])) {
+            choose(getString(R.string.row_orientation), Keys.ORIENTATION, Keys.ORIENTATIONS.map { orientationLabel(it) to it })
+        },
+        Row.Toggle(getString(R.string.row_home_app), getString(R.string.row_home_app_sub), Keys.HOME_APP),
         Row.Value(getString(R.string.row_remote_mode), remoteModeLabel(app.settings[Keys.REMOTE_MODE])) {
             choose(getString(R.string.row_remote_mode), Keys.REMOTE_MODE, Keys.REMOTE_MODES.map { remoteModeLabel(it) to it })
         },
@@ -548,6 +552,16 @@ class SettingsActivity : Activity() {
         rows += Row.Info(getString(R.string.row_motion_help), getString(R.string.row_motion_help_sub))
         return rows
     }
+
+    private fun orientationLabel(value: String) = getString(
+        when (value) {
+            "landscape" -> R.string.value_landscape
+            "portrait" -> R.string.value_portrait
+            "reverse_landscape" -> R.string.value_reverse_landscape
+            "reverse_portrait" -> R.string.value_reverse_portrait
+            else -> R.string.value_orientation_auto
+        }
+    )
 
     private fun restStyleLabel(value: String) =
         getString(if (value == "dim") R.string.value_rest_dim else R.string.value_rest_black)

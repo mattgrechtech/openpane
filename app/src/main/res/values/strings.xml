@@ -183,6 +183,14 @@
     <string name="page_change">Change the address</string>
     <string name="page_move_up">Move up</string>
     <string name="page_remove">Remove</string>
+    <string name="row_orientation">Screen orientation</string>
+    <string name="value_orientation_auto">Automatic</string>
+    <string name="value_landscape">Landscape</string>
+    <string name="value_portrait">Portrait</string>
+    <string name="value_reverse_landscape">Landscape, upside down</string>
+    <string name="value_reverse_portrait">Portrait, upside down</string>
+    <string name="row_home_app">Use as the home screen</string>
+    <string name="row_home_app_sub">For tablets and wall displays: press Home and choose TV Kiosk, "Always". Turn off to go back to the usual home screen.</string>
     <string name="row_burn_in">Burn-in guard</string>
     <string name="row_burn_in_sub">Moves the page a few pixels every couple of minutes. For OLED screens that show the dashboard all day.</string>
     <string name="header_motion">Wake on motion</string>

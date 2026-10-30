@@ -65,6 +65,8 @@ The same names work in `POST /settings`, adb `CONFIGURE` and a settings export. 
 | `screen_off_from` / `screen_off_to` | `-1` / `7` | Hours (0–23) the screen goes black each night; `-1` is never |
 | `remote_mode` | `buttons` | `buttons` (jump between items), `pointer` (on-screen pointer), `page` (arrows go to the page) |
 | `keep_screen_on` | `true` | Stop the TV's screensaver over the dashboard |
+| `orientation` | `auto` | `auto`, `landscape`, `portrait`, `reverse_landscape`, `reverse_portrait` |
+| `home_app` | `false` | Offer TV Kiosk as the home screen (tablets, wall displays); then press Home and choose it |
 | `burn_in_guard` | `false` | Move the page a few pixels every 2 minutes, against burn-in on OLED screens |
 | `rest_after_minutes` | `0` | Rest (darken) the screen after this many minutes without motion, presence or the remote; `0` is never, else 1–240 |
 | `rest_style` | `black` | `black` or `dim` (80 %) while resting |

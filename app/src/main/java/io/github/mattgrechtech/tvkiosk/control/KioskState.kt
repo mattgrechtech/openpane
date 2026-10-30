@@ -100,7 +100,9 @@ class KioskState {
         val activityManager = context.getSystemService(ActivityManager::class.java)
         val memory = ActivityManager.MemoryInfo().also { activityManager.getMemoryInfo(it) }
         val appMemory = Debug.MemoryInfo().also { Debug.getMemoryInfo(it) }
-        val webView = runCatching { WebView.getCurrentWebViewPackage() }.getOrNull()
+        val webView = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            runCatching { WebView.getCurrentWebViewPackage() }.getOrNull()
+        } else null
         val now = SystemClock.elapsedRealtime()
 
         return JSONObject()

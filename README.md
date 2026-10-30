@@ -87,7 +87,7 @@ The app talks only to the addresses you give it (Home Assistant, the web pages y
 
 ## Requirements
 
-Android TV or Google TV on **Android 10 or newer**, with Android System WebView or Chrome kept up to date. Only tested on TVs; it's built for a remote and a landscape screen.
+**Android 7.0 or newer**: Android TV and Google TV, tablets, and Android wall displays. It needs an up-to-date Android System WebView (or Chrome): Home Assistant's dashboards need a recent browser engine, which some old tablets can't get. So far it has only been tested on Android 14 TVs: see [tested devices](docs/devices.md). Built for a remote first, and it works by touch. On tablets it can follow the device's orientation and act as the home screen.
 
 ## Layout
 

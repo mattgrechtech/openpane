@@ -179,7 +179,7 @@ class PopupManager(private val context: Context) {
                 val params = WindowManager.LayoutParams(
                     WindowManager.LayoutParams.WRAP_CONTENT,
                     WindowManager.LayoutParams.WRAP_CONTENT,
-                    WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY,
+                    OVERLAY_TYPE,
                     // Not FLAG_NOT_TOUCHABLE: Android 12+ forces such windows to 80 % opacity. The
                     // window is only as big as its cards, and touches outside it pass through.
                     WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL,
@@ -364,6 +364,14 @@ class PopupManager(private val context: Context) {
 
     private companion object {
         const val TAG = "PopupManager"
+
+        /** The window type for drawing over other apps; Android 7 only has the older one. */
+        @Suppress("DEPRECATION")
+        val OVERLAY_TYPE = if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+            WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY
+        } else {
+            WindowManager.LayoutParams.TYPE_PHONE
+        }
         const val CARD_RGB = 0x1E1F22
         const val LARGE_TEXT = 1.25f
         const val FIRST_BUTTON = "first-button"

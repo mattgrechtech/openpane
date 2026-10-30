@@ -8,7 +8,7 @@ from datetime import datetime, timezone
 from typing import Any
 
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntity, SensorEntityDescription, SensorStateClass
-from homeassistant.const import EntityCategory, UnitOfInformation, UnitOfTime
+from homeassistant.const import EntityCategory, UnitOfInformation, UnitOfTime, PERCENTAGE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -24,9 +24,21 @@ def _timestamp(seconds: Any) -> datetime | None:
 class TvKioskSensorDescription(SensorEntityDescription):
     value: Callable[[dict[str, Any]], Any]
     attributes: Callable[[dict[str, Any]], dict[str, Any]] | None = None
+    # Only for devices that have it (a battery: tablets, not TVs).
+    exists: Callable[[dict[str, Any]], bool] = lambda d: True
 
 
 SENSORS = (
+    TvKioskSensorDescription(
+        key="battery", native_unit_of_measurement=PERCENTAGE, device_class=SensorDeviceClass.BATTERY,
+        state_class=SensorStateClass.MEASUREMENT, value=lambda d: (d.get("battery") or {}).get("level"),
+        exists=lambda d: bool(d.get("battery")),
+    ),
+    TvKioskSensorDescription(
+        key="battery_temperature", native_unit_of_measurement=UnitOfTemperature.CELSIUS, device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT, entity_category=EntityCategory.DIAGNOSTIC,
+        value=lambda d: (d.get("battery") or {}).get("temperature"), exists=lambda d: bool(d.get("battery")),
+    ),
     TvKioskSensorDescription(
         key="page", value=lambda d: d.get("title") or d.get("url"),
         attributes=lambda d: {"url": d.get("url")},
@@ -67,7 +79,8 @@ SENSORS = (
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: TvKioskConfigEntry, add: AddEntitiesCallback) -> None:
-    add(TvKioskSensor(entry.runtime_data, description) for description in SENSORS)
+    data = entry.runtime_data.data or {}
+    add(TvKioskSensor(entry.runtime_data, description) for description in SENSORS if description.exists(data))
 
 
 class TvKioskSensor(TvKioskEntity, SensorEntity):

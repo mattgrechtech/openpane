@@ -31,6 +31,20 @@ class TvKioskApi:
         """Runs a command route such as "notify", "navigate" or "sound/stop"."""
         return await self._request("POST", "/" + route, args or {})
 
+    async def screenshot(self) -> bytes | None:
+        """A JPEG of the dashboard, or None when it isn't on screen."""
+        try:
+            async with self._session.get(
+                self._base + "/screenshot", headers=self._headers, timeout=aiohttp.ClientTimeout(total=15)
+            ) as response:
+                if response.status == 401:
+                    raise TvKioskAuthError("the TV refused the token")
+                if response.status != 200:
+                    return None
+                return await response.read()
+        except (aiohttp.ClientError, TimeoutError) as err:
+            raise TvKioskError(f"can't reach the TV: {err}") from err
+
     async def _request(self, method: str, path: str, body: dict[str, Any] | None = None) -> dict[str, Any]:
         try:
             async with self._session.request(

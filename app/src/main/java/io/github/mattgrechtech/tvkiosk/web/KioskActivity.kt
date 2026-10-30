@@ -569,7 +569,10 @@ class KioskActivity : Activity(), DashboardSurface {
     private fun applyScene(force: Boolean = false) {
         val scene = currentScene()
         if (!force && scene == appliedScene) return
+        val previous = appliedScene
         appliedScene = scene
+        // A scene's brightness lasts only while it does: without one now, back to the device's own.
+        if (previous?.brightness != null && scene?.brightness == null) app.controller.sceneBrightness(-1)
         app.controller.scene = scene
         app.state.update { scene(scene?.label) }
         if (scene == null) return
@@ -820,6 +823,33 @@ class KioskActivity : Activity(), DashboardSurface {
         val now = SystemClock.uptimeMillis()
         dispatchKeyEvent(KeyEvent(now, now, KeyEvent.ACTION_DOWN, code, 0))
         dispatchKeyEvent(KeyEvent(now, SystemClock.uptimeMillis(), KeyEvent.ACTION_UP, code, 0))
+    }
+
+    override fun screenshot(callback: (ByteArray?) -> Unit) {
+        val view = root
+        if (view.width == 0 || view.height == 0) return callback(null)
+        // Half size is plenty to see what's showing, and keeps it small and quick.
+        val bitmap = android.graphics.Bitmap.createBitmap(view.width / 2, view.height / 2, android.graphics.Bitmap.Config.ARGB_8888)
+        val encode = { ok: Boolean ->
+            val bytes = if (!ok) null else java.io.ByteArrayOutputStream().also {
+                bitmap.compress(android.graphics.Bitmap.CompressFormat.JPEG, 80, it)
+            }.toByteArray()
+            bitmap.recycle()
+            callback(bytes)
+        }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            // From the screen's own pixels, so the page's hardware-drawn parts are included.
+            android.view.PixelCopy.request(window, bitmap, { result -> encode(result == android.view.PixelCopy.SUCCESS) }, main)
+        } else {
+            try {
+                val canvas = android.graphics.Canvas(bitmap)
+                canvas.scale(0.5f, 0.5f)
+                view.draw(canvas)
+                encode(true)
+            } catch (e: Exception) {
+                encode(false)
+            }
+        }
     }
 
     override fun typeText(text: String, callback: (Boolean) -> Unit) {

@@ -2,6 +2,9 @@ package io.github.mattgrechtech.tvkiosk.control
 
 import android.app.ActivityManager
 import android.content.Context
+import android.content.Intent
+import android.content.IntentFilter
+import android.os.BatteryManager
 import android.os.Build
 import android.os.Debug
 import android.os.SystemClock
@@ -106,6 +109,25 @@ class KioskState {
     }
 
     /** A full snapshot, including values read from the system at call time. */
+    /**
+     * The battery of a tablet or wall panel: level %, charging, temperature °C; null on TVs and
+     * boxes. Read from Android's last battery broadcast: no listener, no wake-ups.
+     */
+    private fun battery(context: Context): JSONObject? {
+        val intent = runCatching { context.registerReceiver(null, IntentFilter(Intent.ACTION_BATTERY_CHANGED)) }.getOrNull() ?: return null
+        if (!intent.getBooleanExtra(BatteryManager.EXTRA_PRESENT, false)) return null
+        val level = intent.getIntExtra(BatteryManager.EXTRA_LEVEL, -1)
+        val scale = intent.getIntExtra(BatteryManager.EXTRA_SCALE, -1)
+        if (level < 0 || scale <= 0) return null
+        val status = intent.getIntExtra(BatteryManager.EXTRA_STATUS, -1)
+        val temperature = intent.getIntExtra(BatteryManager.EXTRA_TEMPERATURE, Int.MIN_VALUE)
+        return JSONObject()
+            .put("level", level * 100 / scale)
+            .put("charging", status == BatteryManager.BATTERY_STATUS_CHARGING || status == BatteryManager.BATTERY_STATUS_FULL)
+            .put("plugged", intent.getIntExtra(BatteryManager.EXTRA_PLUGGED, 0) != 0)
+            .put("temperature", if (temperature == Int.MIN_VALUE) JSONObject.NULL else temperature / 10.0)
+    }
+
     fun toJson(context: Context): JSONObject {
         val activityManager = context.getSystemService(ActivityManager::class.java)
         val memory = ActivityManager.MemoryInfo().also { activityManager.getMemoryInfo(it) }
@@ -148,6 +170,7 @@ class KioskState {
             .put("memory_total_mb", memory.totalMem / MB)
             .put("memory_low", memory.lowMemory)
             .put("app_memory_mb", appMemory.totalPss / 1024)
+            .put("battery", battery(context) ?: JSONObject.NULL)
             .put("overlay_permission", AndroidSettings.canDrawOverlays(context))
             .put("ip", localIpv4() ?: JSONObject.NULL)
             .put("app_version", BuildConfig.VERSION_NAME)

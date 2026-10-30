@@ -128,6 +128,9 @@
       },
       "webview_version": {
         "name": "WebView version"
+      },
+      "battery_temperature": {
+        "name": "Battery temperature"
       }
     },
     "switch": {
@@ -141,6 +144,11 @@
     "update": {
       "app_update": {
         "name": "TV Kiosk app"
+      }
+    },
+    "camera": {
+      "screen_picture": {
+        "name": "Screen"
       }
     }
   },
@@ -404,6 +412,24 @@
           "description": "One or more TVs."
         }
       }
+    }
+  },
+  "issues": {
+    "unreachable": {
+      "title": "{name} hasn't answered for hours",
+      "description": "Home Assistant can't reach TV Kiosk on {name}. The TV may be off at the wall, in deep standby, on a new IP address, or the app may have stopped. Switch it on and open the dashboard once; if its address changed, reconfigure the TV Kiosk entry."
+    },
+    "no_overlay": {
+      "title": "{name} can't show pop-ups over other apps",
+      "description": "TV Kiosk on {name} doesn't have the 'display over other apps' permission, so pop-ups only appear while the dashboard is open. Grant it over adb (run the provisioning script again) or in the TV's settings."
+    },
+    "background_blocked": {
+      "title": "{name} may stop showing pop-ups",
+      "description": "The TV's own app manager is blocking TV Kiosk from running in the background (seen on TCL TVs), so pop-ups can stop after an update or a restart. Open the dashboard on the TV once, and allow auto-start over adb: see the troubleshooting guide."
+    },
+    "old_webview": {
+      "title": "{name} has an old browser engine",
+      "description": "Android System WebView {version} on {name} is too old for Home Assistant's dashboards, which may show a blank page. Update Android System WebView (or Chrome) from the TV's app store."
     }
   }
 }

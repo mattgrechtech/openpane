@@ -237,7 +237,9 @@ class HttpServer(
         fun write(out: OutputStream, response: Response) {
             val head = buildString {
                 append("HTTP/1.1 ").append(response.status).append(' ').append(reason(response.status)).append("\r\n")
-                append("Content-Type: ").append(response.contentType).append("; charset=utf-8\r\n")
+                append("Content-Type: ").append(response.contentType)
+                if (response.contentType.startsWith("text/") || response.contentType.endsWith("json")) append("; charset=utf-8")
+                append("\r\n")
                 append("Content-Length: ").append(response.body.size).append("\r\n")
                 append("Cache-Control: no-store\r\n")
                 append("X-Content-Type-Options: nosniff\r\n")

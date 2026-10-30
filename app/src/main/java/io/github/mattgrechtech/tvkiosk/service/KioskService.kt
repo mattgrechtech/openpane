@@ -102,6 +102,7 @@ class KioskService : Service() {
                 plannerData = { days -> app.planner.data(days) },
                 plannerTodo = { entity, uid, done -> app.planner.setTodo(entity, uid, done) },
                 plannerNote = { text -> app.planner.addNote(text) },
+                screenshot = { controller.screenshotBlocking() },
             )
             api = startServer(settings[Keys.API_PORT], handler, "API")
             if (api != null) announcer.start(settings[Keys.API_PORT], settings[Keys.DEVICE_ID], settings[Keys.DEVICE_NAME])

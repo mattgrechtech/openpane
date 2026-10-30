@@ -8,6 +8,7 @@ What has actually been tried, where, and when. "Built" features not listed for a
 |---|---|---|---|---|---|
 | TCL Smart TV Pro (Google TV) | 14 | updated 2026-10 | 2026-10 | First-run setup, sign-in, dashboard picker, remote navigation, pop-ups over apps (YouTube), Ring doorbell pop-up with picture, crash recovery, 72-hour run | Works |
 | TCL Smart TV Pro (Google TV) | 14 | updated 2026-10 | 2026-10 | Wake on motion: from rest in 32 ms, dashboard brought forward from the launcher, another app left alone while it played; live camera pop-up. Standby: TV and Android TV Remote drop off the network, so it can't be woken | Works (not from standby) |
+| TCL Smart TV Pro (Google TV), second TV | 14 | updated 2026-10 | 2026-10-31 | Family planner with real calendars; doorbell pop-up paused and resumed YouTube; scenes; phone remote keys; screen picture (80 ms); a page command wakes a resting screen. TCL blocks auto-start until allowed over adb | Works |
 
 ## Not tested yet
 

@@ -45,6 +45,8 @@ interface DashboardSurface {
     fun remoteKey(code: Int)
     /** Types [text] into the page's focused field; false if no field has focus. */
     fun typeText(text: String, callback: (Boolean) -> Unit)
+    /** A JPEG of the dashboard window as it is now (not other apps), or null. */
+    fun screenshot(callback: (ByteArray?) -> Unit)
 }
 
 /**
@@ -147,6 +149,30 @@ class KioskController(
 
     fun takePendingUrl(): String? = pendingUrl.also { pendingUrl = null }
 
+    /**
+     * A JPEG of the dashboard as it is on screen, or why there's none. Blocking: call off the main
+     * thread. Only the app's own window: Android doesn't let an app see other apps' screens.
+     */
+    fun screenshotBlocking(): Pair<ByteArray?, String?> {
+        val done = CountDownLatch(1)
+        var picture: ByteArray? = null
+        var problem: String? = null
+        main.post {
+            val current = surface
+            if (current == null || !state.dashboardVisible) {
+                problem = "the dashboard isn't on screen"
+                done.countDown()
+            } else {
+                current.screenshot { bytes ->
+                    picture = bytes
+                    if (bytes == null) problem = "couldn't take the picture"
+                    done.countDown()
+                }
+            }
+        }
+        return if (done.await(10, TimeUnit.SECONDS)) picture to problem else null to "timed out"
+    }
+
     fun executeBlocking(name: String, args: JSONObject, timeoutSeconds: Long = 10): CommandResult {
         if (Looper.myLooper() == Looper.getMainLooper()) return execute(name, args)
         var result: CommandResult? = null
@@ -166,6 +192,9 @@ class KioskController(
 
     fun execute(name: String, args: JSONObject): CommandResult {
         val result = dispatch(name, args)
+        // Opening a page for someone (a doorbell's camera page) wakes a resting screen, like a pop-up.
+        // Not start_page: that's also how return_after goes back, which shouldn't light the screen.
+        if (result.ok && (name == "url" || name == "navigate")) interaction(SystemClock.elapsedRealtime())
         scheduleReturn(name, args, result)
         AppLog.i(TAG, "Command $name -> ${result.status}" + (result.body.optString("error").takeIf { it.isNotEmpty() }?.let { ": $it" } ?: ""))
         return result

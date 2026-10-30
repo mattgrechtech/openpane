@@ -6,6 +6,9 @@ First public version. Pre-alpha: tested on one TCL Google TV (Android 14), inclu
 
 - Pop-ups can pause what's playing (`pause_media`, for the doorbell): Netflix, YouTube or live TV pause while it's up and resume when it closes, only if the pop-up paused them.
 - TCL and similar TVs: the app reports when the maker's app manager blocks it restarting after an update or boot (*Auto-start*, *Background service* in the admin page); provisioning allows it.
+- Battery: tablets report level, charging and temperature (`battery` in `/state`, sensors in the integration; nothing on TVs), and a battery care blueprint keeps a wall tablet between 30 and 80 % with a smart plug.
+- Health in Home Assistant: the integration raises Repairs when a TV hasn't answered for hours, can't show pop-ups over other apps, is blocked from running in the background, or has a browser engine too old for HA's dashboards; they clear themselves when fixed.
+- Screen picture: `GET /screenshot` and a *Screen* camera in the integration (off by default) show what the dashboard shows, fetched only when someone looks.
 - Bedtime and screen-time blueprint: a countdown pop-up, then playback stops and the TV switches off at bedtime or when a daily limit (a History stats helper) is used up; switched back on too early, it goes off again after a minute.
 - Family board: a Home Assistant to-do list (`planner_board`) shown as sticky notes across the top of the planner; post from the admin page, the HA app or automations, clear by tapping. `POST /planner/note`.
 - Family planner (`kiosk:planner`): a built-in week view of Home Assistant calendars, each in its own colour, with to-do lists beside it; items tick off by touch or remote. Upright layout for tablets. Choose calendars, lists and days with `planner_calendars`, `planner_todos`, `planner_days`. New API routes `GET /planner` and `POST /planner/todo`.

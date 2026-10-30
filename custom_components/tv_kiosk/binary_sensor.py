@@ -16,11 +16,15 @@ SENSORS = {
     "resting": ("resting", None, False),
     "present": ("present", BinarySensorDeviceClass.OCCUPANCY, False),
     "overlay_permission": ("overlay_permission", None, True),
+    "charging": ("battery.charging", BinarySensorDeviceClass.BATTERY_CHARGING, False),
 }
+# Only where the device has a battery.
+NEEDS_BATTERY = {"charging"}
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: TvKioskConfigEntry, add: AddEntitiesCallback) -> None:
-    add(TvKioskBinarySensor(entry.runtime_data, key) for key in SENSORS)
+    has_battery = bool((entry.runtime_data.data or {}).get("battery"))
+    add(TvKioskBinarySensor(entry.runtime_data, key) for key in SENSORS if has_battery or key not in NEEDS_BATTERY)
 
 
 class TvKioskBinarySensor(TvKioskEntity, BinarySensorEntity):
@@ -32,5 +36,7 @@ class TvKioskBinarySensor(TvKioskEntity, BinarySensorEntity):
 
     @property
     def is_on(self) -> bool | None:
-        value = self.coordinator.data.get(self._field)
+        value = self.coordinator.data
+        for part in self._field.split("."):
+            value = (value or {}).get(part)
         return None if value is None else bool(value)

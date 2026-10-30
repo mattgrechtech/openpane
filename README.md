@@ -40,6 +40,7 @@ That's the dashboard, the pop-ups and remote control of the TV, without a second
 
 **When nobody's watching**
 - **Wake on motion:** the screen rests when nobody is around (black, dimmed, a drifting clock, or a photo-frame page) and wakes when your Home Assistant motion or presence sensors see someone. The page keeps running behind it, so it's back at once with current values. It never takes the screen from a film. No camera needed. On TVs it wakes from its own rest (keep the TV out of standby); tablets wake from screen-off.
+- **Battery care for wall tablets** (a blueprint): charges between 30 and 80 % with a smart plug, so the battery doesn't swell.
 - **Bedtime and screen-time limits** (a blueprint): a countdown warning over whatever's playing, then the TV switches off.
 - **Night screen** for set hours, a **burn-in guard** for OLED screens, and the backlight turned down when black where the device allows it.
 

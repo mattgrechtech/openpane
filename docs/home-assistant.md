@@ -210,6 +210,12 @@ actions:
     data: { command: navigate, args: { path: /lovelace/cameras, return_after: 120 } }
 ```
 
+## Wall tablet battery care
+
+A tablet on charge all day wears its battery out, and an old one can swell. With the TV Kiosk integration, a tablet shows its battery level, charging and battery temperature (TVs don't have one). The battery care blueprint keeps it between two levels (30-80 % by default) with a smart plug on the charger, pauses charging if the battery gets hot, and always charges if it gets very low.
+
+[![Import the blueprint](https://my.home-assistant.io/badges/blueprint_import.svg)](https://my.home-assistant.io/redirect/blueprint_import/?blueprint_url=https%3A%2F%2Fgithub.com%2Fmattgrechtech%2Fha-tv-kiosk%2Fblob%2Fmain%2Fblueprints%2Fautomation%2Ftv-kiosk%2Fbattery_care.yaml)
+
 ## Bedtime and screen time
 
 A blueprint ends TV time at bedtime, or once a daily limit is used up: a countdown pop-up warns first (over whatever is playing), then playback stops and the TV switches off. Switched back on before the "allowed again" time, it gets a minute's warning and goes off again.

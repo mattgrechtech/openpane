@@ -35,6 +35,7 @@ curl -X POST -H "Authorization: Bearer $TOKEN" -H "Content-Type: application/jso
 | `POST /now_playing/stop` | | Close it |
 | `POST /pointer` | `{"enabled": true}` | On-screen pointer on/off (omit `enabled` to toggle) |
 | `POST /remote` | `{"key": "ok"}` or `{"text": "kitchen"}` | The phone remote: `key` is `up`, `down`, `left`, `right`, `ok`, `back`, `menu`, `play_pause`, `enter` or `backspace`, pressed as on the TV's remote; `text` (up to 500 characters) is typed into the page's focused field |
+| `GET /screenshot` | | A JPEG of what the dashboard shows (half size), or 409 while another app is in front. Only TV Kiosk's own window: Android doesn't let apps see other apps |
 | `GET /planner?days=7` | | The [family planner](planner.md)'s data: calendars, events and open to-do items |
 | `POST /planner/note` | `{"text": "Back at 5"}` | Posts a note to the family board (`planner_board`) |
 | `POST /planner/todo` | `{"entity_id": "todo.shopping_list", "uid": "…", "done": true}` | Ticks a planner to-do item off (or `done: false` to bring it back) |

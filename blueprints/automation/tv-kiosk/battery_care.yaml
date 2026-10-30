@@ -1,0 +1,109 @@
+blueprint:
+  name: Wall tablet battery care (TV Kiosk)
+  description: >-
+    A tablet on charge all day, every day, wears its battery out and can make it swell. This keeps
+    it between two levels with a smart plug: the plug switches off at the upper level and on again
+    at the lower one. It also warns you if the battery gets hot, and switches the plug on whatever
+    happens if the level gets very low, so the tablet never dies.
+
+
+    Needs the TV Kiosk integration (the tablet's battery sensor) and a smart plug for its charger.
+  domain: automation
+  source_url: https://github.com/mattgrechtech/ha-tv-kiosk/blob/main/blueprints/automation/tv-kiosk/battery_care.yaml
+  input:
+    battery:
+      name: Tablet battery
+      selector:
+        entity:
+          filter:
+            - integration: tv_kiosk
+              domain: sensor
+              device_class: battery
+    plug:
+      name: Charger's smart plug
+      selector:
+        entity:
+          filter:
+            - domain: switch
+    upper:
+      name: Stop charging at
+      default: 80
+      selector:
+        number: { min: 50, max: 100, unit_of_measurement: "%" }
+    lower:
+      name: Start charging at
+      default: 30
+      selector:
+        number: { min: 10, max: 60, unit_of_measurement: "%" }
+    hot:
+      name: Warn above (°C)
+      default: 42
+      selector:
+        number: { min: 35, max: 60, unit_of_measurement: "°C" }
+    temperature:
+      name: Battery temperature (optional)
+      default: ""
+      selector:
+        entity:
+          filter:
+            - integration: tv_kiosk
+              domain: sensor
+              device_class: temperature
+    notify:
+      name: Warn with (optional)
+      description: A notify action, for example notify.mobile_app_your_phone.
+      default: ""
+      selector:
+        text:
+
+mode: queued
+max_exceeded: silent
+
+trigger_variables:
+  temperature: !input temperature
+  hot: !input hot
+
+triggers:
+  - trigger: numeric_state
+    entity_id: !input battery
+    above: !input upper
+    id: full
+  - trigger: numeric_state
+    entity_id: !input battery
+    below: !input lower
+    id: low
+  - trigger: numeric_state
+    entity_id: !input battery
+    below: 15
+    id: very_low
+  - trigger: template
+    value_template: "{{ temperature != '' and states(temperature) | float(0) > hot | float(0) }}"
+    id: hot
+
+variables:
+  notify: !input notify
+  battery: !input battery
+
+actions:
+  - choose:
+      - conditions: "{{ trigger.id == 'full' }}"
+        sequence:
+          - action: switch.turn_off
+            target:
+              entity_id: !input plug
+      - conditions: "{{ trigger.id in ['low', 'very_low'] }}"
+        sequence:
+          - action: switch.turn_on
+            target:
+              entity_id: !input plug
+      - conditions: "{{ trigger.id == 'hot' }}"
+        sequence:
+          - action: switch.turn_off
+            target:
+              entity_id: !input plug
+          - if: "{{ notify != '' }}"
+            then:
+              - action: "{{ notify }}"
+                data:
+                  title: Tablet battery is hot
+                  message: "{{ state_attr(battery, 'friendly_name') }}: charging paused until it cools down."

@@ -31,6 +31,8 @@ class ApiHandler(
     private val plannerTodo: (String, String, Boolean) -> JSONObject = { _, _, _ -> JSONObject().put("ok", false) },
     /** Posts a note to the family board. */
     private val plannerNote: (String) -> JSONObject = { JSONObject().put("ok", false) },
+    /** A JPEG of the dashboard, or null and why. Blocking. */
+    private val screenshot: () -> Pair<ByteArray?, String?> = { null to "not available" },
     private val clock: () -> Long = System::currentTimeMillis,
 ) : (Request) -> Response {
 
@@ -74,6 +76,11 @@ class ApiHandler(
             val log = all.optJSONArray("log") ?: org.json.JSONArray()
             val text = (maxOf(0, log.length() - wanted) until log.length()).joinToString("\n") { log.optString(it) }
             return HttpServer.Response(200, text, "text/plain")
+        }
+        if (route == "/screenshot") {
+            if (request.method != "GET") return error(405, "use GET")
+            val (picture, problem) = screenshot()
+            return if (picture != null) Response(200, picture, "image/jpeg") else error(409, problem ?: "no picture")
         }
         if (route == "/planner") {
             if (request.method != "GET") return error(405, "use GET")

@@ -12,6 +12,7 @@ from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.typing import ConfigType
 
+from . import health
 from .api import TvKioskApi, TvKioskError
 from .const import DOMAIN
 from .coordinator import TvKioskCoordinator
@@ -19,6 +20,7 @@ from .coordinator import TvKioskCoordinator
 PLATFORMS = [
     Platform.BINARY_SENSOR,
     Platform.BUTTON,
+    Platform.CAMERA,
     Platform.NOTIFY,
     Platform.NUMBER,
     Platform.SELECT,
@@ -139,3 +141,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: TvKioskConfigEntry) -> b
 
 async def async_unload_entry(hass: HomeAssistant, entry: TvKioskConfigEntry) -> bool:
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+
+
+async def async_remove_entry(hass: HomeAssistant, entry: TvKioskConfigEntry) -> None:
+    """A removed TV leaves no Repairs behind."""
+    health.clear_all(hass, entry.entry_id)

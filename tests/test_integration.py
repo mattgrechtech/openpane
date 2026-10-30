@@ -106,6 +106,49 @@ async def test_notify_action_reaches_the_tv(hass: HomeAssistant, aioclient_mock:
     assert sent[0][2] == {"title": "Front door", "sound": "doorbell", "actions": [{"label": "Unlock", "event": "unlock_front"}]}
 
 
+async def test_health_repairs(hass: HomeAssistant, aioclient_mock: AiohttpClientMocker) -> None:
+    from homeassistant.helpers import issue_registry as ir
+
+    aioclient_mock.get(
+        f"{BASE}/state",
+        json={**STATE, "webview_version": "91.0.4472", "wake": {"overlay_permission": False, "auto_start": "allowed", "service_protected": True}},
+    )
+    entry = MockConfigEntry(domain=DOMAIN, unique_id="a1b2c3d4", title="Living room TV",
+                            data={CONF_HOST: HOST, CONF_PORT: 2424, CONF_TOKEN: "secret"})
+    entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+    issues = ir.async_get(hass)
+    assert issues.async_get_issue(DOMAIN, f"{entry.entry_id}_old_webview") is not None
+    assert issues.async_get_issue(DOMAIN, f"{entry.entry_id}_no_overlay") is not None
+    assert issues.async_get_issue(DOMAIN, f"{entry.entry_id}_background_blocked") is None
+
+
+async def test_healthy_tv_has_no_repairs(hass: HomeAssistant, aioclient_mock: AiohttpClientMocker) -> None:
+    from homeassistant.helpers import issue_registry as ir
+
+    entry = await _set_up(hass, aioclient_mock)
+    assert not [i for i in ir.async_get(hass).issues.values() if i.domain == DOMAIN and i.issue_id.startswith(entry.entry_id)]
+
+
+async def test_battery_only_on_tablets(hass: HomeAssistant, aioclient_mock: AiohttpClientMocker) -> None:
+    await _set_up(hass, aioclient_mock)
+    # The TV in STATE has no battery: no battery entities.
+    assert hass.states.get("sensor.living_room_tv_battery") is None
+    assert hass.states.get("binary_sensor.living_room_tv_charging") is None
+
+
+async def test_tablet_battery(hass: HomeAssistant, aioclient_mock: AiohttpClientMocker) -> None:
+    aioclient_mock.get(f"{BASE}/state", json={**STATE, "battery": {"level": 64, "charging": True, "plugged": True, "temperature": 31.5}})
+    entry = MockConfigEntry(domain=DOMAIN, unique_id="a1b2c3d4", title="Living room TV",
+                            data={CONF_HOST: HOST, CONF_PORT: 2424, CONF_TOKEN: "secret"})
+    entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+    assert hass.states.get("sensor.living_room_tv_battery").state == "64"
+    assert hass.states.get("binary_sensor.living_room_tv_charging").state == "on"
+
+
 async def test_wake_button(hass: HomeAssistant, aioclient_mock: AiohttpClientMocker) -> None:
     await _set_up(hass, aioclient_mock)
     aioclient_mock.post(f"{BASE}/wake", json={"ok": True})

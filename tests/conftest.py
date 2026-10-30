@@ -1,4 +1,4 @@
-"""Tests for the TV Kiosk Home Assistant integration (pytest-homeassistant-custom-component)."""
+"""Tests for the OpenPane Home Assistant integration (pytest-homeassistant-custom-component)."""
 
 import pytest
 

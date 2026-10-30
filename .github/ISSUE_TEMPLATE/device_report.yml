@@ -1,5 +1,5 @@
 name: Device report
-description: Tried TV Kiosk on a TV or tablet? Tell us how it went, good or bad.
+description: Tried OpenPane on a TV or tablet? Tell us how it went, good or bad.
 labels: [device-report]
 body:
   - type: input
@@ -13,7 +13,7 @@ body:
     id: versions
     attributes:
       label: Versions
-      description: TV Kiosk, Android and WebView versions (Settings → Status and about).
+      description: OpenPane, Android and WebView versions (Settings → Status and about).
     validations:
       required: true
   - type: checkboxes

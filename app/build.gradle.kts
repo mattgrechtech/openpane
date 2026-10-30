@@ -29,13 +29,13 @@ val signing: Map<String, String>? = run {
 }
 
 android {
-    namespace = "io.github.mattgrechtech.tvkiosk"
+    namespace = "io.github.mattgrechtech.openpane"
     compileSdk = 35
     buildToolsVersion = "35.0.0"
 
     defaultConfig {
         // Permanent: changing it makes Android treat the app as new (users would have to reinstall).
-        applicationId = "io.github.mattgrechtech.tvkiosk"
+        applicationId = "io.github.mattgrechtech.openpane"
         minSdk = 24
         targetSdk = 35
         versionName = appVersion

@@ -1,5 +1,5 @@
-// Family planner: the household's Home Assistant calendars and to-do lists, served by TV Kiosk.
-// On the TV the app hands the token in through tvKioskConnect(); elsewhere it comes from #token=.
+// Family planner: the household's Home Assistant calendars and to-do lists, served by OpenPane.
+// On the TV the app hands the token in through openPaneConnect(); elsewhere it comes from #token=.
 "use strict";
 
 const PALETTE = ["#4c8dff", "#3fb950", "#f0883e", "#db61a2", "#a371f7", "#2fbcb2", "#e3b341", "#f85149"];
@@ -185,8 +185,8 @@ async function tick(entity, item, button) {
   }
 }
 
-/** Called by TV Kiosk on the TV with its API token and the number of days to show. */
-window.tvKioskConnect = (value, count) => {
+/** Called by OpenPane on the TV with its API token and the number of days to show. */
+window.openPaneConnect = (value, count) => {
   document.documentElement.classList.add("tv");
   token = value;
   days = Math.max(1, Math.min(14, Number(count) || 7));

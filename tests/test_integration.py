@@ -1,4 +1,4 @@
-"""Set-up, entities and actions of the TV Kiosk integration, against a mocked TV."""
+"""Set-up, entities and actions of the OpenPane integration, against a mocked TV."""
 
 from ipaddress import ip_address
 
@@ -11,7 +11,7 @@ from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 from pytest_homeassistant_custom_component.test_util.aiohttp import AiohttpClientMocker
 
-from custom_components.tv_kiosk.const import DOMAIN
+from custom_components.openpane.const import DOMAIN
 
 HOST = "192.168.1.60"
 BASE = f"http://{HOST}:2424/api/v1"
@@ -51,8 +51,8 @@ async def test_user_flow_wrong_token(hass: HomeAssistant, aioclient_mock: Aiohtt
 async def test_discovered_tv_asks_only_for_the_token(hass: HomeAssistant, aioclient_mock: AiohttpClientMocker) -> None:
     aioclient_mock.get(f"{BASE}/state", json=STATE)
     info = ZeroconfServiceInfo(
-        ip_address=ip_address(HOST), ip_addresses=[ip_address(HOST)], hostname="tv.local.", name="TV Kiosk Living room TV",
-        port=2424, type="_tvkiosk._tcp.local.", properties={"id": "a1b2c3d4", "name": "Living room TV", "version": "0.1.0"},
+        ip_address=ip_address(HOST), ip_addresses=[ip_address(HOST)], hostname="tv.local.", name="OpenPane Living room TV",
+        port=2424, type="_openpane._tcp.local.", properties={"id": "a1b2c3d4", "name": "Living room TV", "version": "0.1.0"},
     )
     result = await hass.config_entries.flow.async_init(DOMAIN, context={"source": config_entries.SOURCE_ZEROCONF}, data=info)
     assert result["type"] is FlowResultType.FORM
@@ -67,7 +67,7 @@ async def test_rediscovery_never_moves_the_tv(hass: HomeAssistant) -> None:
     entry.add_to_hass(hass)
     info = ZeroconfServiceInfo(
         ip_address=ip_address(HOST), ip_addresses=[ip_address(HOST)], hostname="tv.local.", name="x",
-        port=2424, type="_tvkiosk._tcp.local.", properties={"id": "a1b2c3d4"},
+        port=2424, type="_openpane._tcp.local.", properties={"id": "a1b2c3d4"},
     )
     result = await hass.config_entries.flow.async_init(DOMAIN, context={"source": config_entries.SOURCE_ZEROCONF}, data=info)
     assert result["type"] is FlowResultType.ABORT

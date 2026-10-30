@@ -1,9 +1,9 @@
-// TV Kiosk web admin. Talks only to this TV's own API, with the token the user enters.
+// OpenPane web admin. Talks only to this TV's own API, with the token the user enters.
 // Everything is rendered with textContent: nothing from the TV is ever parsed as HTML.
 "use strict";
 
 const API = "/api/v1";
-const STORE = "tvkiosk-token";
+const STORE = "openpane-token";
 
 const GROUPS = [
   ["What the TV shows", ["mode", "start_url", "ha_url", "auth_mode", "ha_long_lived_token", "ha_kiosk_mode", "pages", "rotate_seconds", "scenes"]],
@@ -175,10 +175,10 @@ async function refreshState() {
     card("Reloads", s.reload_count + (s.last_reload_reason ? " · last: " + s.last_reload_reason : "")),
     card("Memory", s.app_memory_mb + " MB used · " + s.memory_available_mb + " MB free", s.memory_low ? "warn" : ""),
     card("Running for", Math.round(s.app_uptime_s / 3600) + " h"),
-    card("Versions", "TV Kiosk " + s.app_version + " · WebView " + s.webview_version + " · Android " + s.android_version),
+    card("Versions", "OpenPane " + s.app_version + " · WebView " + s.webview_version + " · Android " + s.android_version),
     card("Device", (s.manufacturer || "") + " " + (s.model || "") + " · " + (s.ip || "")),
     s.update
-      ? card("Updates", s.update.available ? "TV Kiosk " + s.update.latest + " is out" : "up to date", s.update.available ? "warn" : "ok")
+      ? card("Updates", s.update.available ? "OpenPane " + s.update.latest + " is out" : "up to date", s.update.available ? "warn" : "ok")
       : card("Updates", "not checked (Settings → check_updates)"),
   ];
   $("cards").replaceChildren(...cards);
@@ -282,7 +282,7 @@ async function save() {
 async function exportSettings() {
   try {
     const data = await api("/settings");
-    const name = "tv-kiosk-settings-" + (current.device_name || "tv").replace(/[^a-z0-9]+/gi, "-").toLowerCase() + ".json";
+    const name = "openpane-settings-" + (current.device_name || "tv").replace(/[^a-z0-9]+/gi, "-").toLowerCase() + ".json";
     const url = URL.createObjectURL(new Blob([JSON.stringify(data.settings, null, 2)], { type: "application/json" }));
     const a = el("a", { href: url, download: name });
     document.body.append(a);
@@ -335,7 +335,7 @@ async function downloadDiagnostics(event) {
   try {
     const data = await api("/diagnostics");
     const url = URL.createObjectURL(new Blob([JSON.stringify(data, null, 2)], { type: "application/json" }));
-    const a = el("a", { href: url, download: "tv-kiosk-diagnostics.json" });
+    const a = el("a", { href: url, download: "openpane-diagnostics.json" });
     document.body.append(a);
     a.click();
     a.remove();

@@ -6,7 +6,7 @@ A built-in page that shows the household's week: every Home Assistant calendar i
 - **To-do lists:** open items with due dates (late ones stand out). Tap an item on a touch screen, or highlight it with the remote and press OK, and it's ticked off in Home Assistant.
 - **Any calendar Home Assistant has:** Google, Microsoft 365 and Outlook, iCloud (CalDAV), Local Calendar, school or sports calendars, bin days. Any to-do list: the Shopping List, Local To-do, Todoist, Google Tasks, Bring!, Microsoft To Do.
 - **Upright tablets:** the days become rows, with the lists underneath.
-- **Nothing extra to install:** the TV app serves the page itself, reads Home Assistant with its own sign-in, and keeps it current every minute. Nothing goes to the cloud.
+- **Nothing extra to install:** OpenPane serves the page itself, reads Home Assistant with its own sign-in, and keeps it current every minute. Nothing goes to the cloud.
 
 ## Family board
 
@@ -32,7 +32,7 @@ Use `kiosk:planner` wherever a page goes:
   21:30 /lovelace/0 brightness=30 rest_after=5
   ```
 
-- **From an automation:** `tv_kiosk.open_url` with `url: kiosk:planner` (or the REST `url` command), with `return_after` to go back to the dashboard.
+- **From an automation:** `openpane.open_url` with `url: kiosk:planner` (or the REST `url` command), with `return_after` to go back to the dashboard.
 
 On a phone or computer: the admin page's Overview has **Open the family planner**.
 
@@ -56,4 +56,4 @@ Calendars take the planner's colours in the order Home Assistant lists them.
 
 ## Ideas for later
 
-Adding events and list items from the phone, a month view, per-person filters and colours, meal plans, and weather in the header. [Tell us](https://github.com/mattgrechtech/ha-tv-kiosk/issues) what your family would use.
+Adding events and list items from the phone, a month view, per-person filters and colours, meal plans, and weather in the header. [Tell us](https://github.com/mattgrechtech/openpane/issues) what your family would use.

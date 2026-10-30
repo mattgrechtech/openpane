@@ -18,13 +18,13 @@ Every release must be signed with the same key, or Android won't install it over
 
 1. Create it (asks for a password and a name):
    ```powershell
-   keytool -genkeypair -v -keystore $HOME\keys\tv-kiosk-release.jks -alias release -keyalg RSA -keysize 4096 -validity 10000
+   keytool -genkeypair -v -keystore $HOME\keys\openpane-release.jks -alias release -keyalg RSA -keysize 4096 -validity 10000
    ```
 2. Add four repository secrets (GitHub → the repo → Settings → Secrets and variables → Actions → New repository secret):
 
    | Secret | Value |
    |---|---|
-   | `KEYSTORE_BASE64` | the `.jks` file as base64: `[Convert]::ToBase64String([IO.File]::ReadAllBytes("$HOME\keys\tv-kiosk-release.jks")) \| Set-Clipboard`, then paste |
+   | `KEYSTORE_BASE64` | the `.jks` file as base64: `[Convert]::ToBase64String([IO.File]::ReadAllBytes("$HOME\keys\openpane-release.jks")) \| Set-Clipboard`, then paste |
    | `KEYSTORE_PASSWORD` | the keystore password |
    | `KEY_ALIAS` | `release` |
    | `KEY_PASSWORD` | the key password (the same as the keystore password unless you chose another) |
@@ -39,9 +39,9 @@ Every release must be signed with the same key, or Android won't install it over
    git tag v0.1.0
    git push origin v0.1.0
    ```
-   The **Release** workflow checks the tag matches `appVersion`, runs the tests, builds the signed APK and creates a **draft** release with `tv-kiosk-v0.1.0.apk` and its `.sha256`.
+   The **Release** workflow checks the tag matches `appVersion`, runs the tests, builds the signed APK and creates a **draft** release with `openpane-v0.1.0.apk` and its `.sha256`.
 5. Download the APK from the draft and check it on a TV:
-   - `adb install -r tv-kiosk-v0.1.0.apk`;
+   - `adb install -r openpane-v0.1.0.apk`;
    - setup finds Home Assistant, signs in and lists dashboards;
    - a pop-up from Home Assistant shows, with its picture.
 6. Publish the draft (edit the release → paste the changelog section → Publish).

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Generates the TV banner and launcher icons from code, so they can be redone when the name changes.
 
-    python tools/make_assets.py "TV Kiosk"
+    python tools/make_assets.py "OpenPane"
 
 Needs Pillow (pip install pillow). Writes:
   app/src/main/res/drawable-xhdpi/banner.png        320x180 (Google Play TV rules TV-LB/TV-BN: must show the name)
@@ -123,6 +123,6 @@ def icons():
 
 
 if __name__ == "__main__":
-    app_name = sys.argv[1] if len(sys.argv) > 1 else "TV Kiosk"
+    app_name = sys.argv[1] if len(sys.argv) > 1 else "OpenPane"
     banner(app_name)
     icons()

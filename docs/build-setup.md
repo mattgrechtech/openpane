@@ -90,13 +90,13 @@ To make it permanent, set the same `JAVA_TOOL_OPTIONS` as a user environment var
 Release builds are signed. Create a key once and keep it **outside the repo**, in a password manager plus a backup: losing it means everyone has to uninstall to update.
 
 ```powershell
-keytool -genkeypair -v -keystore $HOME\keys\tv-kiosk-release.jks -alias release -keyalg RSA -keysize 4096 -validity 10000
+keytool -genkeypair -v -keystore $HOME\keys\openpane-release.jks -alias release -keyalg RSA -keysize 4096 -validity 10000
 ```
 
 Then either put a `keystore.properties` file in the repo folder (it's git-ignored):
 
 ```properties
-storeFile=C:/Users/you/keys/tv-kiosk-release.jks
+storeFile=C:/Users/you/keys/openpane-release.jks
 storePassword=...
 keyAlias=release
 keyPassword=...

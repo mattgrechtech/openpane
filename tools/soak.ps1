@@ -18,7 +18,7 @@ param(
     [switch]$Release
 )
 
-$ns = 'io.github.mattgrechtech.tvkiosk'
+$ns = 'io.github.mattgrechtech.openpane'
 $pkg = if ($Release) { $ns } else { "$ns.debug" }
 $receiver = "$pkg/$ns.service.ProvisionReceiver"
 $target = "${Tv}:5555"

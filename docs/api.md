@@ -35,7 +35,7 @@ curl -X POST -H "Authorization: Bearer $TOKEN" -H "Content-Type: application/jso
 | `POST /now_playing/stop` | | Close it |
 | `POST /pointer` | `{"enabled": true}` | On-screen pointer on/off (omit `enabled` to toggle) |
 | `POST /remote` | `{"key": "ok"}` or `{"text": "kitchen"}` | The phone remote: `key` is `up`, `down`, `left`, `right`, `ok`, `back`, `menu`, `play_pause`, `enter` or `backspace`, pressed as on the TV's remote; `text` (up to 500 characters) is typed into the page's focused field |
-| `GET /screenshot` | | A JPEG of what the dashboard shows (half size), or 409 while another app is in front. Only TV Kiosk's own window: Android doesn't let apps see other apps |
+| `GET /screenshot` | | A JPEG of what the dashboard shows (half size), or 409 while another app is in front. Only OpenPane's own window: Android doesn't let apps see other apps |
 | `GET /planner?days=7` | | The [family planner](planner.md)'s data: calendars, events and open to-do items |
 | `POST /planner/note` | `{"text": "Back at 5"}` | Posts a note to the family board (`planner_board`) |
 | `POST /planner/todo` | `{"entity_id": "todo.shopping_list", "uid": "…", "done": true}` | Ticks a planner to-do item off (or `done: false` to bring it back) |
@@ -75,9 +75,9 @@ The same names work in `POST /settings`, adb `CONFIGURE` and a settings export. 
 | `remote_mode` | `buttons` | `buttons` (jump between items), `pointer` (on-screen pointer), `page` (arrows go to the page) |
 | `keep_screen_on` | `true` | Stop the TV's screensaver over the dashboard |
 | `orientation` | `auto` | `auto`, `landscape`, `portrait`, `reverse_landscape`, `reverse_portrait` |
-| `home_app` | `false` | Offer TV Kiosk as the home screen (tablets, wall displays); then press Home and choose it |
+| `home_app` | `false` | Offer OpenPane as the home screen (tablets, wall displays); then press Home and choose it |
 | `do_not_disturb` | `false` | Pop-ups and their sounds are held back unless `priority` is `high`. Also `POST /do_not_disturb` `{"enabled"}`, the MQTT switch and the integration's switch |
-| `key_events` | `false` | While the dashboard is in front, the colour keys (`red`, `green`, `yellow`, `blue`) and digits `0`–`9` fire a `tv_kiosk_key` event in Home Assistant (`key`, `long`, `device_id`, `device_name`) and the MQTT event entity (`event_type: key`). Navigation, Back, Home, volume and media keys are never taken |
+| `key_events` | `false` | While the dashboard is in front, the colour keys (`red`, `green`, `yellow`, `blue`) and digits `0`–`9` fire a `openpane_key` event in Home Assistant (`key`, `long`, `device_id`, `device_name`) and the MQTT event entity (`event_type: key`). Navigation, Back, Home, volume and media keys are never taken |
 | `burn_in_guard` | `false` | Move the page a few pixels every 2 minutes, against burn-in on OLED screens |
 | `check_updates` | `false` | Once a day, ask GitHub whether a newer release is out; shown in Settings, the admin page, `/state` (`update`) and the integration's update entity. Never installs anything |
 | `rest_after_minutes` | `0` | Rest (darken) the screen after this many minutes without motion, presence or the remote; `0` is never, else 1–240 |
@@ -104,7 +104,7 @@ The same names work in `POST /settings`, adb `CONFIGURE` and a settings export. 
 | `mqtt_enabled` | `false` | |
 | `mqtt_host`, `mqtt_port`, `mqtt_tls`, `mqtt_user` | `""`, `1883`, `false`, `""` | Broker connection |
 | `mqtt_password` | | Secret |
-| `mqtt_base_topic` | `tvkiosk` | |
+| `mqtt_base_topic` | `openpane` | |
 | `mqtt_discovery_prefix` | `homeassistant` | |
 | `device_name` | the TV's model | The name in Home Assistant and in diagnostics |
 | `settings_pin` | | Secret. 4–8 digits to protect the TV's settings screen. Send `""` to remove it |
@@ -140,12 +140,12 @@ For example `{"pages": ["http://192.168.1.50:8123/cameras"], "rotate_seconds": 6
 
 The token-less TvOverlay-compatible port only passes TvOverlay's fields and the look (`size`, `opacity`, `text_size`): no buttons, cameras, streams, sounds, speech, QR codes, priority, or pop-ups that stay up.
 
-**Buttons that tell Home Assistant.** A button with `"event": "unlock_front"` (lower case letters, digits and `_`) fires a `tv_kiosk_action` event in Home Assistant when pressed, with `action`, `label`, `popup_id`, `title`, `device_id` and `device_name`. The TV sends it with its own sign-in, so nothing else is needed. Over MQTT the TV's *Pop-up button* event entity fires too. An automation acts on it:
+**Buttons that tell Home Assistant.** A button with `"event": "unlock_front"` (lower case letters, digits and `_`) fires a `openpane_action` event in Home Assistant when pressed, with `action`, `label`, `popup_id`, `title`, `device_id` and `device_name`. The TV sends it with its own sign-in, so nothing else is needed. Over MQTT the TV's *Pop-up button* event entity fires too. An automation acts on it:
 
 ```yaml
 triggers:
   - trigger: event
-    event_type: tv_kiosk_action
+    event_type: openpane_action
     event_data: { action: unlock_front }
 actions:
   - action: lock.unlock
@@ -223,7 +223,7 @@ The TV appears in Home Assistant as one device through MQTT discovery, with:
 | Dashboard visible, Can show pop-ups over apps | binary sensors |
 | HA connection, last error, app started, reloads, last wake time, app memory, memory available, WebView version, IP | diagnostic sensors |
 
-Topics, with `<base>` = base topic (default `tvkiosk`) and `<id>` = the device id:
+Topics, with `<base>` = base topic (default `openpane`) and `<id>` = the device id:
 
 - `<base>/<id>/availability`: `online`/`offline` (retained; `offline` is the last will).
 - `<base>/<id>/state`: the [State](#state) JSON (retained), refreshed on changes and every minute.
@@ -234,9 +234,9 @@ Topics, with `<base>` = base topic (default `tvkiosk`) and `<id>` = the device i
 For set-up scripts. The receiver needs a permission only adb (the shell) has.
 
 ```bash
-PKG=io.github.mattgrechtech.tvkiosk.debug     # release builds: without .debug
-R=$PKG/io.github.mattgrechtech.tvkiosk.service.ProvisionReceiver
-A=io.github.mattgrechtech.tvkiosk
+PKG=io.github.mattgrechtech.openpane.debug     # release builds: without .debug
+R=$PKG/io.github.mattgrechtech.openpane.service.ProvisionReceiver
+A=io.github.mattgrechtech.openpane
 
 adb shell am broadcast -n $R -a $A.CONFIGURE --es json '{"start_url":"http://192.168.1.50:8123/house?tv=1"}'
 adb shell am broadcast -n $R -a $A.GET_TOKEN
@@ -251,5 +251,5 @@ adb shell am broadcast -n $R -a $A.DIAGNOSTICS                  # also writes An
 
 In the default "jump between buttons" remote mode, the app moves its own highlight between a page's clickable items. A page with its own remote navigation can take the keys instead:
 
-- Put `data-tvkiosk-keys="page"` on the element that holds your controls (it works through shadow roots). While focus is inside it, the arrow keys go to the page as normal key events, OK as Enter, and Back as an Escape keydown (the app doesn't go back in history). Move focus out of it, for example back to a button outside it, to hand the keys back to the app.
+- Put `data-openpane-keys="page"` on the element that holds your controls (it works through shadow roots). While focus is inside it, the arrow keys go to the page as normal key events, OK as Enter, and Back as an Escape keydown (the app doesn't go back in history). Move focus out of it, for example back to a button outside it, to hand the keys back to the app.
 - A focused slider, select or text field gets Left and Right without any marking; Up and Down still move the app's highlight.

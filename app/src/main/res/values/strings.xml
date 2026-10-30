@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <!-- The app name; the TV banner (tools/make_assets.py) shows it too. -->
-    <string name="app_name">TV Kiosk</string>
+    <string name="app_name">OpenPane</string>
 
     <string name="menu_reload">Reload</string>
     <string name="menu_pointer_on">Use the pointer</string>
@@ -192,14 +192,14 @@
     <string name="value_reverse_landscape">Landscape, upside down</string>
     <string name="value_reverse_portrait">Portrait, upside down</string>
     <string name="row_home_app">Use as the home screen</string>
-    <string name="row_home_app_sub">For tablets and wall displays: press Home and choose TV Kiosk, "Always". Turn off to go back to the usual home screen.</string>
+    <string name="row_home_app_sub">For tablets and wall displays: press Home and choose OpenPane, "Always". Turn off to go back to the usual home screen.</string>
     <string name="row_check_updates">Check for updates</string>
     <string name="row_check_updates_sub">Once a day, asks GitHub whether a newer release is out. Never installs anything by itself.</string>
     <string name="row_update">Updates</string>
-    <string name="row_update_available">TV Kiosk %1$s is out: get it from github.com/mattgrechtech/ha-tv-kiosk/releases</string>
+    <string name="row_update_available">OpenPane %1$s is out: get it from github.com/mattgrechtech/openpane/releases</string>
     <string name="row_update_none">Up to date</string>
     <string name="row_key_events">Colour keys and digits to Home Assistant</string>
-    <string name="row_key_events_sub">While the dashboard is in front, the red, green, yellow and blue keys and 0-9 send a tv_kiosk_key event (short or long press) for your automations.</string>
+    <string name="row_key_events_sub">While the dashboard is in front, the red, green, yellow and blue keys and 0-9 send a openpane_key event (short or long press) for your automations.</string>
     <string name="row_burn_in">Burn-in guard</string>
     <string name="row_burn_in_sub">Moves the page a few pixels every couple of minutes. For OLED screens that show the dashboard all day.</string>
     <string name="header_motion">Wake on motion</string>

@@ -18,7 +18,7 @@ param(
 $ErrorActionPreference = 'Stop'
 
 $root = Split-Path -Parent $PSScriptRoot
-$ns = 'io.github.mattgrechtech.tvkiosk'
+$ns = 'io.github.mattgrechtech.openpane'
 if ($Release) {
     $pkg = $ns
     if (-not $Apk) { $Apk = Join-Path $root 'app\build\outputs\apk\release\app-release.apk' }

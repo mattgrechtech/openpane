@@ -17,7 +17,7 @@ First, look at Settings → Status and about: the last error, the last crash and
 **Pop-ups only show on the dashboard, not over other apps.** The app needs "display over other apps". Settings → Pop-ups and API shows whether it has it. Many TVs have no screen for this permission; grant it once over adb:
 
 ```bash
-adb shell appops set io.github.mattgrechtech.tvkiosk SYSTEM_ALERT_WINDOW allow
+adb shell appops set io.github.mattgrechtech.openpane SYSTEM_ALERT_WINDOW allow
 ```
 
 **Pop-ups from TvOverlay automations don't arrive.** Turn on *TvOverlay-compatible pop-ups* (Settings → Pop-ups and API) and make sure TvOverlay itself isn't running on that TV: both use port 5001.
@@ -37,7 +37,7 @@ Some TVs (TCL, and likely other makes with their own app managers) stop apps res
 
 **Motion doesn't wake the screen.** Settings → Screen → *Ready to wake* names what's missing. Also check: is it the night hours (motion is ignored then unless *Motion wakes it at night* is on), and is something playing (the dashboard stays behind a film unless *Motion brings the dashboard back* is *Always*)?
 
-**It wakes from resting but not when the TV is off.** In standby an app can't hear anything, and on most TVs Home Assistant can't switch it on either. Turn off the TV's own sleep timer and let TV Kiosk rest the screen instead: see [Wake on motion](home-assistant.md#wake-on-motion).
+**It wakes from resting but not when the TV is off.** In standby an app can't hear anything, and on most TVs Home Assistant can't switch it on either. Turn off the TV's own sleep timer and let OpenPane rest the screen instead: see [Wake on motion](home-assistant.md#wake-on-motion).
 
 ## Permissions over adb
 
@@ -45,7 +45,7 @@ Many TVs and some tablets have no settings screen for these. Connect once from a
 
 ```bash
 # Pop-ups over other apps, and bringing the dashboard forward
-adb shell appops set io.github.mattgrechtech.tvkiosk SYSTEM_ALERT_WINDOW allow
+adb shell appops set io.github.mattgrechtech.openpane SYSTEM_ALERT_WINDOW allow
 ```
 
 ```bash
@@ -53,15 +53,15 @@ adb shell appops set io.github.mattgrechtech.tvkiosk SYSTEM_ALERT_WINDOW allow
 adb shell appops set <package> AUTO_START allow
 
 # Android 14+: wake on motion may turn the screen on
-adb shell appops set io.github.mattgrechtech.tvkiosk TURN_SCREEN_ON allow
+adb shell appops set io.github.mattgrechtech.openpane TURN_SCREEN_ON allow
 ```
 
 ```bash
 # Keep running in the background (API, MQTT, pop-ups)
-adb shell dumpsys deviceidle whitelist +io.github.mattgrechtech.tvkiosk
+adb shell dumpsys deviceidle whitelist +io.github.mattgrechtech.openpane
 ```
 
-Some makes add their own app-killers on top: on Xiaomi/Mi boxes allow *Autostart*; on Fire TV and Fire tablets keep the app out of any "optimise" or "clean" lists; on Samsung tablets set the app's battery use to *Unrestricted*. Reports for other makes are welcome: [device report](https://github.com/mattgrechtech/ha-tv-kiosk/issues/new?template=device_report.yml).
+Some makes add their own app-killers on top: on Xiaomi/Mi boxes allow *Autostart*; on Fire TV and Fire tablets keep the app out of any "optimise" or "clean" lists; on Samsung tablets set the app's battery use to *Unrestricted*. Reports for other makes are welcome: [device report](https://github.com/mattgrechtech/openpane/issues/new?template=device_report.yml).
 
 ## Remote
 
@@ -74,8 +74,8 @@ Some makes add their own app-killers on top: on Xiaomi/Mi boxes allow *Autostart
 The PIN only protects the settings screen on the TV. To remove it, any of:
 
 - from Home Assistant or a computer, with the API token: `POST /api/v1/settings` with `{"settings_pin": ""}`;
-- over adb: `adb shell am broadcast -n io.github.mattgrechtech.tvkiosk/.service.ProvisionReceiver -a io.github.mattgrechtech.tvkiosk.CONFIGURE --es json '{"settings_pin":""}'`;
-- in the TV's own settings: Apps → TV Kiosk → Clear data (this resets everything, including the sign-in).
+- over adb: `adb shell am broadcast -n io.github.mattgrechtech.openpane/.service.ProvisionReceiver -a io.github.mattgrechtech.openpane.CONFIGURE --es json '{"settings_pin":""}'`;
+- in the TV's own settings: Apps → OpenPane → Clear data (this resets everything, including the sign-in).
 
 ## Updating and uninstalling
 

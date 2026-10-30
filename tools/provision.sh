@@ -23,14 +23,14 @@ for arg in "$@"; do
 done
 
 root="$(cd "$(dirname "$0")/.." && pwd)"
-pkg="io.github.mattgrechtech.tvkiosk"
+pkg="io.github.mattgrechtech.openpane"
 if [ "$release" = 1 ]; then
   apk="${apk:-$root/app/build/outputs/apk/release/app-release.apk}"
 else
   pkg="$pkg.debug"
   apk="${apk:-$root/app/build/outputs/apk/debug/app-debug.apk}"
 fi
-ns="io.github.mattgrechtech.tvkiosk"
+ns="io.github.mattgrechtech.openpane"
 receiver="$pkg/$ns.service.ProvisionReceiver"
 
 case "$url" in http://*|https://*) ;; *) echo "The start URL must begin with http:// or https://" >&2; exit 2 ;; esac

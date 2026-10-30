@@ -1,0 +1,135 @@
+blueprint:
+  name: TV bedtime and screen-time limit (OpenPane)
+  description: >-
+    Ends TV time at bedtime, or once a daily screen-time limit is used up: a countdown pop-up
+    warns first (over Netflix, YouTube or live TV), then what's playing stops and the TV switches
+    off. Pick the days it applies. Bedtime alone works; for a daily limit, make a "History stats"
+    helper that counts the hours the TV's media player was "on" today, and pick it below.
+
+
+    Needs the OpenPane integration (for the warning) and the TV's own media player (Android TV
+    Remote integration or similar) to stop playback and switch the TV off. Nothing can fully lock
+    a TV: this switches it off, and does it again if it's switched back on before the end time.
+  domain: automation
+  source_url: https://github.com/mattgrechtech/openpane/blob/main/blueprints/automation/openpane/bedtime.yaml
+  input:
+    kiosk:
+      name: OpenPane TV
+      selector:
+        device:
+          filter:
+            - integration: openpane
+    tv:
+      name: The TV's media player
+      description: Switched off at bedtime (and paused first).
+      selector:
+        entity:
+          filter:
+            - domain: media_player
+    bedtime:
+      name: Bedtime
+      default: "20:00:00"
+      selector:
+        time:
+    until:
+      name: TV allowed again from
+      description: Switched back on before this, the TV goes off again after a short warning.
+      default: "06:00:00"
+      selector:
+        time:
+    days:
+      name: Days
+      default: [mon, tue, wed, thu, sun]
+      selector:
+        select:
+          multiple: true
+          options:
+            - { label: Monday, value: mon }
+            - { label: Tuesday, value: tue }
+            - { label: Wednesday, value: wed }
+            - { label: Thursday, value: thu }
+            - { label: Friday, value: fri }
+            - { label: Saturday, value: sat }
+            - { label: Sunday, value: sun }
+    warning_minutes:
+      name: Warning
+      default: 10
+      selector:
+        number: { min: 1, max: 30, unit_of_measurement: min }
+    screen_time:
+      name: Screen-time sensor (optional)
+      description: A History stats helper (type "time") counting today's hours with the TV on.
+      default: ""
+      selector:
+        entity:
+          filter:
+            - domain: sensor
+    limit_hours:
+      name: Daily limit (hours)
+      description: Used with the screen-time sensor.
+      default: 2
+      selector:
+        number: { min: 0.25, max: 12, step: 0.25, unit_of_measurement: h }
+
+mode: single
+max_exceeded: silent
+
+trigger_variables:
+  screen_time: !input screen_time
+  limit: !input limit_hours
+
+triggers:
+  - trigger: time
+    at: !input bedtime
+    id: bedtime
+  - trigger: state
+    entity_id: !input tv
+    from: "off"
+    id: switched_on
+  - trigger: template
+    value_template: "{{ screen_time != '' and states(screen_time) | float(0) > limit | float(0) }}"
+    id: limit
+
+variables:
+  tv: !input tv
+  bedtime: !input bedtime
+  until: !input until
+  warning_input: !input warning_minutes
+  # Switched back on in the no-TV window: just a minute's warning.
+  warning: "{{ 1 if trigger.id == 'switched_on' else warning_input | int }}"
+  # Inside the no-TV window: from bedtime to the "allowed again" time, past midnight too.
+  in_window: >-
+    {% set now_t = now().strftime('%H:%M:%S') %}
+    {{ (now_t >= bedtime or now_t < until) if bedtime > until else (bedtime <= now_t < until) }}
+
+conditions:
+  - condition: time
+    weekday: !input days
+  - condition: template
+    value_template: "{{ states(tv) not in ['off', 'standby', 'unavailable', 'unknown'] }}"
+  - condition: template
+    value_template: "{{ trigger.id == 'limit' or in_window }}"
+
+actions:
+  - action: openpane.notify
+    data:
+      device_id: !input kiosk
+      id: bedtime
+      title: "{{ 'Screen time is up' if trigger.id == 'limit' else 'Bedtime' }}"
+      message: "The TV switches off in {{ warning }} minutes."
+      countdown: "{{ (warning | int) * 60 }}"
+      priority: high
+      duration: 0  # stays up; cleared below
+  - delay:
+      minutes: "{{ warning | int }}"
+  - action: openpane.clear_popup
+    data:
+      device_id: !input kiosk
+      id: bedtime
+  - action: media_player.media_pause
+    target:
+      entity_id: !input tv
+    continue_on_error: true
+  - action: media_player.turn_off
+    target:
+      entity_id: !input tv

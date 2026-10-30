@@ -4,13 +4,13 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="referrer" content="no-referrer">
-<title>TV Kiosk</title>
+<title>OpenPane</title>
 <link rel="stylesheet" href="admin.css">
 <script src="admin.js" defer></script>
 </head>
 <body>
 <header class="bar">
-  <div class="brand"><span class="logo" aria-hidden="true">▣</span> TV Kiosk <span id="device" class="device"></span></div>
+  <div class="brand"><span class="logo" aria-hidden="true">▣</span> OpenPane <span id="device" class="device"></span></div>
   <nav id="tabs" class="tabs" hidden>
     <button data-tab="overview" class="active">Overview</button>
     <button data-tab="control">Control</button>
@@ -131,13 +131,13 @@
   <section id="log" class="panel" hidden>
     <div class="toolbar">
       <button id="log-refresh">Refresh</button>
-      <a id="diag" href="#" download="tv-kiosk-diagnostics.json">Download diagnostics</a>
+      <a id="diag" href="#" download="openpane-diagnostics.json">Download diagnostics</a>
     </div>
     <pre id="log-text"></pre>
   </section>
 </main>
 
 <div id="toast" role="status" aria-live="polite"></div>
-<footer class="muted">TV Kiosk · open source (Apache-2.0) · <button id="disconnect" class="link" hidden>Forget token</button></footer>
+<footer class="muted">OpenPane · open source (Apache-2.0) · <button id="disconnect" class="link" hidden>Forget token</button></footer>
 </body>
 </html>

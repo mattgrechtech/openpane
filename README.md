@@ -1,16 +1,16 @@
-# TV Kiosk
+# OpenPane
 
-**TV Kiosk for Android TV and Google TV: shows a Home Assistant dashboard, or any web page, full screen, and lets Home Assistant control the TV.** One free, open-source app instead of a kiosk browser (such as Fully Kiosk), adb scripts and a separate pop-up app (such as TvOverlay).
+**OpenPane puts a Home Assistant dashboard, or any web page, full screen on Android TVs, tablets and wall displays, and lets Home Assistant control the screen.** Free and open source (Apache-2.0, commercial use welcome): one app instead of a kiosk browser (such as Fully Kiosk), adb scripts and a separate pop-up app (such as TvOverlay).
 
-## Home Assistant on your TV, in one app
+## Home Assistant on your TV or tablet, in one app
 
-1. **Install TV Kiosk** on the TV ([Install](#install)).
+1. **Install OpenPane** on the TV or tablet ([Install](#install)).
 2. **Open it and follow setup with the remote.** It finds Home Assistant on your network, you sign in once, and you pick a dashboard from a list. No URLs to type.
 3. **Add pop-ups.** Home Assistant can show a pop-up on the TV over whatever is playing, for example a doorbell press with a picture from the camera: [Doorbell pop-up with a camera picture](docs/home-assistant.md#doorbell-pop-up-with-a-camera-picture).
 
 That's the dashboard, the pop-ups and remote control of the TV, without a second app. Tested with a Ring doorbell (Home Assistant's Ring integration) on one TV; any camera Home Assistant shows should work the same way.
 
-> Status: **pre-alpha.** Tested on one TCL Google TV (Android 14), including a 72-hour run. Reports from other TVs are very welcome: see [Contributing](CONTRIBUTING.md). Companion to [ha-tv-kit](https://github.com/mattgrechtech/ha-tv-kit).
+> Status: **pre-alpha.** Tested on two TCL Google TVs (Android 14), including a 72-hour run; tablets and wall displays are supported but not yet tested. Reports from other TVs are very welcome: see [Contributing](CONTRIBUTING.md). Companion to [ha-tv-kit](https://github.com/mattgrechtech/ha-tv-kit).
 
 <p align="center">
   <img src="docs/screenshots/dashboard-popup.jpg" width="49%" alt="A Home Assistant dashboard with the remote's highlight on a card and a doorbell pop-up with buttons">
@@ -45,7 +45,7 @@ That's the dashboard, the pop-ups and remote control of the TV, without a second
 - **Night screen** for set hours, a **burn-in guard** for OLED screens, and the backlight turned down when black where the device allows it.
 
 **Home Assistant**
-- **The TV Kiosk integration** (HACS): found automatically, no YAML, actions like `tv_kiosk.notify` for one TV or all of them, entities for the screen, presence, page and health, and `apply_settings` to set up several TVs at once.
+- **The OpenPane integration** (HACS): found automatically, no YAML, actions like `openpane.notify` for one TV or all of them, entities for the screen, presence, page and health, and `apply_settings` to set up several TVs at once.
 - Or **REST** (token, LAN only) or **MQTT** with discovery.
 - **Remote keys for automations:** the colour keys and digits can trigger anything in Home Assistant.
 
@@ -61,12 +61,12 @@ Not included on purpose: remote shell or script injection, camera motion detecti
 ## Install
 
 1. On the TV, allow apps from unknown sources for the app you'll install with (Settings → Apps → Security & restrictions, or Settings → Privacy → Security, depending on the TV).
-2. Get the APK from [Releases](https://github.com/mattgrechtech/ha-tv-kiosk/releases) (the first one, v0.1.0, is on its way; until it's there, build it as below):
+2. Get the APK from [Releases](https://github.com/mattgrechtech/openpane/releases) (the first one, v0.1.0, is on its way; until it's there, build it as below):
    - with the **Downloader** app on the TV: enter the APK's link, then install;
-   - or from a computer with adb: `adb connect 192.168.1.60:5555`, then `adb install tv-kiosk-v0.1.0.apk`.
-3. Open **TV Kiosk**. Setup asks whether the TV shows Home Assistant or a web page, finds Home Assistant on your network and signs in.
+   - or from a computer with adb: `adb connect 192.168.1.60:5555`, then `adb install openpane-v0.1.0.apk`.
+3. Open **OpenPane**. Setup asks whether the TV shows Home Assistant or a web page, finds Home Assistant on your network and signs in.
 4. For pop-ups over other apps, grant "display over other apps": the app asks, and many TVs need it done once over adb (see [Troubleshooting](docs/troubleshooting.md#pop-ups)).
-5. Connect Home Assistant to the TV: install the **TV Kiosk integration** from HACS (it finds the TV by itself), or use REST commands or MQTT: [docs/home-assistant.md](docs/home-assistant.md).
+5. Connect Home Assistant to the TV: install the **OpenPane integration** from HACS (it finds the TV by itself), or use REST commands or MQTT: [docs/home-assistant.md](docs/home-assistant.md).
 
 Developers can build it instead ([docs/build-setup.md](docs/build-setup.md): JDK 17 and the Android command-line tools, no Android Studio) and install and configure it in one step:
 
@@ -78,7 +78,7 @@ The example IPs are placeholders: `192.168.1.50` for Home Assistant, `192.168.1.
 
 ## Open source, for real
 
-TV Kiosk is open source under the [Apache-2.0 licence](LICENSE). That means you can:
+OpenPane is open source under the [Apache-2.0 licence](LICENSE). That means you can:
 
 - use it at home, in a business, or as part of something you sell or install for clients;
 - change it, and share or sell your changed version;
@@ -114,7 +114,7 @@ The app talks only to the addresses you give it (Home Assistant, the web pages y
 ## Layout
 
 ```
-app/src/main/java/io/github/mattgrechtech/tvkiosk/
+app/src/main/java/io/github/mattgrechtech/openpane/
   KioskApp.kt          app start: settings, state, controller, sign-in
   settings/            typed settings, encrypted secrets, JSON import/export
   web/                 dashboard activity, HA frontend bridge, sign-in, pointer

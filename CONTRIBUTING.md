@@ -4,7 +4,7 @@ Thanks for helping. Bug reports from TVs other than the one it was built on are 
 
 ## Tested a TV or tablet?
 
-Please report it, even if everything worked: open an issue with the **Device report** template. Reports fill the [tested devices](docs/devices.md) list, which is how people find out whether TV Kiosk suits their hardware.
+Please report it, even if everything worked: open an issue with the **Device report** template. Reports fill the [tested devices](docs/devices.md) list, which is how people find out whether OpenPane suits their hardware.
 
 ## Reporting a bug
 

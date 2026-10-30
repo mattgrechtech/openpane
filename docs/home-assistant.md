@@ -1,20 +1,20 @@
 # Home Assistant set-up
 
-Three options. **The TV Kiosk integration is the easiest:** it finds the TV, needs no YAML, and gives you actions like `tv_kiosk.notify`. REST commands and MQTT work too, without installing anything.
+Three options. **The OpenPane integration is the easiest:** it finds the TV, needs no YAML, and gives you actions like `openpane.notify`. REST commands and MQTT work too, without installing anything.
 
-## The TV Kiosk integration
+## The OpenPane integration
 
-1. In HACS: ⋮ → *Custom repositories* → add `https://github.com/mattgrechtech/ha-tv-kiosk` as an *Integration*, then download **TV Kiosk** and restart Home Assistant.
-2. Settings → Devices & services: the TV usually shows up under *Discovered* (it announces itself on the network). Otherwise *Add integration* → TV Kiosk and type the TV's IP address.
+1. In HACS: ⋮ → *Custom repositories* → add `https://github.com/mattgrechtech/openpane` as an *Integration*, then download **OpenPane** and restart Home Assistant.
+2. Settings → Devices & services: the TV usually shows up under *Discovered* (it announces itself on the network). Otherwise *Add integration* → OpenPane and type the TV's IP address.
 3. Enter the TV's API token (on the TV: Settings → Pop-ups and API → *Web admin, API address and token*).
 
 The TV becomes a device with:
 
-- **Actions** for one or more TVs: `tv_kiosk.notify` (every pop-up field, including `camera`, `sound`, `tts` and buttons), `tv_kiosk.clear_popup`, `tv_kiosk.navigate` and `tv_kiosk.open_url` (with `return_after`), `tv_kiosk.motion`, `tv_kiosk.wake`, `tv_kiosk.speak`, `tv_kiosk.play_sound`, `tv_kiosk.launch_app`.
+- **Actions** for one or more TVs: `openpane.notify` (every pop-up field, including `camera`, `sound`, `tts` and buttons), `openpane.clear_popup`, `openpane.navigate` and `openpane.open_url` (with `return_after`), `openpane.motion`, `openpane.wake`, `openpane.speak`, `openpane.play_sound`, `openpane.launch_app`.
 - **Entities:** a Pop-up notify entity (for `notify.send_message`), Wake / Motion / Reload / Start page / Stop sound buttons, a Screen select, a Brightness number, a *Someone present* switch, Dashboard in front / Screen resting / Someone present sensors, the page, screen state, last motion, and diagnostics (memory, wake time, WebView version, HA connection).
 
 ```yaml
-action: tv_kiosk.notify
+action: openpane.notify
 data:
   device_id: <your TV>
   title: Front door
@@ -27,7 +27,7 @@ data:
       event: unlock_front
 ```
 
-Pop-up buttons with an `event` fire `tv_kiosk_action` in Home Assistant (see [api.md](api.md#pop-ups)).
+Pop-up buttons with an `event` fire `openpane_action` in Home Assistant (see [api.md](api.md#pop-ups)).
 
 > **Using ha-tv-kit?** Its pop-ups, bin night, garage and doorbell flows already exist: [`tv_kit_config.yaml`](https://github.com/mattgrechtech/ha-tv-kit/blob/main/homeassistant/packages/tv_kit_config.yaml) holds the TV list and the `rest_command`, and [`script.tv_popup`](https://github.com/mattgrechtech/ha-tv-kit/blob/main/homeassistant/packages/tv_kit_scripts.yaml) sends to every TV that's on, with the [doorbell blueprint](https://github.com/mattgrechtech/ha-tv-kit/blob/main/homeassistant/blueprints/automation/ha-tv-kit/camera_motion_tv_popup.yaml) on top. They work with this app unchanged through the TvOverlay-compatible mode; see [Moving the kit's pop-ups over](#moving-the-kits-pop-ups-over).
 
@@ -35,8 +35,8 @@ Pop-up buttons with an `event` fire `tv_kiosk_action` in Home Assistant (see [ap
 
 With the integration, every action takes one TV or many:
 
-- **A pop-up on every TV:** `tv_kiosk.notify` with all of them in `device_id`.
-- **The same set-up everywhere:** `tv_kiosk.apply_settings` with, for example, `{rest_after_minutes: 5, rest_style: clock, popup_corner: bottom_end}`. Only the settings you list change; each TV keeps its own name and token.
+- **A pop-up on every TV:** `openpane.notify` with all of them in `device_id`.
+- **The same set-up everywhere:** `openpane.apply_settings` with, for example, `{rest_after_minutes: 5, rest_style: clock, popup_corner: bottom_end}`. Only the settings you list change; each TV keeps its own name and token.
 - **One TV leads, the others follow:** when the lead TV's screen changes, do the same on the rest.
 
 ```yaml
@@ -57,16 +57,16 @@ actions:
 1. Get the TV's API token: the provisioning script prints it, or Settings → *Show API address and token*.
 2. In `secrets.yaml`:
    ```yaml
-   tv_kiosk_living_room_auth: "Bearer 0123...your-token...cdef"
+   openpane_living_room_auth: "Bearer 0123...your-token...cdef"
    ```
 3. In a package or `configuration.yaml`:
    ```yaml
    rest_command:
-     tv_kiosk_living_room:
+     openpane_living_room:
        url: "http://192.168.1.60:2424/api/v1/{{ command }}"
        method: POST
        headers:
-         Authorization: !secret tv_kiosk_living_room_auth
+         Authorization: !secret openpane_living_room_auth
        content_type: "application/json"
        payload: "{{ (args | default({})) | tojson }}"
        timeout: 8
@@ -74,7 +74,7 @@ actions:
    rest:
      - resource: "http://192.168.1.60:2424/api/v1/state"
        headers:
-         Authorization: !secret tv_kiosk_living_room_auth
+         Authorization: !secret openpane_living_room_auth
        scan_interval: 60
        sensor:
          - name: "Living room TV kiosk page"
@@ -86,7 +86,7 @@ actions:
    ```
 4. Use it:
    ```yaml
-   action: rest_command.tv_kiosk_living_room
+   action: rest_command.openpane_living_room
    data:
      command: notify
      args:
@@ -127,7 +127,7 @@ For title, image and corner, publish JSON to the command topic instead:
 ```yaml
 action: mqtt.publish
 data:
-  topic: tvkiosk/<device-id>/cmd/notify
+  topic: openpane/<device-id>/cmd/notify
   payload: '{"title":"Front door","message":"Motion","image":"http://192.168.1.50:8123/local/x.png"}'
 ```
 
@@ -151,7 +151,7 @@ triggers:
     entity_id: event.front_door_ding
     not_from: [unavailable, unknown]
 actions:
-  - action: rest_command.tv_kiosk_living_room
+  - action: rest_command.openpane_living_room
     data:
       command: notify
       args:
@@ -171,7 +171,7 @@ mode: single
 - `id: doorbell` makes a second press replace the pop-up instead of stacking another.
 - **Live instead of a snapshot:** add `camera: camera.front_door_live_view` (keep `image` as the first picture) and set `duration` to 30 or so: the pop-up shows the camera live until it closes. Any camera whose live view works in Home Assistant can do this; for the smoothest picture, point `stream` at a go2rtc or Frigate MJPEG link. Live view hasn't been tested on a Ring doorbell yet.
 - `sound: doorbell` plays a ding-dong on the TV. Other built-in sounds: `chime`, `alert`. Add `tts: "Someone's at the front door"` to have the TV say it too.
-- A button can also act in Home Assistant, for example `{label: Unlock, event: unlock_front}` with an automation on the `tv_kiosk_action` event: see [Buttons that tell Home Assistant](api.md#pop-ups).
+- A button can also act in Home Assistant, for example `{label: Unlock, event: unlock_front}` with an automation on the `openpane_action` event: see [Buttons that tell Home Assistant](api.md#pop-ups).
 - The button is optional; change `/lovelace/cameras` to a dashboard page of yours, or remove `actions`. Back closes the pop-up.
 - The picture link carries a short-lived access token from Home Assistant, so the TV loads it without signing in. Don't copy camera pictures into `/config/www`: anyone on your network can read that folder without a login.
 
@@ -187,7 +187,7 @@ triggers:
     entity_id: media_player.kitchen
     to: playing
 actions:
-  - action: tv_kiosk.now_playing
+  - action: openpane.now_playing
     data:
       device_id: <your TV>
       entity: media_player.kitchen
@@ -198,31 +198,31 @@ The pop-up keeps its artwork, title, artist and progress up to date and closes b
 
 ## Remote keys for automations
 
-Turn on Settings → Screen → *Colour keys and digits to Home Assistant*. Then, while the dashboard is in front, each colour key and digit fires a `tv_kiosk_key` event, with `long: true` for a long press:
+Turn on Settings → Screen → *Colour keys and digits to Home Assistant*. Then, while the dashboard is in front, each colour key and digit fires a `openpane_key` event, with `long: true` for a long press:
 
 ```yaml
 triggers:
   - trigger: event
-    event_type: tv_kiosk_key
+    event_type: openpane_key
     event_data: { key: red }
 actions:
-  - action: rest_command.tv_kiosk_living_room
+  - action: rest_command.openpane_living_room
     data: { command: navigate, args: { path: /lovelace/cameras, return_after: 120 } }
 ```
 
 ## Wall tablet battery care
 
-A tablet on charge all day wears its battery out, and an old one can swell. With the TV Kiosk integration, a tablet shows its battery level, charging and battery temperature (TVs don't have one). The battery care blueprint keeps it between two levels (30-80 % by default) with a smart plug on the charger, pauses charging if the battery gets hot, and always charges if it gets very low.
+A tablet on charge all day wears its battery out, and an old one can swell. With the OpenPane integration, a tablet shows its battery level, charging and battery temperature (TVs don't have one). The battery care blueprint keeps it between two levels (30-80 % by default) with a smart plug on the charger, pauses charging if the battery gets hot, and always charges if it gets very low.
 
-[![Import the blueprint](https://my.home-assistant.io/badges/blueprint_import.svg)](https://my.home-assistant.io/redirect/blueprint_import/?blueprint_url=https%3A%2F%2Fgithub.com%2Fmattgrechtech%2Fha-tv-kiosk%2Fblob%2Fmain%2Fblueprints%2Fautomation%2Ftv-kiosk%2Fbattery_care.yaml)
+[![Import the blueprint](https://my.home-assistant.io/badges/blueprint_import.svg)](https://my.home-assistant.io/redirect/blueprint_import/?blueprint_url=https%3A%2F%2Fgithub.com%2Fmattgrechtech%2Fopenpane%2Fblob%2Fmain%2Fblueprints%2Fautomation%2Fopenpane%2Fbattery_care.yaml)
 
 ## Bedtime and screen time
 
 A blueprint ends TV time at bedtime, or once a daily limit is used up: a countdown pop-up warns first (over whatever is playing), then playback stops and the TV switches off. Switched back on before the "allowed again" time, it gets a minute's warning and goes off again.
 
-[![Import the blueprint](https://my.home-assistant.io/badges/blueprint_import.svg)](https://my.home-assistant.io/redirect/blueprint_import/?blueprint_url=https%3A%2F%2Fgithub.com%2Fmattgrechtech%2Fha-tv-kiosk%2Fblob%2Fmain%2Fblueprints%2Fautomation%2Ftv-kiosk%2Fbedtime.yaml)
+[![Import the blueprint](https://my.home-assistant.io/badges/blueprint_import.svg)](https://my.home-assistant.io/redirect/blueprint_import/?blueprint_url=https%3A%2F%2Fgithub.com%2Fmattgrechtech%2Fopenpane%2Fblob%2Fmain%2Fblueprints%2Fautomation%2Fopenpane%2Fbedtime.yaml)
 
-- **Needs** the TV Kiosk integration and the TV's own media player (Android TV Remote integration), which does the switching off.
+- **Needs** the OpenPane integration and the TV's own media player (Android TV Remote integration), which does the switching off.
 - **Daily limit:** add a *History stats* helper (Settings → Devices & services → Helpers), type *Time*, counting the TV's media player in state `on` from midnight today. Pick it in the blueprint with the number of hours.
 - **Honest about limits:** no app can lock a TV, so this switches it off rather than blocking apps. It's for a household agreement, not a determined teenager.
 
@@ -230,7 +230,7 @@ A blueprint ends TV time at bedtime, or once a daily limit is used up: a countdo
 
 The dashboard goes dark when nobody is around and comes back the moment your sensors see someone. Waking from dark is instant: the page keeps running behind the dark screen, still connected to Home Assistant.
 
-**1. In TV Kiosk** (Settings → Screen → Wake on motion):
+**1. In OpenPane** (Settings → Screen → Wake on motion):
 
 - **Rest the screen after:** how long without motion before it goes dark, for example 5 min.
 - **Motion brings the dashboard back:** "Unless something is playing" (the default) never takes the screen from a film or YouTube.
@@ -238,22 +238,22 @@ The dashboard goes dark when nobody is around and comes back the moment your sen
 
 **2. In Home Assistant:** import the blueprint.
 
-[![Import the blueprint](https://my.home-assistant.io/badges/blueprint_import.svg)](https://my.home-assistant.io/redirect/blueprint_import/?blueprint_url=https%3A%2F%2Fgithub.com%2Fmattgrechtech%2Fha-tv-kiosk%2Fblob%2Fmain%2Fblueprints%2Fautomation%2Ftv-kiosk%2Fmotion_wake.yaml)
+[![Import the blueprint](https://my.home-assistant.io/badges/blueprint_import.svg)](https://my.home-assistant.io/redirect/blueprint_import/?blueprint_url=https%3A%2F%2Fgithub.com%2Fmattgrechtech%2Fopenpane%2Fblob%2Fmain%2Fblueprints%2Fautomation%2Fopenpane%2Fmotion_wake.yaml)
 
 Then create an automation from it:
 
 - **Sensors:** one or more motion, occupancy or presence sensors in the room. A presence sensor (mmWave) is best for a living room: it stays on while someone sits still, so the screen stays awake. A motion sensor (PIR) only sees movement, so pair it with a long enough rest time.
-- **TV Kiosk rest_command:** the name from [Option A](#option-a-rest-commands-no-broker), for example `tv_kiosk_living_room`.
-- **TV power (optional):** the TV's media player, only for a TV that stays reachable in standby (see below). The blueprint switches it on, then waits for TV Kiosk.
-- **Switch the TV off after the room is clear (optional):** dark is not off: an LCD's backlight stays on while resting. This switches the TV off after a while, but only if TV Kiosk is in front.
+- **OpenPane rest_command:** the name from [Option A](#option-a-rest-commands-no-broker), for example `openpane_living_room`.
+- **TV power (optional):** the TV's media player, only for a TV that stays reachable in standby (see below). The blueprint switches it on, then waits for OpenPane.
+- **Switch the TV off after the room is clear (optional):** dark is not off: an LCD's backlight stays on while resting. This switches the TV off after a while, but only if OpenPane is in front.
 
-**TVs: wake from rest, not from standby.** On a TV, wake on motion works from TV Kiosk's own rest (black, dimmed, clock or photo page): the TV is still on and connected, so it wakes in well under a second. A TV in standby is a different matter: Android TV cuts apps off the network, and on the TCL Google TV we tested, Home Assistant's own Android TV Remote integration went *unavailable* too, so nothing could switch it back on. So on a TV:
+**TVs: wake from rest, not from standby.** On a TV, wake on motion works from OpenPane's own rest (black, dimmed, clock or photo page): the TV is still on and connected, so it wakes in well under a second. A TV in standby is a different matter: Android TV cuts apps off the network, and on the TCL Google TV we tested, Home Assistant's own Android TV Remote integration went *unavailable* too, so nothing could switch it back on. So on a TV:
 
-- let TV Kiosk do the resting, and keep the TV out of standby: turn off the TV's own sleep timer (TCL: Settings → System → Power & energy → *Auto sleep*, which defaults to 2 hours);
+- let OpenPane do the resting, and keep the TV out of standby: turn off the TV's own sleep timer (TCL: Settings → System → Power & energy → *Auto sleep*, which defaults to 2 hours);
 - leave the screensaver as it is if you like: motion ends it and brings the dashboard forward;
 - for a TV you do want off at night, switch it off and on with your own automation at fixed times, or use the blueprint's *Switch the TV off* option and accept that motion won't bring it back.
 
-Some TVs stay reachable in standby (Google TV *Energy modes* set to "Optimized" or "Increased", TCL *Screenless service*, or HDMI-CEC from another device). Then the blueprint's *TV power* option can switch it on first; expect several seconds while it starts. We haven't confirmed this on any TV yet: [device reports](https://github.com/mattgrechtech/ha-tv-kiosk/issues/new?template=device_report.yml) welcome.
+Some TVs stay reachable in standby (Google TV *Energy modes* set to "Optimized" or "Increased", TCL *Screenless service*, or HDMI-CEC from another device). Then the blueprint's *TV power* option can switch it on first; expect several seconds while it starts. We haven't confirmed this on any TV yet: [device reports](https://github.com/mattgrechtech/openpane/issues/new?template=device_report.yml) welcome.
 
 **Tablets and wall displays: full wake.** With the screen fully off (not just resting), motion turns it on: tablets stay on the network with the screen off, especially while charging. Not yet tested on a tablet.
 

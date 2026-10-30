@@ -16,3 +16,6 @@ captures/
 keystore.properties
 # soak test logs (describe your TV and network)
 soak/
+
+# Python caches (integration tests)
+__pycache__/

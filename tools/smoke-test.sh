@@ -3,12 +3,12 @@
 # Usage: tools/smoke-test.sh path/to/app-debug.apk
 set -eu
 apk="$1"
-pkg=io.github.mattgrechtech.tvkiosk.debug
+pkg=io.github.mattgrechtech.openpane.debug
 
 adb install -r "$apk"
 adb shell appops set "$pkg" SYSTEM_ALERT_WINDOW allow || true
 adb logcat -c
-adb shell am start -n "$pkg/io.github.mattgrechtech.tvkiosk.web.KioskActivity"
+adb shell am start -n "$pkg/io.github.mattgrechtech.openpane.web.KioskActivity"
 sleep 25
 
 if ! adb shell pidof "$pkg" >/dev/null; then

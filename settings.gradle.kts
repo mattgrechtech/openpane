@@ -14,5 +14,5 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "ha-tv-kiosk"
+rootProject.name = "openpane"
 include(":app")

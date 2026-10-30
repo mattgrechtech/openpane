@@ -45,6 +45,23 @@ class Discovery(
         entity("button", "wake", "Wake") {
             put("command_topic", commandTopic("wake")).put("payload_press", "{}").put("icon", "mdi:television")
         },
+        entity("button", "motion", "Motion") {
+            put("command_topic", commandTopic("motion")).put("payload_press", "{}").put("icon", "mdi:motion-sensor")
+        },
+        entity("switch", "present", "Someone present") {
+            put("command_topic", commandTopic("present_switch"))
+                .put("state_topic", stateTopic)
+                .put("value_template", "{{ 'ON' if value_json.present else 'OFF' }}")
+                .put("icon", "mdi:account")
+        },
+        entity("binary_sensor", "resting", "Screen resting") {
+            put("state_topic", stateTopic)
+                .put("value_template", "{{ 'ON' if value_json.resting else 'OFF' }}")
+                .put("icon", "mdi:sleep")
+        },
+        sensor("last_motion", "Last motion", "{{ value_json.last_motion_iso }}", diagnostic = false) {
+            put("device_class", "timestamp")
+        },
         entity("button", "start_page", "Go to start page") {
             put("command_topic", commandTopic("start_page")).put("payload_press", "{}").put("icon", "mdi:home")
         },
@@ -92,6 +109,9 @@ class Discovery(
         },
         sensor("memory_available", "Memory available", "{{ value_json.memory_available_mb }}", diagnostic = true) {
             put("unit_of_measurement", "MB").put("state_class", "measurement").put("icon", "mdi:memory")
+        },
+        sensor("last_wake", "Last wake time", "{{ value_json.last_wake_ms }}", diagnostic = true) {
+            put("unit_of_measurement", "ms").put("icon", "mdi:timer-outline")
         },
         sensor("webview_version", "WebView version", "{{ value_json.webview_version }}", diagnostic = true),
         sensor("ip", "IP address", "{{ value_json.ip }}", diagnostic = true) { put("icon", "mdi:ip-network") },
@@ -162,6 +182,7 @@ class Discovery(
                     "screen" to JSONObject().put("mode", "dim").put("level", it.toInt())
                 }
                 "pointer_switch" -> "pointer" to JSONObject().put("enabled", text.equals("ON", ignoreCase = true))
+                "present_switch" -> "motion" to JSONObject().put("present", text.equals("ON", ignoreCase = true))
                 "url_text" -> "url" to JSONObject().put("url", text)
                 // The MQTT notify entity sends plain text; JSON gets all pop-up fields.
                 "notify" -> "notify" to (json() ?: JSONObject().put("message", text))
@@ -174,7 +195,7 @@ class Discovery(
         }
 
         private val PASS_THROUGH = setOf(
-            "reload", "wake", "start_page", "screen", "pointer", "notify_clear", "launch", "volume", "sound", "stop_sound",
+            "reload", "wake", "motion", "start_page", "screen", "pointer", "notify_clear", "launch", "volume", "sound", "stop_sound",
         )
     }
 }

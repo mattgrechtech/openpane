@@ -125,12 +125,32 @@ mode: single
 
 **Using ha-tv-kit?** Its [doorbell blueprint](https://github.com/mattgrechtech/ha-tv-kit/blob/main/homeassistant/blueprints/automation/ha-tv-kit/camera_motion_tv_popup.yaml) does this for every TV that's on, with a cooldown and an optional phone alert. It's what the Ring test used.
 
-## Wake on doorbell (outline)
+## Wake on motion
 
-An app can't wake a TV from standby by itself: in deep standby the TV's network is off. The pattern:
+The dashboard goes dark when nobody is around and comes back the moment your sensors see someone. Waking from dark is instant: the page keeps running behind the dark screen, still connected to Home Assistant.
 
-1. HA turns the TV on: the **Android TV Remote** integration (`media_player.turn_on`), or HDMI-CEC from another device. Check your TV's "networked standby" / "Wake on network" setting.
-2. Wait until the TV answers (the kit's TV `media_player` is `on`, or the app's state sensor becomes available).
-3. `rest_command.tv_kiosk_...` with `{command: wake}` then `{command: navigate, args: {path: /dashboard-cameras/doorbell}}`, or a pop-up with the snapshot.
+**1. In TV Kiosk** (Settings → Screen → Wake on motion):
 
-A blueprint for this is planned for the next phase.
+- **Rest the screen after:** how long without motion before it goes dark, for example 5 min.
+- **Motion brings the dashboard back:** "Unless something is playing" (the default) never takes the screen from a film or YouTube.
+- **Ready to wake** should say "Yes". If it names something missing, run the provisioning script again or follow what it says.
+
+**2. In Home Assistant:** import the blueprint.
+
+[![Import the blueprint](https://my.home-assistant.io/badges/blueprint_import.svg)](https://my.home-assistant.io/redirect/blueprint_import/?blueprint_url=https%3A%2F%2Fgithub.com%2Fmattgrechtech%2Fha-tv-kiosk%2Fblob%2Fmain%2Fblueprints%2Fautomation%2Ftv-kiosk%2Fmotion_wake.yaml)
+
+Then create an automation from it:
+
+- **Sensors:** one or more motion, occupancy or presence sensors in the room. A presence sensor (mmWave) is best for a living room: it stays on while someone sits still, so the screen stays awake. A motion sensor (PIR) only sees movement, so pair it with a long enough rest time.
+- **TV Kiosk rest_command:** the name from [Option A](#option-a-rest-commands-no-broker), for example `tv_kiosk_living_room`.
+- **TV power (optional):** the TV's media player, if the TV itself may be off. The blueprint switches it on, then waits for TV Kiosk.
+- **Switch the TV off after the room is clear (optional):** dark is not off: an LCD's backlight stays on while resting. This switches the TV off after a while, but only if TV Kiosk is in front.
+
+**When the TV itself is off.** An app can't hear anything while the TV is in standby: Android 14 cuts apps off the network. Home Assistant has to switch the TV on first, which needs:
+
+- an integration that can switch it on: **Android TV Remote** (`media_player.turn_on`), or HDMI-CEC from another device;
+- the TV kept reachable in standby. On Google TV: Settings → System → Power & energy → *Energy modes*: choose "Optimized" or "Increased" (on "Low", the network is off in standby and nothing can wake it). TCL: also turn on *Screenless service*. Nvidia Shield: turn off the "simplified wake buttons" setting.
+
+From standby, expect several seconds while the TV starts; from resting, under a second.
+
+Without the blueprint, any automation can send `{command: motion}` (or `{command: motion, args: {present: true}}` / `{present: false}`) through the `rest_command`, or press the TV's **Motion** button / switch **Someone present** over MQTT. See [api.md](api.md#wake-on-motion).

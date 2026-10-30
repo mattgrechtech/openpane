@@ -19,12 +19,13 @@ curl -X POST -H "Authorization: Bearer $TOKEN" -H "Content-Type: application/jso
 
 | Route | Body | What it does |
 |---|---|---|
-| `GET /state` | | Everything below under [State](#state) |
+| `GET /state` | | Everything below under [State](#state). `POST` works too, for Home Assistant's `rest_command` |
 | `POST /url` | `{"url"}` | Load a page (http/https only) |
 | `POST /navigate` | `{"path"}` | Go to an HA page without a reload, e.g. `/lovelace/1` (falls back to a full load) |
 | `POST /reload` | `{"hard": false}` | Reload; `hard` clears the cache first |
 | `POST /screen` | `{"mode": "on"\|"dim"\|"blank", "level": 50}` | Dim (5–95 %) or blank the dashboard with a black layer. The backlight stays on: TVs don't let apps control it |
-| `POST /wake` | | Screen back on, dashboard to the front |
+| `POST /wake` | `{"minutes": 5}` | Turn the screen on (ending a screensaver), lift a dim, rest or night screen, and bring the dashboard to the front, even over another app. The night hours stay away for `minutes` (1–240) |
+| `POST /motion` | `{"present": true\|false}` | Someone was seen: see [Wake on motion](#wake-on-motion). Without `present` it's a moment of motion; `present: true` holds the screen awake until `present: false` |
 | `POST /pointer` | `{"enabled": true}` | On-screen pointer on/off (omit `enabled` to toggle) |
 | `POST /notify` | see [Pop-ups](#pop-ups) | Show a pop-up |
 | `POST /notify/clear` | `{"id"}` | Remove one pop-up, or all without `id` |
@@ -58,6 +59,10 @@ The same names work in `POST /settings`, adb `CONFIGURE` and a settings export. 
 | `screen_off_from` / `screen_off_to` | `-1` / `7` | Hours (0–23) the screen goes black each night; `-1` is never |
 | `remote_mode` | `buttons` | `buttons` (jump between items), `pointer` (on-screen pointer), `page` (arrows go to the page) |
 | `keep_screen_on` | `true` | Stop the TV's screensaver over the dashboard |
+| `rest_after_minutes` | `0` | Rest (darken) the screen after this many minutes without motion, presence or the remote; `0` is never, else 1–240 |
+| `rest_style` | `black` | `black` or `dim` (80 %) while resting |
+| `motion_front` | `unless_playing` | When motion brings the dashboard in front of another app: `unless_playing` (not while sound is playing), `always`, `never` (only wake the screen) |
+| `motion_at_night` | `false` | Whether motion wakes the screen during the night hours |
 | `boot_start` | `false` | Open the dashboard when the TV starts |
 | `reload_on_network` | `true` | Reload when the network comes back |
 | `reload_on_disconnect_seconds` | `60` | Reload when Home Assistant stays disconnected this long; `0` is off, else 10–3600 |
@@ -112,6 +117,20 @@ Pop-ups appear over any app when the app may "display over other apps" (the prov
 
 Off by default. When on (Settings → Local API), `POST http://<tv-ip>:5001/notify` accepts TvOverlay's fields, so automations written for TvOverlay work by changing nothing, or only the port. Like TvOverlay, it has **no token**: anyone on the network can show pop-ups, nothing else. For that reason `actions` are ignored there; use the token-protected `/api/v1/notify` for pop-ups with buttons. Don't run it and TvOverlay on the same port.
 
+### Wake on motion
+
+Home Assistant sends `motion` when your sensors see someone ([blueprint](home-assistant.md#wake-on-motion)). What the app does with it:
+
+- **Resting:** with `rest_after_minutes` set, the screen goes dark that long after the last motion, presence or remote press, never while someone is present. The page keeps running behind it, connected to Home Assistant, so waking shows it straight away with current values.
+- **Waking:** `motion` wakes a resting screen, turns the screen on if Android has it off or a screensaver is up, and brings the dashboard forward as `motion_front` allows. Any remote button wakes it too.
+- **Not straight back:** for 3 seconds after resting starts, motion is ignored, so the change in light can't wake it again.
+- **Night:** in the night hours (`screen_off_from` / `screen_off_to`) motion is ignored unless `motion_at_night` is on.
+- **Standby:** a TV in standby can't hear the app's API (Android 14 cuts apps off the network). Home Assistant has to switch the TV on first; the blueprint does.
+
+The answer says what happened, for example `{"result": "woke", "present": true, "screen_was_off": false, "was_dark": true, "dashboard": "in front"}`. `result` is `woke`, `awake` (wasn't resting: the timer starts again), `cleared`, `ignored_grace` or `ignored_quiet`. `dashboard` is `in front`, `brought to front`, `left behind the app in front` or `behind other apps` (with a `warning`).
+
+On Android 14 and newer, turning the screen on needs a permission the TV doesn't offer in its settings: the provisioning script grants it, or `adb shell appops set <package> TURN_SCREEN_ON allow`. Settings → Screen → *Ready to wake* says what's missing.
+
 ## State
 
 ```json
@@ -119,6 +138,10 @@ Off by default. When on (Settings → Local API), `POST http://<tv-ip>:5001/noti
   "url": "http://192.168.1.50:8123/house?tv=1&external_auth=1",
   "title": "House",
   "screen": "on", "dim_level": 0,
+  "resting": false, "night": false, "present": false,
+  "last_motion_at": 1793000000, "last_motion_iso": "2026-10-30T09:00:00Z", "last_wake_ms": 207,
+  "wake": {"screen_on": true, "overlay_permission": true, "turn_screen_on": "allowed",
+           "battery_optimization_exempt": true, "low_power_standby": true, "low_power_standby_exempt": false},
   "dashboard_visible": true, "pointer": false,
   "ha_connection": "connected",
   "last_error": "", "last_reload_reason": "network back", "last_reload_at": 1793000000, "reload_count": 3,
@@ -130,6 +153,8 @@ Off by default. When on (Settings → Local API), `POST http://<tv-ip>:5001/noti
 }
 ```
 
+`last_wake_ms` is how long the last wake took, from the command arriving to the dashboard's next frame. `wake.turn_screen_on` is `allowed`, `default`, `denied` or `not needed` (before Android 14); `low_power_standby` (Android 13+) means the TV cuts apps off the network in standby.
+
 `ha_connection` comes from HA's frontend through the app bridge, so it is only known when the app manages sign-in (auth mode `login` or `token`); otherwise it stays `unknown`.
 
 ## MQTT
@@ -140,20 +165,23 @@ The TV appears in Home Assistant as one device through MQTT discovery, with:
 
 | Entity | Type |
 |---|---|
-| Reload, Reload and clear cache, Wake, Go to start page | buttons |
+| Reload, Reload and clear cache, Wake, Motion, Go to start page | buttons |
+| Someone present (turn on and off from your presence sensor) | switch |
+| Screen resting | binary sensor |
+| Last motion | timestamp sensor |
 | Screen (on / dim / blank) | select |
 | Dim level | number |
 | Pointer | switch |
 | Page (current URL; set it to load a page) | text |
 | Pop-up | notify (plain text, or a JSON pop-up) |
 | Dashboard visible, Can show pop-ups over apps | binary sensors |
-| HA connection, last error, app started, reloads, app memory, memory available, WebView version, IP | diagnostic sensors |
+| HA connection, last error, app started, reloads, last wake time, app memory, memory available, WebView version, IP | diagnostic sensors |
 
 Topics, with `<base>` = base topic (default `tvkiosk`) and `<id>` = the device id:
 
 - `<base>/<id>/availability`: `online`/`offline` (retained; `offline` is the last will).
 - `<base>/<id>/state`: the [State](#state) JSON (retained), refreshed on changes and every minute.
-- `<base>/<id>/cmd/<command>`: commands. The payload is the same JSON as the REST body, for `url`, `navigate`, `reload`, `screen`, `wake`, `start_page`, `pointer`, `notify`, `notify_clear`, `launch`, `volume`, `tts`, `sound`, `stop_sound`. `notify`, `tts`, `url` and `navigate` also take plain text. Retained command messages are ignored.
+- `<base>/<id>/cmd/<command>`: commands. The payload is the same JSON as the REST body, for `url`, `navigate`, `reload`, `screen`, `wake`, `motion`, `start_page`, `pointer`, `notify`, `notify_clear`, `launch`, `volume`, `tts`, `sound`, `stop_sound`. `notify`, `tts`, `url` and `navigate` also take plain text. Retained command messages are ignored.
 
 ## adb
 

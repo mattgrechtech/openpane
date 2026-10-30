@@ -24,6 +24,7 @@ import android.widget.TextView
 import io.github.mattgrechtech.tvkiosk.BuildConfig
 import io.github.mattgrechtech.tvkiosk.KioskApp
 import io.github.mattgrechtech.tvkiosk.R
+import io.github.mattgrechtech.tvkiosk.control.WakeReadiness
 import io.github.mattgrechtech.tvkiosk.control.KioskState
 import io.github.mattgrechtech.tvkiosk.diag.AppLog
 import io.github.mattgrechtech.tvkiosk.diag.CrashGuard
@@ -503,7 +504,7 @@ class SettingsActivity : Activity() {
             choose(getString(R.string.row_remote_mode), Keys.REMOTE_MODE, Keys.REMOTE_MODES.map { remoteModeLabel(it) to it })
         },
         Row.Info(getString(R.string.row_remote_help), getString(R.string.row_remote_help_sub)),
-    ) + nightRows()
+    ) + nightRows() + motionRows()
 
     private fun nightRows(): List<Row> {
         val from = app.settings[Keys.SCREEN_OFF_FROM]
@@ -522,6 +523,53 @@ class SettingsActivity : Activity() {
             rows += Row.Info(getString(R.string.row_night_help), getString(R.string.row_night_help_sub))
         }
         return rows
+    }
+
+    private fun motionRows(): List<Row> {
+        val restAfter = app.settings[Keys.REST_AFTER_MINUTES]
+        val rows = mutableListOf<Row>(
+            Row.Header(getString(R.string.header_motion)),
+            Row.Value(getString(R.string.row_rest_after), durationLabel(restAfter * 60)) {
+                choose(getString(R.string.row_rest_after), Keys.REST_AFTER_MINUTES,
+                    listOf(0, 1, 2, 5, 10, 15, 30, 60).map { durationLabel(it * 60) to it })
+            },
+        )
+        if (restAfter > 0) {
+            rows += Row.Value(getString(R.string.row_rest_style), restStyleLabel(app.settings[Keys.REST_STYLE])) {
+                choose(getString(R.string.row_rest_style), Keys.REST_STYLE, Keys.REST_STYLES.map { restStyleLabel(it) to it })
+            }
+        }
+        rows += Row.Value(getString(R.string.row_motion_front), motionFrontLabel(app.settings[Keys.MOTION_FRONT])) {
+            choose(getString(R.string.row_motion_front), Keys.MOTION_FRONT, Keys.MOTION_FRONTS.map { motionFrontLabel(it) to it })
+        }
+        rows += Row.Toggle(getString(R.string.row_motion_at_night), getString(R.string.row_motion_at_night_sub), Keys.MOTION_AT_NIGHT)
+        rows += wakeReadinessRow()
+        rows += Row.Info(getString(R.string.row_motion_help), getString(R.string.row_motion_help_sub))
+        return rows
+    }
+
+    private fun restStyleLabel(value: String) =
+        getString(if (value == "dim") R.string.value_rest_dim else R.string.value_rest_black)
+
+    private fun motionFrontLabel(value: String) = getString(
+        when (value) {
+            "always" -> R.string.value_front_always
+            "never" -> R.string.value_front_never
+            else -> R.string.value_front_unless_playing
+        }
+    )
+
+    /** What the TV allows: a missing permission is named, with what it costs. */
+    private fun wakeReadinessRow(): Row {
+        val wake = WakeReadiness.toJson(this)
+        val problems = listOfNotNull(
+            if (!wake.optBoolean("overlay_permission")) getString(R.string.wake_missing_overlay) else null,
+            if (wake.optString("turn_screen_on") == "denied") getString(R.string.wake_missing_turn_on, packageName) else null,
+            if (wake.optBoolean("low_power_standby") && !wake.optBoolean("low_power_standby_exempt"))
+                getString(R.string.wake_low_power_standby) else null,
+        )
+        return if (problems.isEmpty()) Row.Info(getString(R.string.row_wake_ready), getString(R.string.wake_ready), TvUi.SUCCESS)
+        else Row.Info(getString(R.string.row_wake_ready), problems.joinToString("\n"), TvUi.WARNING)
     }
 
     private fun recoveryRows(): List<Row> {

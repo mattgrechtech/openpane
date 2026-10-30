@@ -15,6 +15,7 @@ import android.util.TypedValue
 import android.view.Gravity
 import android.view.KeyEvent
 import android.view.View
+import android.view.ViewTreeObserver
 import android.view.ViewGroup
 import android.view.WindowInsets
 import android.view.WindowInsetsController
@@ -91,6 +92,19 @@ class KioskActivity : Activity(), DashboardSurface {
     private var lastInteraction = 0L
     /** True while the night schedule has the screen black, so only the schedule turns it back on. */
     private var nightBlank = false
+    /** A wake command or motion keeps the night hours from darkening the screen until then. */
+    private var nightWakeUntil = 0L
+    /** When a wake started, until the dashboard draws its next frame; 0 when none is pending. */
+    private var wakeStartedAt = 0L
+    private val wakeFrame: ViewTreeObserver.OnDrawListener = ViewTreeObserver.OnDrawListener {
+        val started = wakeStartedAt
+        if (started == 0L) return@OnDrawListener
+        wakeStartedAt = 0L
+        val took = SystemClock.elapsedRealtime() - started
+        AppLog.i(TAG, "Woke: next frame $took ms after the command")
+        app.state.update { wakeTook(took) }
+        main.post { root.viewTreeObserver.removeOnDrawListener(wakeFrame) }
+    }
 
     private var centreDownAt = 0L
     private var centreLongPressed = false
@@ -417,6 +431,7 @@ class KioskActivity : Activity(), DashboardSurface {
         heartbeat()
         nightlyReload()
         nightScreen()
+        app.controller.restTick(SystemClock.elapsedRealtime())
         scheduleTick()
     }
 
@@ -451,9 +466,10 @@ class KioskActivity : Activity(), DashboardSurface {
 
     /** Blacks the screen during the night hours; the remote wakes it for a few minutes at a time. */
     private fun nightScreen() {
-        val hour = Calendar.getInstance().get(Calendar.HOUR_OF_DAY)
-        val night = Schedule.inNightWindow(hour, app.settings[Keys.SCREEN_OFF_FROM], app.settings[Keys.SCREEN_OFF_TO])
-        val idle = SystemClock.elapsedRealtime() - lastInteraction >= Schedule.NIGHT_WAKE_MILLIS
+        val now = SystemClock.elapsedRealtime()
+        val night = nightActive()
+        val someoneThere = app.settings[Keys.MOTION_AT_NIGHT] && app.controller.presence.present
+        val idle = now - lastInteraction >= Schedule.NIGHT_WAKE_MILLIS && now >= nightWakeUntil && !someoneThere
         if (night && idle && app.state.screen == KioskState.Screen.ON) {
             AppLog.i(TAG, "Night hours: screen black")
             app.controller.setScreen(KioskState.Screen.BLANK, 100)
@@ -462,6 +478,25 @@ class KioskActivity : Activity(), DashboardSurface {
             nightBlank = false
             if (app.state.screen == KioskState.Screen.BLANK) app.controller.setScreen(KioskState.Screen.ON, 0)
         }
+        if (app.state.nightDark != nightBlank) app.state.update { nightDark(nightBlank) }
+    }
+
+    override fun nightActive(): Boolean {
+        val hour = Calendar.getInstance().get(Calendar.HOUR_OF_DAY)
+        return Schedule.inNightWindow(hour, app.settings[Keys.SCREEN_OFF_FROM], app.settings[Keys.SCREEN_OFF_TO])
+    }
+
+    override fun holdAwake(millis: Long) {
+        val now = SystemClock.elapsedRealtime()
+        lastInteraction = now
+        nightWakeUntil = maxOf(nightWakeUntil, now + millis)
+    }
+
+    override fun timeNextFrame(startedAt: Long) {
+        val pending = wakeStartedAt != 0L
+        wakeStartedAt = startedAt
+        if (!pending) root.viewTreeObserver.addOnDrawListener(wakeFrame)
+        root.invalidate()
     }
 
     // ---- page rotation -----------------------------------------------------------------------
@@ -469,7 +504,7 @@ class KioskActivity : Activity(), DashboardSurface {
     private val rotation: Runnable = Runnable {
         val pages = app.settings.pages()
         val now = SystemClock.elapsedRealtime()
-        val busy = panel.isShowing || mainFrameFailed || app.state.screen == KioskState.Screen.BLANK
+        val busy = panel.isShowing || mainFrameFailed || app.state.screen == KioskState.Screen.BLANK || app.state.resting
         if (pages.size > 1 && !busy && Schedule.rotationDue(now, pageShownAt, lastInteraction, app.settings[Keys.ROTATE_SECONDS])) {
             showPage(Schedule.nextIndex(pageIndex, pages.size), pages)
         }
@@ -598,7 +633,10 @@ class KioskActivity : Activity(), DashboardSurface {
 
     override fun dispatchKeyEvent(event: KeyEvent): Boolean {
         val code = event.keyCode
-        if (event.action == KeyEvent.ACTION_DOWN) lastInteraction = SystemClock.elapsedRealtime()
+        if (event.action == KeyEvent.ACTION_DOWN) {
+            lastInteraction = SystemClock.elapsedRealtime()
+            app.controller.interaction(lastInteraction)
+        }
         val isCentre = code == KeyEvent.KEYCODE_DPAD_CENTER || code == KeyEvent.KEYCODE_ENTER ||
             code == KeyEvent.KEYCODE_NUMPAD_ENTER
 

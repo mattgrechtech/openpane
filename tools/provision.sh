@@ -48,6 +48,7 @@ a install -r "$apk" >/dev/null
 
 echo "Allowing pop-ups over other apps and background start ..."
 a shell appops set "$pkg" SYSTEM_ALERT_WINDOW allow
+a shell appops set "$pkg" TURN_SCREEN_ON allow 2>/dev/null || true  # Android 14+: wake on motion turns the screen on
 echo "Excluding it from battery optimisation (keeps the service running) ..."
 a shell dumpsys deviceidle whitelist "+$pkg" >/dev/null || true
 

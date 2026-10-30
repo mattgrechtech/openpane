@@ -45,6 +45,20 @@ class KioskState {
         private set
     @Volatile var reloadCount: Int = 0
         private set
+    /** The screen is dark because nobody has been around (wake on motion). */
+    @Volatile var resting: Boolean = false
+        private set
+    /** The night hours have the screen dark. */
+    @Volatile var nightDark: Boolean = false
+        private set
+    /** Home Assistant says someone is present. */
+    @Volatile var present: Boolean = false
+        private set
+    @Volatile var lastMotionAtMillis: Long = 0
+        private set
+    /** How long the last wake took, from the command arriving to the dashboard's next frame. */
+    @Volatile var lastWakeMillis: Long = -1
+        private set
 
     private val startedElapsed = SystemClock.elapsedRealtime()
     private val listeners = mutableListOf<() -> Unit>()
@@ -65,6 +79,11 @@ class KioskState {
         fun pointer(enabled: Boolean) { pointerEnabled = enabled }
         fun haConnection(value: String) { haConnection = value }
         fun error(message: String) { lastError = message }
+        fun resting(value: Boolean) { resting = value }
+        fun nightDark(value: Boolean) { nightDark = value }
+        fun motion(present: Boolean) { this@KioskState.present = present; lastMotionAtMillis = System.currentTimeMillis() }
+        fun presentOnly(present: Boolean) { this@KioskState.present = present }
+        fun wakeTook(millis: Long) { lastWakeMillis = millis }
         fun reloaded(reason: String) {
             lastReloadReason = reason
             lastReloadAtMillis = System.currentTimeMillis()
@@ -85,6 +104,13 @@ class KioskState {
             .put("title", pageTitle)
             .put("screen", screen.name.lowercase())
             .put("dim_level", dimLevel)
+            .put("resting", resting)
+            .put("night", nightDark)
+            .put("present", present)
+            .put("last_motion_at", if (lastMotionAtMillis == 0L) JSONObject.NULL else lastMotionAtMillis / 1000)
+            .put("last_motion_iso", if (lastMotionAtMillis == 0L) JSONObject.NULL else iso(lastMotionAtMillis))
+            .put("last_wake_ms", if (lastWakeMillis < 0) JSONObject.NULL else lastWakeMillis)
+            .put("wake", WakeReadiness.toJson(context))
             .put("dashboard_visible", dashboardVisible)
             .put("pointer", pointerEnabled)
             .put("ha_connection", haConnection)
@@ -95,7 +121,7 @@ class KioskState {
             .put("app_uptime_s", (now - startedElapsed) / 1000)
             .put("device_uptime_s", now / 1000)
             .put("app_started_at", startedAtMillis(now) / 1000)
-            .put("app_started_iso", Instant.ofEpochMilli(startedAtMillis(now)).truncatedTo(ChronoUnit.SECONDS).toString())
+            .put("app_started_iso", iso(startedAtMillis(now)))
             .put("memory_available_mb", memory.availMem / MB)
             .put("memory_total_mb", memory.totalMem / MB)
             .put("memory_low", memory.lowMemory)
@@ -110,6 +136,8 @@ class KioskState {
             .put("model", Build.MODEL)
             .put("manufacturer", Build.MANUFACTURER)
     }
+
+    private fun iso(millis: Long) = Instant.ofEpochMilli(millis).truncatedTo(ChronoUnit.SECONDS).toString()
 
     private fun startedAtMillis(nowElapsed: Long) = System.currentTimeMillis() - (nowElapsed - startedElapsed)
 

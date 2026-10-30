@@ -59,6 +59,18 @@ object Keys {
         if (it in 0..23) null else "must be an hour 0-23"
     })
 
+    // Wake on motion
+    /** Minutes without motion, presence or the remote before the screen rests; 0 is never. */
+    val REST_AFTER_MINUTES = Key("rest_after_minutes", 0, check = {
+        if (it in 0..240) null else "must be 0 (never) or 1-240"
+    })
+    /** black, or dim (the page stays faintly visible). */
+    val REST_STYLE = Key("rest_style", "black", check = { if (it in REST_STYLES) null else "must be one of $REST_STYLES" })
+    /** Whether motion wakes the screen during the night hours. */
+    val MOTION_AT_NIGHT = Key("motion_at_night", false)
+    /** When motion brings the dashboard in front of another app: unless_playing, always or never. */
+    val MOTION_FRONT = Key("motion_front", "unless_playing", check = { if (it in MOTION_FRONTS) null else "must be one of $MOTION_FRONTS" })
+
     // Recovery
     val RELOAD_ON_NETWORK = Key("reload_on_network", true)
     val RELOAD_ON_DISCONNECT_SECONDS = Key("reload_on_disconnect_seconds", 60, check = {
@@ -115,6 +127,8 @@ object Keys {
     val POPUP_CORNERS = listOf("top_start", "top_end", "bottom_start", "bottom_end")
     val AUTH_MODES = listOf("none", "login", "token")
     val REMOTE_MODES = listOf("buttons", "pointer", "page")
+    val REST_STYLES = listOf("black", "dim")
+    val MOTION_FRONTS = listOf("unless_playing", "always", "never")
 
     /** The non-blank lines of a [PAGES] value, trimmed. */
     fun splitPages(value: String): List<String> = value.lines().map { it.trim() }.filter { it.isNotEmpty() }
@@ -125,6 +139,7 @@ object Keys {
     val ALL: List<Key<*>> = listOf(
         MODE, START_URL, HA_URL, AUTH_MODE, HA_KIOSK_MODE, KEEP_SCREEN_ON, BOOT_START, REMOTE_MODE,
         PAGES, ROTATE_SECONDS, SCREEN_OFF_FROM, SCREEN_OFF_TO,
+        REST_AFTER_MINUTES, REST_STYLE, MOTION_AT_NIGHT, MOTION_FRONT,
         POPUP_SIZE, POPUP_OPACITY, POPUP_TEXT_SIZE, POPUP_CORNER, POPUP_DURATION, POPUP_MAX_PER_CORNER, POPUP_TAKE_REMOTE,
         RELOAD_ON_NETWORK, RELOAD_ON_DISCONNECT_SECONDS, NIGHTLY_RELOAD_HOUR,
         API_ENABLED, API_PORT, TVOVERLAY_COMPAT, TVOVERLAY_PORT,

@@ -7,6 +7,7 @@ import android.media.AudioManager
 import android.media.MediaPlayer
 import android.os.Handler
 import android.os.Looper
+import android.os.SystemClock
 import android.provider.Settings as AndroidSettings
 import android.speech.tts.TextToSpeech
 import io.github.mattgrechtech.tvkiosk.overlay.Popup
@@ -28,6 +29,12 @@ interface DashboardSurface {
     fun setPointer(enabled: Boolean)
     /** Navigates inside the HA frontend without a reload. Returns false if the bridge isn't up. */
     fun navigateHa(path: String): Boolean
+    /** Keeps the night hours from darkening the screen for [millis]. */
+    fun holdAwake(millis: Long)
+    /** True during the night hours. */
+    fun nightActive(): Boolean
+    /** Logs and reports the time from [startedAt] (elapsed realtime) to the dashboard's next frame. */
+    fun timeNextFrame(startedAt: Long)
 }
 
 /**
@@ -48,6 +55,8 @@ class KioskController(
         takeRemote = { settings[Keys.POPUP_TAKE_REMOTE] }
         onAction = { action -> runPopupAction(action) }
     }
+    /** Wake on motion: when the screen rests and what wakes it. */
+    val presence = Presence()
     private var tts: TextToSpeech? = null
     private var ttsReady = false
     private var player: MediaPlayer? = null
@@ -110,7 +119,8 @@ class KioskController(
         "navigate" -> navigate(args)
         "reload" -> reload(args)
         "screen" -> screen(args)
-        "wake" -> wake()
+        "wake" -> wake(args)
+        "motion" -> motion(args)
         "pointer" -> pointer(args)
         "notify" -> notify(args)
         "notify_clear" -> {
@@ -176,16 +186,92 @@ class KioskController(
     }
 
     fun setScreen(mode: KioskState.Screen, level: Int) {
-        state.update { screen(mode, level) }
+        if (mode == KioskState.Screen.ON) presence.awake(SystemClock.elapsedRealtime())
+        state.update {
+            screen(mode, level)
+            if (mode == KioskState.Screen.ON) resting(false)
+        }
         surface?.applyScreen(mode, level)
     }
 
-    private fun wake(): CommandResult {
-        setScreen(KioskState.Screen.ON, 0)
-        val started = bringToFront()
-        val body = JSONObject()
-        if (!started) body.put("warning", "no permission to start from the background: grant 'display over other apps'")
+    /** Wakes the screen and brings the dashboard to the front, even over another app. */
+    private fun wake(args: JSONObject): CommandResult {
+        val minutes = args.optInt("minutes", 5).coerceIn(1, 240)
+        return CommandResult.ok(wakeScreen(SystemClock.elapsedRealtime(), front = true, holdMillis = minutes * 60_000L))
+    }
+
+    /**
+     * Motion or presence from Home Assistant. Wakes a resting screen, restarts the rest timer, and
+     * brings the dashboard forward as [Keys.MOTION_FRONT] allows. `present: true` holds the screen
+     * awake until `present: false`.
+     */
+    private fun motion(args: JSONObject): CommandResult {
+        val now = SystemClock.elapsedRealtime()
+        val present = if (args.has("present")) args.optBoolean("present") else null
+        val night = surface?.nightActive() == true
+        val quiet = state.nightDark && state.screen != KioskState.Screen.ON && !settings[Keys.MOTION_AT_NIGHT]
+        val result = presence.motion(now, present, quiet)
+        state.update { if (present == false) presentOnly(false) else motion(presence.present) }
+        val body = JSONObject().put("result", result.name.lowercase(Locale.ROOT)).put("present", presence.present)
+        if (result == Presence.Result.WOKE || result == Presence.Result.AWAKE) {
+            val front = when (settings[Keys.MOTION_FRONT]) {
+                "always" -> true
+                "never" -> false
+                else -> !somethingPlaying()
+            }
+            wakeScreen(now, front, holdMillis = if (night) Schedule.NIGHT_WAKE_MILLIS else 0).let { woke ->
+                woke.keys().forEach { key -> body.put(key, woke.get(key)) }
+            }
+        }
         return CommandResult.ok(body)
+    }
+
+    /**
+     * Turns the screen on (ending a screensaver), lifts a dim or rest, and brings the dashboard
+     * forward if [front]. [holdMillis] keeps the night hours from darkening it again for that long.
+     */
+    private fun wakeScreen(startedAt: Long, front: Boolean, holdMillis: Long): JSONObject {
+        val body = JSONObject()
+        body.put("screen_was_off", WakeReadiness.turnScreenOn(context))
+        if (holdMillis > 0) surface?.holdAwake(holdMillis)
+        val wasDark = state.screen != KioskState.Screen.ON
+        if (wasDark) setScreen(KioskState.Screen.ON, 0)
+        body.put("was_dark", wasDark)
+        when {
+            state.dashboardVisible -> body.put("dashboard", "in front")
+            !front -> body.put("dashboard", "left behind the app in front")
+            bringToFront() -> body.put("dashboard", "brought to front")
+            else -> body.put("dashboard", "behind other apps")
+                .put("warning", "no permission to start from the background: grant 'display over other apps'")
+        }
+        surface?.timeNextFrame(startedAt)
+        return body
+    }
+
+    /** Something is playing sound (a film, music): motion shouldn't take the screen from it. */
+    private fun somethingPlaying(): Boolean =
+        context.getSystemService(AudioManager::class.java)?.isMusicActive == true
+
+    /** Called by the dashboard about every half minute while it's in front: rests the screen when due. */
+    fun restTick(now: Long) {
+        presence.restAfterMillis = settings[Keys.REST_AFTER_MINUTES] * 60_000L
+        if (!presence.restDue(now) || state.screen != KioskState.Screen.ON) return
+        if (surface?.nightActive() == true) return
+        presence.rest(now)
+        AppLog.i(TAG, "Nobody around: screen resting")
+        val dim = settings[Keys.REST_STYLE] == "dim"
+        val mode = if (dim) KioskState.Screen.DIM else KioskState.Screen.BLANK
+        val level = if (dim) REST_DIM_LEVEL else 100
+        state.update {
+            resting(true)
+            screen(mode, level)
+        }
+        surface?.applyScreen(mode, level)
+    }
+
+    /** The remote was used: it counts as someone being around. */
+    fun interaction(now: Long) {
+        presence.awake(now)
     }
 
     /**
@@ -321,6 +407,7 @@ class KioskController(
 
     companion object {
         private const val TAG = "KioskController"
+        private const val REST_DIM_LEVEL = 80
 
         /** Whether the settings ask for a dashboard at all. */
         fun hasStartUrl(settings: Settings) = settings[Keys.START_URL].isNotEmpty()

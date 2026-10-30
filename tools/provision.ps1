@@ -43,6 +43,7 @@ if ($LASTEXITCODE -ne 0) { throw 'Install failed' }
 
 Write-Host 'Allowing pop-ups over other apps and background start ...'
 adb -s $target shell appops set $pkg SYSTEM_ALERT_WINDOW allow
+adb -s $target shell appops set $pkg TURN_SCREEN_ON allow 2>$null  # Android 14+: wake on motion turns the screen on
 Write-Host 'Excluding it from battery optimisation (keeps the service running) ...'
 adb -s $target shell dumpsys deviceidle whitelist "+$pkg" | Out-Null
 

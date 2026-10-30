@@ -24,6 +24,7 @@ That's the dashboard, the pop-ups and remote control of the TV, without a second
 
 - **Set up with the remote:** first-run setup finds Home Assistant on the network, signs in and lists your dashboards. Or choose "A web page" for any site: no Home Assistant needed.
 - **Dashboard:** any HA dashboard full screen, signed in without typing a password on the TV, HA's header and sidebar hidden.
+- **Wake on motion:** the screen rests (goes dark) when nobody is around and wakes when your Home Assistant motion or presence sensors see someone. The page keeps running behind the dark screen, so it's back at once with current values. It never takes the screen from a film, and a blueprint switches the TV on first if it's off. No camera needed. New, and still being tested on TVs.
 - **Several pages:** rotate through dashboards or web pages; the remote holds the current one. A night schedule blacks the screen for set hours.
 - **Remote-friendly:** the arrows jump between a page's buttons and OK presses them, so touch dashboards work with a remote. An on-screen pointer for anything else. Back goes back, then home. Hold **OK** (or press Menu) for a quick menu.
 - **Pop-ups over any app:** doorbell snapshots, bin night, alerts, in any corner, stacked, replaceable by id, with your choice of size, opacity and text size, and optional buttons ("Open camera"). Speaks TvOverlay's `/notify` format, so existing automations keep working.
@@ -59,7 +60,7 @@ The app talks only to the addresses you give it (Home Assistant, the web pages y
 
 ## Docs
 
-- [Home Assistant set-up](docs/home-assistant.md): doorbell pop-ups with a camera picture, REST commands, MQTT, moving TvOverlay or ha-tv-kit pop-ups over, wake on doorbell.
+- [Home Assistant set-up](docs/home-assistant.md): doorbell pop-ups with a camera picture, wake on motion, REST commands, MQTT, moving TvOverlay or ha-tv-kit pop-ups over.
 - [API](docs/api.md): REST routes, every setting, pop-up fields, MQTT topics and entities, adb, remote keys for your own pages.
 - [Troubleshooting](docs/troubleshooting.md): setup, sign-in, pop-ups, a forgotten PIN, updating and uninstalling.
 - [Build set-up](docs/build-setup.md), [Releasing](docs/releasing.md) and [Contributing](CONTRIBUTING.md).

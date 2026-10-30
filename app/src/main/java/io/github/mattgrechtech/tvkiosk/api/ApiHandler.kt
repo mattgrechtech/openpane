@@ -47,7 +47,9 @@ class ApiHandler(
         val route = path.removePrefix(PREFIX)
 
         if (route == "/state") {
-            return if (request.method == "GET") result(execute("state", JSONObject())) else error(405, "use GET")
+            // POST too, so a Home Assistant rest_command (always POST) can read it.
+            return if (request.method == "GET" || request.method == "POST") result(execute("state", JSONObject()))
+            else error(405, "use GET")
         }
         if (route == "/diagnostics" || route == "/logs") {
             if (request.method != "GET") return error(405, "use GET")
@@ -110,6 +112,7 @@ class ApiHandler(
             "/reload" to "reload",
             "/screen" to "screen",
             "/wake" to "wake",
+            "/motion" to "motion",
             "/pointer" to "pointer",
             "/notify" to "notify",
             "/notify/clear" to "notify_clear",

@@ -44,9 +44,10 @@ class ApiHandlerTest {
         assertEquals("Doorbell", JSONObject(executed.single().second).getString("title"))
     }
 
-    @Test fun stateIsAGet() {
+    @Test fun stateIsARead() {
         assertEquals(200, request("GET", "/api/v1/state").status)
-        assertEquals(405, request("POST", "/api/v1/state").status)
+        assertEquals(200, request("POST", "/api/v1/state").status)
+        assertEquals(405, request("PUT", "/api/v1/state").status)
         assertEquals(405, request("GET", "/api/v1/reload").status)
     }
 

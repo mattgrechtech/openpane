@@ -1,0 +1,44 @@
+name: Device smoke test
+
+# Installs the debug APK on Android emulators (old and new, TV and tablet), starts it, and checks
+# it runs without crashing and its web admin page answers. Weekly and on demand.
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 3 * * 1"
+
+permissions:
+  contents: read
+
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { api: 24, target: default, name: "Android 7 tablet" }
+          - { api: 29, target: android-tv, name: "Android 10 TV" }
+          - { api: 34, target: android-tv, name: "Android 14 TV" }
+          - { api: 34, target: google_apis, name: "Android 14 tablet" }
+    name: ${{ matrix.name }}
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: "17"
+      - uses: gradle/actions/setup-gradle@v5
+      - run: ./gradlew assembleDebug
+      - name: Enable KVM
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+      - uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: ${{ matrix.api }}
+          target: ${{ matrix.target }}
+          arch: x86_64
+          disable-animations: true
+          script: tools/smoke-test.sh app/build/outputs/apk/debug/app-debug.apk

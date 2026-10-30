@@ -1,5 +1,7 @@
 package io.github.mattgrechtech.openpane.overlay
 
+import io.github.mattgrechtech.openpane.diag.Perf
+import android.view.ViewTreeObserver
 import android.content.Context
 import android.graphics.Color
 import android.graphics.PixelFormat
@@ -59,8 +61,13 @@ class PopupManager(private val context: Context) {
         var focusable = false
     }
 
-    private class Entry(val popup: Popup, val view: View, val corner: Popup.Corner, val dismiss: Runnable) {
+    private class Entry(
+        val popup: Popup, val view: View, val corner: Popup.Corner, val dismiss: Runnable,
+        /** When the command arrived (elapsedRealtime), for the timings in [Perf]. */
+        val startedAt: Long,
+    ) {
         var stream: LiveStream? = null
+        var firstFrameSeen = false
     }
 
     private val main = Handler(Looper.getMainLooper())
@@ -84,7 +91,7 @@ class PopupManager(private val context: Context) {
     /** True while any pop-up is on screen. */
     val showing: Boolean get() = entries.isNotEmpty()
 
-    fun show(popup: Popup): Shown {
+    fun show(popup: Popup, startedAt: Long = SystemClock.elapsedRealtime()): Shown {
         val overWindows = Settings.canDrawOverlays(context)
         if (!overWindows && dashboardFrame == null) return Shown.NOWHERE
 
@@ -112,7 +119,8 @@ class PopupManager(private val context: Context) {
         }
 
         val dismiss = Runnable { entries[popup.id]?.let { if (it.view === view) clear(popup.id) } }
-        entries[popup.id] = Entry(popup, view, popup.corner, dismiss)
+        entries[popup.id] = Entry(popup, view, popup.corner, dismiss, startedAt)
+        timeFirstDraw(view, startedAt)
         // 0 means until it's closed; even then, never forever.
         val seconds = if (popup.durationSeconds > 0) popup.durationSeconds else Popup.MAX_STICKY
         main.postDelayed(dismiss, seconds * 1000L)
@@ -174,15 +182,35 @@ class PopupManager(private val context: Context) {
     }
 
     /** Plays [url] (MJPEG) in pop-up [id]'s picture area until the pop-up goes. */
+    /** Records how long until [view] is first drawn on screen. */
+    private fun timeFirstDraw(view: View, startedAt: Long) {
+        val observer = view.viewTreeObserver
+        val listener = object : ViewTreeObserver.OnDrawListener {
+            override fun onDraw() {
+                Perf.record(Perf.Metric.POPUP, SystemClock.elapsedRealtime() - startedAt)
+                val self = this
+                // Can't remove a draw listener while it's being called.
+                main.post { if (view.viewTreeObserver.isAlive) view.viewTreeObserver.removeOnDrawListener(self) }
+            }
+        }
+        if (observer.isAlive) observer.addOnDrawListener(listener)
+    }
+
     fun playStream(id: String, url: String) {
         val entry = entries[id] ?: return
         val image = entry.view.findViewWithTag<ImageView>(PICTURE) ?: return
         entry.stream?.stop()
-        entry.stream = LiveStream(url, maxSidePx = 1280) { frame ->
+        // Decode at the size it's shown, not the camera's: less work per frame on a slow TV.
+        val side = maxOf(image.layoutParams?.width ?: 0, image.layoutParams?.height ?: 0).takeIf { it > 0 } ?: 720
+        entry.stream = LiveStream(url, maxSidePx = side.coerceIn(320, 1280)) { frame ->
             main.post {
                 if (entries[id] === entry && image.isAttachedToWindow) {
                     image.setImageBitmap(frame)
                     image.visibility = View.VISIBLE
+                    if (!entry.firstFrameSeen) {
+                        entry.firstFrameSeen = true
+                        Perf.record(Perf.Metric.CAMERA_FIRST_FRAME, SystemClock.elapsedRealtime() - entry.startedAt)
+                    }
                 }
             }
         }.also { it.start() }

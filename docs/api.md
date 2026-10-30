@@ -199,7 +199,7 @@ On Android 14 and newer, turning the screen on needs a permission the TV doesn't
 }
 ```
 
-`last_wake_ms` is how long the last wake took, from the command arriving to the dashboard's next frame. `wake.turn_screen_on` is `allowed`, `default`, `denied` or `not needed` (before Android 14); `low_power_standby` (Android 13+) means the TV cuts apps off the network in standby.
+`perf` has recent timings against their budgets: `wake` (150 ms), `popup` (300 ms to the pop-up's first frame), `camera_first_frame` (1.5 s), `page_load` (8 s), each with `last`, `median`, `worst`, `count`, `budget` and `over_budget`. The admin page shows them under Speed, and the emulator smoke test fails if pop-ups get slow. `last_wake_ms` is how long the last wake took, from the command arriving to the dashboard's next frame. `wake.turn_screen_on` is `allowed`, `default`, `denied` or `not needed` (before Android 14); `low_power_standby` (Android 13+) means the TV cuts apps off the network in standby.
 
 `ha_connection` comes from HA's frontend through the app bridge, so it is only known when the app manages sign-in (auth mode `login` or `token`); otherwise it stays `unknown`.
 

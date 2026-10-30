@@ -488,6 +488,7 @@ class KioskController(
     }
 
     private fun notify(args: JSONObject): CommandResult {
+        val startedAt = SystemClock.elapsedRealtime()
         val popup = Popup.fromJson(args, popupDefaults()) ?: return CommandResult.error(400, "a title or message is required")
         if (settings[Keys.DO_NOT_DISTURB] && args.optString("priority") != "high") {
             AppLog.i(TAG, "Do not disturb: pop-up held back")
@@ -496,7 +497,7 @@ class KioskController(
         // Before the chime or speech, so it can't be mistaken for the film still playing.
         if (popup.pauseMedia) mediaPause.hold(popup.id)
         announce(args.optString("sound").trim(), args.optString("tts").trim(), args)
-        val shown = popups.show(popup)
+        val shown = popups.show(popup, startedAt)
         if (shown == PopupManager.Shown.NOWHERE && popup.pauseMedia) mediaPause.release(popup.id)
         if (shown != PopupManager.Shown.NOWHERE) {
             // A pop-up wakes a resting screen, so it isn't shown over black.

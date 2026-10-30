@@ -171,6 +171,7 @@ class KioskState {
             .put("memory_low", memory.lowMemory)
             .put("app_memory_mb", appMemory.totalPss / 1024)
             .put("battery", battery(context) ?: JSONObject.NULL)
+            .put("perf", io.github.mattgrechtech.openpane.diag.Perf.toJson())
             .put("overlay_permission", AndroidSettings.canDrawOverlays(context))
             .put("ip", localIpv4() ?: JSONObject.NULL)
             .put("app_version", BuildConfig.VERSION_NAME)

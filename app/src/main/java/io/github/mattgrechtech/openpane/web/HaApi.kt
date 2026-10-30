@@ -1,5 +1,6 @@
 package io.github.mattgrechtech.openpane.web
 
+import android.os.SystemClock
 import io.github.mattgrechtech.openpane.diag.AppLog
 import io.github.mattgrechtech.openpane.settings.Settings
 import org.json.JSONObject
@@ -131,6 +132,12 @@ class HaApi(private val settings: Settings, private val auth: HaAuth) {
     fun cameraStream(entity: String, callback: (String?) -> Unit) {
         val base = settings.haBaseUrl()
         if (settings.isWebMode() || base == null) return callback(null)
+        // A doorbell's second press within a few minutes skips a round trip to Home Assistant.
+        synchronized(streamLinks) {
+            streamLinks[entity]?.let { (url, at) ->
+                if (SystemClock.elapsedRealtime() - at < STREAM_LINK_MILLIS && url.startsWith(base)) return callback(url)
+            }
+        }
         Thread({
             val url = try {
                 val token = auth.accessToken(force = false).accessToken
@@ -143,7 +150,9 @@ class HaApi(private val settings: Settings, private val auth: HaAuth) {
                     val state = JSONObject(connection.inputStream.bufferedReader().readText())
                     val access = state.optJSONObject("attributes")?.optString("access_token").orEmpty()
                     if (access.isEmpty()) throw IllegalStateException("$entity has no access token")
-                    "$base/api/camera_proxy_stream/$entity?token=$access"
+                    "$base/api/camera_proxy_stream/$entity?token=$access".also { link ->
+                        synchronized(streamLinks) { streamLinks[entity] = link to SystemClock.elapsedRealtime() }
+                    }
                 } finally {
                     connection.disconnect()
                 }
@@ -155,8 +164,13 @@ class HaApi(private val settings: Settings, private val auth: HaAuth) {
         }, "ha-camera").start()
     }
 
+    /** Camera entity -> (stream link, when it was fetched). Links carry a token HA rotates every 5 minutes. */
+    private val streamLinks = mutableMapOf<String, Pair<String, Long>>()
+
     companion object {
         private const val TAG = "HaApi"
+        /** Under Home Assistant's 5-minute access token rotation, with room to spare. */
+        private const val STREAM_LINK_MILLIS = 3 * 60_000L
         private val ENTITY_ID = Regex("[a-z_]+\\.[a-z0-9_]{1,100}")
         private const val TIMEOUT_MILLIS = 8000
     }

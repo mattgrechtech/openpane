@@ -195,6 +195,10 @@ async function refreshState() {
     wake.push(card("In standby", cut ? "cut off the network: HA must switch the TV on" : "stays reachable", cut ? "warn" : "ok"));
   }
   $("wake").replaceChildren(...wake);
+  const NAMES = { wake: "Wake", popup: "Pop-up on screen", camera_first_frame: "Camera's first frame", page_load: "Page load" };
+  const perf = Object.entries(s.perf || {}).map(([key, p]) =>
+    card(NAMES[key] || key, p.median + " ms typical, " + p.worst + " worst (budget " + p.budget + ")", p.median > p.budget ? "warn" : "ok"));
+  $("perf").replaceChildren(...(perf.length ? perf : [card("Timings", "none yet: they appear as things happen")]));
   const b = $("brightness");
   if (document.activeElement !== b) { b.value = s.brightness; $("brightness-value").textContent = s.brightness < 0 ? "device setting" : s.brightness + "%"; }
 }

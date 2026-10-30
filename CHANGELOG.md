@@ -8,6 +8,7 @@ First public version. Pre-alpha: tested on two TCL Google TVs (Android 14), incl
 
 - Pop-ups can pause what's playing (`pause_media`, for the doorbell): Netflix, YouTube or live TV pause while it's up and resume when it closes, only if the pop-up paused them.
 - TCL and similar TVs: the app reports when the maker's app manager blocks it restarting after an update or boot (*Auto-start*, *Background service* in the admin page); provisioning allows it.
+- Speed budgets: the app times waking (150 ms), pop-ups reaching the screen (300 ms), a camera's first frame (1.5 s) and page loads (8 s), shows them in the admin page (Speed) and `/state` (`perf`), logs anything over budget, and the emulator smoke test fails if pop-ups get slow. Camera pop-ups reuse the stream link for 3 minutes (a second doorbell press skips a round trip to Home Assistant) and decode frames at the size they're shown.
 - Battery: tablets report level, charging and temperature (`battery` in `/state`, sensors in the integration; nothing on TVs), and a battery care blueprint keeps a wall tablet between 30 and 80 % with a smart plug.
 - Health in Home Assistant: the integration raises Repairs when a TV hasn't answered for hours, can't show pop-ups over other apps, is blocked from running in the background, or has a browser engine too old for HA's dashboards; they clear themselves when fixed.
 - Screen picture: `GET /screenshot` and a *Screen* camera in the integration (off by default) show what the dashboard shows, fetched only when someone looks.

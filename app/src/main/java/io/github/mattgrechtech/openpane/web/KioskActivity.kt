@@ -87,6 +87,8 @@ class KioskActivity : Activity(), DashboardSurface {
     private var retryDelayIndex = 0
     private var mainFrameFailed = false
     private var networkLost = false
+    /** When the current page started loading, for the page-load timing; 0 when none is pending. */
+    private var pageStartedAt = 0L
     /** The scene by time of day last put in place (null: none). */
     private var appliedScene: Scenes.Scene? = null
     /** The dashboard as it last looked while connected, shown dimmed while it can't load; and when. */
@@ -117,6 +119,7 @@ class KioskActivity : Activity(), DashboardSurface {
         val took = SystemClock.elapsedRealtime() - started
         AppLog.i(TAG, "Woke: next frame $took ms after the command")
         app.state.update { wakeTook(took) }
+        io.github.mattgrechtech.openpane.diag.Perf.record(io.github.mattgrechtech.openpane.diag.Perf.Metric.WAKE, took)
         main.post { root.viewTreeObserver.removeOnDrawListener(wakeFrame) }
     }
 
@@ -338,6 +341,7 @@ class KioskActivity : Activity(), DashboardSurface {
         }
 
         override fun onPageStarted(view: WebView, url: String, favicon: Bitmap?) {
+            pageStartedAt = SystemClock.elapsedRealtime()
             mainFrameFailed = false
             navigator.reset()
             bridge?.onPageStarted(url)
@@ -359,6 +363,12 @@ class KioskActivity : Activity(), DashboardSurface {
             // Also when HA handles its own sign-in (no bus events): hide the header on load.
             if (!mainFrameFailed && app.settings[Keys.HA_KIOSK_MODE]) bridge?.setKioskMode(true)
             if (!mainFrameFailed) {
+                if (pageStartedAt > 0) {
+                    io.github.mattgrechtech.openpane.diag.Perf.record(
+                        io.github.mattgrechtech.openpane.diag.Perf.Metric.PAGE_LOAD, SystemClock.elapsedRealtime() - pageStartedAt,
+                    )
+                    pageStartedAt = 0
+                }
                 retryDelayIndex = 0
                 lastGood = null
                 hidePanel(unless = Panel.SIGN_IN)

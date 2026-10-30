@@ -19,6 +19,7 @@ object Diagnostics {
         val json = JSONObject()
             .put("generated_at", Instant.now().toString())
             .put("state", app.state.toJson(context))
+            .put("perf", Perf.toJson())
             .put("settings", SettingsJson.export(app.settings, includeSecrets = false))
             .put("log", JSONArray(AppLog.recent(logLines)))
         CrashGuard.lastCrash(context)?.let { crash ->

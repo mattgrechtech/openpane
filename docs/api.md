@@ -119,7 +119,7 @@ For example `{"pages": ["http://192.168.1.50:8123/cameras"], "rotate_seconds": 6
 | `size` | | `small`, `medium`, `large` |
 | `opacity` | | Background opacity in percent, 40–100. Images and text stay solid |
 | `text_size` | | `normal` or `large` |
-| `actions` | | Up to 3 buttons: `[{"label": "Open camera", "navigate": "/lovelace/cameras"}]`. `navigate` opens a Home Assistant path, `url` opens a web page, `event` tells Home Assistant (see below), none of them just closes the pop-up. A Close button is always added |
+| `actions` | | Up to 3 buttons: `[{"label": "Open camera", "navigate": "/lovelace/cameras"}]`. `navigate` opens a Home Assistant path, `url` opens a web page, `event` tells Home Assistant (see below), `toggle` switches an entity straight away (`light`, `switch`, `fan`, `cover`, `input_boolean`, `media_player`; `scene` and `script` are turned on; never locks or alarms: use `event` and an automation for those), none of them just closes the pop-up. A Close button is always added |
 | `camera` | | A Home Assistant camera to show **live** in the picture area, e.g. `camera.front_door`. The TV asks Home Assistant for the camera's stream with its own sign-in. Give `image` too, and the snapshot shows until the stream starts |
 | `stream` | | Any live MJPEG URL instead, e.g. go2rtc's `http://<host>:1984/api/stream.mjpeg?src=front_door` or Frigate's. Played at up to 10 frames a second, scaled to fit, until the pop-up closes |
 | `priority` | | `high` still shows (with its sound) during *Do not disturb*; anything else waits |

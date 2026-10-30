@@ -42,6 +42,7 @@ class KioskApp : Application() {
         controller.eventListeners += { type, data -> ha.fire(type, data) }
         controller.cameraStream = ha::cameraStream
         controller.haState = ha::state
+        controller.haService = ha::callService
         KioskService.start(this)
         applyHomeScreen()
         scheduleUpdateCheck()

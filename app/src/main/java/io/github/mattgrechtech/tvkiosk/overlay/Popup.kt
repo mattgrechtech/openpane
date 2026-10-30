@@ -53,10 +53,17 @@ data class Popup(
 
     /**
      * A button on the pop-up: open a Home Assistant path ([navigate]), open a web page ([url]),
-     * or send [event] to Home Assistant (a `tv_kiosk_action` event, and the MQTT pop-up button
-     * entity) for an automation to act on. Every button closes the pop-up.
+     * send [event] to Home Assistant (a `tv_kiosk_action` event, and the MQTT pop-up button
+     * entity) for an automation to act on, or [toggle] an entity in a safe domain ([TOGGLE_DOMAINS]:
+     * never locks, alarms or doors). Every button closes the pop-up.
      */
-    data class Action(val label: String, val navigate: String?, val url: String?, val event: String? = null)
+    data class Action(
+        val label: String,
+        val navigate: String?,
+        val url: String?,
+        val event: String? = null,
+        val toggle: String? = null,
+    )
 
     /** The pop-up settings, used for anything the payload leaves out. */
     data class Defaults(
@@ -83,6 +90,10 @@ data class Popup(
         const val MAX_QR = 500
         private val EVENT_NAME = Regex("[a-z0-9_]{1,50}")
         private val CAMERA_ENTITY = Regex("camera\\.[a-z0-9_]{1,100}")
+        private val ENTITY = Regex("[a-z_]+\\.[a-z0-9_]{1,100}")
+
+        /** What a button may toggle without an automation: lights and the like, never security. */
+        val TOGGLE_DOMAINS = setOf("light", "switch", "fan", "cover", "input_boolean", "scene", "script", "media_player")
 
         /** 4:59, 1:02:03. */
         fun formatCountdown(seconds: Int): String {
@@ -135,13 +146,16 @@ data class Popup(
                 val navigate = text(item, "navigate").ifEmpty { null }
                 val url = text(item, "url").ifEmpty { null }
                 val event = text(item, "event").lowercase().ifEmpty { null }
+                val toggle = text(item, "toggle").lowercase().ifEmpty { null }
                 when {
                     label.isEmpty() -> null
                     navigate != null && !navigate.startsWith("/") -> null
                     url != null && !url.startsWith("http://") && !url.startsWith("https://") -> null
                     event != null && !EVENT_NAME.matches(event) -> null
+                    toggle != null && (!ENTITY.matches(toggle) || toggle.substringBefore('.') !in TOGGLE_DOMAINS) -> null
                     navigate != null -> Action(label, navigate, null)
                     url != null -> Action(label, null, url)
+                    toggle != null -> Action(label, null, null, toggle = toggle)
                     else -> Action(label, null, null, event)
                 }
             }.take(MAX_ACTIONS)

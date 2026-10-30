@@ -78,6 +78,9 @@ class KioskController(
     /** Finds a live stream link for a camera entity (Home Assistant), or null. */
     var cameraStream: (String, (String?) -> Unit) -> Unit = { _, callback -> callback(null) }
 
+    /** Calls a Home Assistant action (domain, service, data). */
+    var haService: (String, String, JSONObject) -> Unit = { _, _, _ -> }
+
     /** Reads an entity's state from Home Assistant (blocking), or null. */
     var haState: (String) -> JSONObject? = { null }
 
@@ -110,6 +113,13 @@ class KioskController(
      * forward), or tell Home Assistant which button was pressed.
      */
     private fun runPopupAction(popup: Popup, action: Popup.Action) {
+        action.toggle?.let { entity ->
+            AppLog.i(TAG, "Pop-up button: toggle $entity")
+            val domain = entity.substringBefore('.')
+            val service = if (domain == "scene" || domain == "script") "turn_on" else "toggle"
+            haService(if (service == "toggle") "homeassistant" else domain, service, JSONObject().put("entity_id", entity))
+            return
+        }
         action.event?.let { event ->
             AppLog.i(TAG, "Pop-up button: $event")
             emit(

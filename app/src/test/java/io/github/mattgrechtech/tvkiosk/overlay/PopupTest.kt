@@ -105,6 +105,15 @@ class PopupTest {
         )
     }
 
+    @Test fun toggleButtonsOnlyForSafeDomains() {
+        val popup = Popup.fromJson(JSONObject("""{"title":"T","actions":[
+            {"label":"Porch light","toggle":"light.porch"},
+            {"label":"Unlock","toggle":"lock.front_door"},
+            {"label":"Disarm","toggle":"alarm_control_panel.home"}
+        ]}"""))!!
+        assertEquals(listOf(Popup.Action("Porch light", null, null, toggle = "light.porch")), popup.actions)
+    }
+
     @Test fun liveStreamAndCameraAreChecked() {
         val ok = Popup.fromJson(JSONObject("""{"title":"T","stream":"http://go2rtc.test:1984/api/stream.mjpeg?src=door","camera":"Camera.Front_Door"}"""))!!
         assertEquals("http://go2rtc.test:1984/api/stream.mjpeg?src=door", ok.stream)

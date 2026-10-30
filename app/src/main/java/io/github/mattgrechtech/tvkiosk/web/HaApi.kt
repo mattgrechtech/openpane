@@ -16,17 +16,18 @@ class HaApi(private val settings: Settings, private val auth: HaAuth) {
     fun fire(type: String, data: JSONObject) {
         if (settings.isWebMode()) return
         val base = settings.haBaseUrl() ?: return
-        Thread({ post(base, type, data) }, "ha-event").start()
+        Thread({ post(base, "/api/events/$type", data, type) }, "ha-event").start()
     }
 
-    private fun post(base: String, type: String, data: JSONObject) {
+    private fun post(base: String, path: String, data: JSONObject, what: String) {
+        val type = what
         val token = try {
             auth.accessToken(force = false).accessToken
         } catch (e: Exception) {
             AppLog.w(TAG, "Can't send $type: not signed in to Home Assistant (${e.message})")
             return
         }
-        val connection = URL("$base/api/events/$type").openConnection() as HttpURLConnection
+        val connection = URL(base + path).openConnection() as HttpURLConnection
         try {
             connection.requestMethod = "POST"
             connection.connectTimeout = TIMEOUT_MILLIS
@@ -43,6 +44,16 @@ class HaApi(private val settings: Settings, private val auth: HaAuth) {
         } finally {
             connection.disconnect()
         }
+    }
+
+    /**
+     * Calls a Home Assistant action ([domain].[service]) with [data], off the main thread. Only
+     * used for pop-up toggle buttons, whose entities [io.github.mattgrechtech.tvkiosk.overlay.Popup] limits.
+     */
+    fun callService(domain: String, service: String, data: JSONObject) {
+        if (settings.isWebMode()) return
+        val base = settings.haBaseUrl() ?: return
+        Thread({ post(base, "/api/services/$domain/$service", data, "$domain.$service") }, "ha-service").start()
     }
 
     /** [entity]'s state and attributes from Home Assistant, or null. Blocking: call off the main thread. */

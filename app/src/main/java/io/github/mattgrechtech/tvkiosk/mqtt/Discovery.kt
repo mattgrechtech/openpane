@@ -211,7 +211,7 @@ class Discovery(
         }
 
         private val PASS_THROUGH = setOf(
-            "reload", "wake", "motion", "brightness", "start_page", "screen", "pointer", "notify_clear", "launch", "volume", "sound", "stop_sound",
+            "reload", "wake", "motion", "brightness", "now_playing", "now_playing_stop", "start_page", "screen", "pointer", "notify_clear", "launch", "volume", "sound", "stop_sound",
         )
     }
 }

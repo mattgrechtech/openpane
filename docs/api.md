@@ -31,6 +31,8 @@ curl -X POST -H "Authorization: Bearer $TOKEN" -H "Content-Type: application/jso
 | `POST /wake` | `{"minutes": 5}` | Turn the screen on (ending a screensaver), lift a dim, rest or night screen, and bring the dashboard to the front, even over another app. The night hours stay away for `minutes` (1–240) |
 | `POST /motion` | `{"present": true\|false}` | Someone was seen: see [Wake on motion](#wake-on-motion). Without `present` it's a moment of motion; `present: true` holds the screen awake until `present: false` |
 | `POST /brightness` | `{"level": 0-100}` | Screen brightness while the dashboard is in front; `-1` goes back to the device's own setting. Works on most tablets; many TVs ignore it |
+| `POST /now_playing` | `{"entity": "media_player.kitchen", "corner", "size"}` | A pop-up that follows a Home Assistant media player: artwork, title, artist, progress, updated every 2 s, closed 30 s after it stops. Needs the TV's Home Assistant sign-in |
+| `POST /now_playing/stop` | | Close it |
 | `POST /pointer` | `{"enabled": true}` | On-screen pointer on/off (omit `enabled` to toggle) |
 | `POST /notify` | see [Pop-ups](#pop-ups) | Show a pop-up |
 | `POST /notify/clear` | `{"id"}` | Remove one pop-up, or all without `id` |

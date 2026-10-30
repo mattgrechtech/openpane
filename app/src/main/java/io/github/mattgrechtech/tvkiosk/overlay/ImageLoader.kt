@@ -20,7 +20,18 @@ object ImageLoader {
         executor.execute { callback(loadNow(source, maxSidePx)) }
     }
 
-    fun loadNow(source: String, maxSidePx: Int): Bitmap? = try {
+    private val recent = object : LinkedHashMap<String, Bitmap>(8, 0.75f, true) {
+        override fun removeEldestEntry(eldest: MutableMap.MutableEntry<String, Bitmap>) = size > 4
+    }
+
+    fun loadNow(source: String, maxSidePx: Int): Bitmap? {
+        val key = "$maxSidePx $source"
+        val web = source.startsWith("http://") || source.startsWith("https://")
+        if (web) synchronized(recent) { recent[key] }?.let { return it }
+        return fetch(source, maxSidePx)?.also { bitmap -> if (web) synchronized(recent) { recent[key] = bitmap } }
+    }
+
+    private fun fetch(source: String, maxSidePx: Int): Bitmap? = try {
         val bytes = when {
             source.startsWith("http://") || source.startsWith("https://") -> download(source)
             source.startsWith("data:") -> Base64.decode(source.substringAfter(","), Base64.DEFAULT)

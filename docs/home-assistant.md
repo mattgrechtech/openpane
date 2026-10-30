@@ -156,6 +156,25 @@ mode: single
 
 **Using ha-tv-kit?** Its [doorbell blueprint](https://github.com/mattgrechtech/ha-tv-kit/blob/main/homeassistant/blueprints/automation/ha-tv-kit/camera_motion_tv_popup.yaml) does this for every TV that's on, with a cooldown and an optional phone alert. It's what the Ring test used.
 
+## Now playing
+
+When music starts on a player near the TV, show what's playing over whatever is on screen:
+
+```yaml
+triggers:
+  - trigger: state
+    entity_id: media_player.kitchen
+    to: playing
+actions:
+  - action: tv_kiosk.now_playing
+    data:
+      device_id: <your TV>
+      entity: media_player.kitchen
+      corner: bottom_end
+```
+
+The pop-up keeps its artwork, title, artist and progress up to date and closes by itself 30 seconds after the music stops. Without the integration: `rest_command` with `{command: now_playing, args: {entity: media_player.kitchen}}`.
+
 ## Remote keys for automations
 
 Turn on Settings → Screen → *Colour keys and digits to Home Assistant*. Then, while the dashboard is in front, each colour key and digit fires a `tv_kiosk_key` event, with `long: true` for a long press:

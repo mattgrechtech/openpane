@@ -78,6 +78,16 @@ class KioskController(
     /** Finds a live stream link for a camera entity (Home Assistant), or null. */
     var cameraStream: (String, (String?) -> Unit) -> Unit = { _, callback -> callback(null) }
 
+    /** Reads an entity's state from Home Assistant (blocking), or null. */
+    var haState: (String) -> JSONObject? = { null }
+
+    private val nowPlaying = NowPlaying(
+        fetch = { entity -> haState(entity) },
+        base = { settings.haBaseUrl() },
+        show = { card -> main.post { notify(card) } },
+        clear = { main.post { popups.clear(NowPlaying.POPUP_ID) } },
+    )
+
     /**
      * Events for Home Assistant (type, data): pop-up buttons ([ACTION_EVENT]) and remote keys
      * ([KEY_EVENT]). Listeners send them on: Home Assistant's event bus, MQTT.
@@ -178,6 +188,21 @@ class KioskController(
         "wake" -> wake(args)
         "brightness" -> brightness(args)
         "motion" -> motion(args)
+        "now_playing" -> {
+            val entity = args.optString("entity").trim()
+            if (!entity.startsWith("media_player.")) CommandResult.error(400, "entity must be a media_player")
+            else {
+                nowPlaying.start(entity, JSONObject().apply {
+                    for (key in listOf("corner", "size", "opacity", "text_size")) if (args.has(key)) put(key, args.get(key))
+                })
+                CommandResult.ok()
+            }
+        }
+        "now_playing_stop" -> {
+            nowPlaying.stop()
+            popups.clear(NowPlaying.POPUP_ID)
+            CommandResult.ok()
+        }
         "pointer" -> pointer(args)
         "notify" -> notify(args)
         "notify_clear" -> {

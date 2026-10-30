@@ -139,6 +139,8 @@ class ApiHandler(
             "/screen" to "screen",
             "/wake" to "wake",
             "/motion" to "motion",
+            "/now_playing" to "now_playing",
+            "/now_playing/stop" to "now_playing_stop",
             "/brightness" to "brightness",
             "/pointer" to "pointer",
             "/notify" to "notify",

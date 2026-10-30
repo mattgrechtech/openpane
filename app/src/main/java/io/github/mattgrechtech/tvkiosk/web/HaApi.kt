@@ -45,6 +45,28 @@ class HaApi(private val settings: Settings, private val auth: HaAuth) {
         }
     }
 
+    /** [entity]'s state and attributes from Home Assistant, or null. Blocking: call off the main thread. */
+    fun state(entity: String): JSONObject? {
+        val base = settings.haBaseUrl()
+        if (settings.isWebMode() || base == null) return null
+        return try {
+            val token = auth.accessToken(force = false).accessToken
+            val connection = URL("$base/api/states/$entity").openConnection() as HttpURLConnection
+            try {
+                connection.connectTimeout = TIMEOUT_MILLIS
+                connection.readTimeout = TIMEOUT_MILLIS
+                connection.setRequestProperty("Authorization", "Bearer $token")
+                if (connection.responseCode != 200) null
+                else JSONObject(connection.inputStream.bufferedReader().readText())
+            } finally {
+                connection.disconnect()
+            }
+        } catch (e: Exception) {
+            AppLog.w(TAG, "Can't read $entity: ${e.message}")
+            null
+        }
+    }
+
     /**
      * A live MJPEG link for [entity] (a camera), from its current access token, or null (off the
      * main thread; [callback] runs there too). The link works without a sign-in until the token

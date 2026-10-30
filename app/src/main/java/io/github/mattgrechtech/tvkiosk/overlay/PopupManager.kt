@@ -83,7 +83,10 @@ class PopupManager(private val context: Context) {
         val overWindows = Settings.canDrawOverlays(context)
         if (!overWindows && dashboardFrame == null) return Shown.NOWHERE
 
-        entries.remove(popup.id)?.let { remove(it) }
+        val previous = entries.remove(popup.id)
+        val previousIndex = previous?.let { old -> corners[old.corner]?.container?.indexOfChild(old.view) } ?: -1
+        val replacing = previous != null && previous.corner == popup.corner
+        previous?.let { remove(it) }
         val corner = cornerFor(popup.corner, overWindows) ?: return Shown.NOWHERE
 
         while (corner.container.childCount >= maxPerCorner().coerceIn(1, 3)) {
@@ -95,9 +98,13 @@ class PopupManager(private val context: Context) {
         val view = buildView(popup)
         val atBottom = popup.corner == Popup.Corner.BOTTOM_START || popup.corner == Popup.Corner.BOTTOM_END
         // Newest nearest the screen edge.
-        corner.container.addView(view, if (atBottom) corner.container.childCount else 0)
-        view.alpha = 0f
-        view.animate().alpha(1f).setDuration(200).start()
+        val index = if (replacing && previousIndex in 0..corner.container.childCount) previousIndex
+        else if (atBottom) corner.container.childCount else 0
+        corner.container.addView(view, index)
+        if (!replacing) {
+            view.alpha = 0f
+            view.animate().alpha(1f).setDuration(200).start()
+        }
 
         val dismiss = Runnable { entries[popup.id]?.let { if (it.view === view) clear(popup.id) } }
         entries[popup.id] = Entry(popup, view, popup.corner, dismiss)

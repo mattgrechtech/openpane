@@ -62,6 +62,8 @@
     <string name="panel_server_answered">The server answered with error %1$d</string>
     <string name="panel_open_settings">Open settings</string>
     <string name="panel_unreachable_title">Can\'t reach Home Assistant</string>
+    <string name="panel_offline_title">Reconnecting to Home Assistant…</string>
+    <string name="panel_offline_message">Showing the dashboard as it was at %1$s. Trying again by itself in %2$d seconds.</string>
     <string name="panel_unreachable_message">%1$s\n\nTrying again by itself in %2$d seconds.</string>
     <string name="panel_try_now">Try now</string>
     <string name="panel_sign_in_title">Sign in to Home Assistant</string>

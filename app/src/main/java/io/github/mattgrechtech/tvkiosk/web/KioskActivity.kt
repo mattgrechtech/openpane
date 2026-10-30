@@ -86,6 +86,9 @@ class KioskActivity : Activity(), DashboardSurface {
     private var retryDelayIndex = 0
     private var mainFrameFailed = false
     private var networkLost = false
+    /** The dashboard as it last looked while connected, shown dimmed while it can't load; and when. */
+    private var lastGood: android.graphics.Bitmap? = null
+    private var lastGoodAt = 0L
     private var heartbeatPending = 0
     private var lastNightlyReloadDay = -1
     private var resumed = false
@@ -339,6 +342,7 @@ class KioskActivity : Activity(), DashboardSurface {
             if (!mainFrameFailed && app.settings[Keys.HA_KIOSK_MODE]) bridge?.setKioskMode(true)
             if (!mainFrameFailed) {
                 retryDelayIndex = 0
+                lastGood = null
                 hidePanel(unless = Panel.SIGN_IN)
                 app.state.update { page(url, view.title ?: "") }
             }
@@ -372,11 +376,51 @@ class KioskActivity : Activity(), DashboardSurface {
         app.state.update { error(message) }
         val delay = RETRY_DELAYS_SECONDS[retryDelayIndex.coerceAtMost(RETRY_DELAYS_SECONDS.lastIndex)]
         retryDelayIndex++
-        showPanel(Panel.ERROR, unreachableTitle(), getString(R.string.panel_unreachable_message, message, delay), MessagePanel.ICON_WARNING,
-            MessagePanel.Action(getString(R.string.panel_try_now), primary = true) { retryNow() },
-            MessagePanel.Action(getString(R.string.menu_settings)) { openSettings() })
+        val picture = lastGood
+        if (picture != null) {
+            // Calm, and still useful: the dashboard as it last was, dimmed, with the time.
+            val since = android.text.format.DateFormat.getTimeFormat(this).format(java.util.Date(lastGoodAt))
+            panelKind = Panel.ERROR
+            panel.show(
+                getString(R.string.panel_offline_title),
+                getString(R.string.panel_offline_message, since, delay),
+                listOf(
+                    MessagePanel.Action(getString(R.string.panel_try_now), primary = true) { retryNow() },
+                    MessagePanel.Action(getString(R.string.menu_settings)) { openSettings() },
+                ),
+                background = picture,
+            )
+        } else {
+            showPanel(Panel.ERROR, unreachableTitle(), getString(R.string.panel_unreachable_message, message, delay), MessagePanel.ICON_WARNING,
+                MessagePanel.Action(getString(R.string.panel_try_now), primary = true) { retryNow() },
+                MessagePanel.Action(getString(R.string.menu_settings)) { openSettings() })
+        }
         main.removeCallbacks(retry)
         main.postDelayed(retry, delay * 1000L)
+    }
+
+    /**
+     * Keeps a small copy of the dashboard as it is now, for the offline screen. Only once per
+     * outage (the first picture has the freshest values) and only from a page that loaded.
+     */
+    private fun rememberLastGood() {
+        if (lastGood != null || mainFrameFailed) return
+        val view = webView ?: return
+        if (view.width == 0 || view.height == 0) return
+        try {
+            val scale = 0.5f
+            val bitmap = android.graphics.Bitmap.createBitmap(
+                (view.width * scale).toInt(), (view.height * scale).toInt(), android.graphics.Bitmap.Config.RGB_565,
+            )
+            val canvas = android.graphics.Canvas(bitmap)
+            canvas.scale(scale, scale)
+            view.draw(canvas)
+            lastGood = bitmap
+            lastGoodAt = System.currentTimeMillis()
+        } catch (e: Throwable) {
+            // Out of memory or a WebView that can't draw in software: just the plain message then.
+            AppLog.w(TAG, "Can't keep the last dashboard picture: ${e.javaClass.simpleName}")
+        }
     }
 
     private val retry = Runnable {
@@ -399,10 +443,12 @@ class KioskActivity : Activity(), DashboardSurface {
             main.removeCallbacks(disconnectedTooLong)
             when (status) {
                 "connected" -> {
+                    lastGood = null
                     hidePanel()
                     if (app.settings[Keys.HA_KIOSK_MODE]) bridge?.setKioskMode(true)
                 }
                 "disconnected" -> {
+                    rememberLastGood()
                     val seconds = app.settings[Keys.RELOAD_ON_DISCONNECT_SECONDS]
                     if (seconds > 0) main.postDelayed(disconnectedTooLong, seconds * 1000L)
                 }
@@ -628,7 +674,10 @@ class KioskActivity : Activity(), DashboardSurface {
         }
 
         override fun onLost(network: Network) {
-            main.post { networkLost = true }
+            main.post {
+                networkLost = true
+                rememberLastGood()
+            }
         }
     }
 

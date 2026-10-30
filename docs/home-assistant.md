@@ -31,6 +31,27 @@ Pop-up buttons with an `event` fire `tv_kiosk_action` in Home Assistant (see [ap
 
 > **Using ha-tv-kit?** Its pop-ups, bin night, garage and doorbell flows already exist: [`tv_kit_config.yaml`](https://github.com/mattgrechtech/ha-tv-kit/blob/main/homeassistant/packages/tv_kit_config.yaml) holds the TV list and the `rest_command`, and [`script.tv_popup`](https://github.com/mattgrechtech/ha-tv-kit/blob/main/homeassistant/packages/tv_kit_scripts.yaml) sends to every TV that's on, with the [doorbell blueprint](https://github.com/mattgrechtech/ha-tv-kit/blob/main/homeassistant/blueprints/automation/ha-tv-kit/camera_motion_tv_popup.yaml) on top. They work with this app unchanged through the TvOverlay-compatible mode; see [Moving the kit's pop-ups over](#moving-the-kits-pop-ups-over).
 
+### Several TVs
+
+With the integration, every action takes one TV or many:
+
+- **A pop-up on every TV:** `tv_kiosk.notify` with all of them in `device_id`.
+- **The same set-up everywhere:** `tv_kiosk.apply_settings` with, for example, `{rest_after_minutes: 5, rest_style: clock, popup_corner: bottom_end}`. Only the settings you list change; each TV keeps its own name and token.
+- **One TV leads, the others follow:** when the lead TV's screen changes, do the same on the rest.
+
+```yaml
+alias: Bedtime on every TV
+triggers:
+  - trigger: state
+    entity_id: select.living_room_tv_screen
+actions:
+  - action: select.select_option
+    target:
+      entity_id: [select.kitchen_tv_screen, select.bedroom_tv_screen]
+    data:
+      option: "{{ trigger.to_state.state }}"
+```
+
 ## Option A: REST commands (no broker)
 
 1. Get the TV's API token: the provisioning script prints it, or Settings → *Show API address and token*.

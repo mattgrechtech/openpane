@@ -58,6 +58,8 @@ class HaApi(private val settings: Settings, private val auth: HaAuth) {
 
     /** [entity]'s state and attributes from Home Assistant, or null. Blocking: call off the main thread. */
     fun state(entity: String): JSONObject? {
+        // Checked here too: the id goes into a URL path, where "../" would reach other API routes.
+        if (!ENTITY_ID.matches(entity)) return null
         val base = settings.haBaseUrl()
         if (settings.isWebMode() || base == null) return null
         return try {
@@ -73,7 +75,8 @@ class HaApi(private val settings: Settings, private val auth: HaAuth) {
                 connection.disconnect()
             }
         } catch (e: Exception) {
-            AppLog.w(TAG, "Can't read $entity: ${e.message}")
+            // Only the kind of error: a parser's message can quote Home Assistant's whole answer.
+            AppLog.w(TAG, "Can't read $entity: ${e.javaClass.simpleName}")
             null
         }
     }
@@ -103,7 +106,7 @@ class HaApi(private val settings: Settings, private val auth: HaAuth) {
                     connection.disconnect()
                 }
             } catch (e: Exception) {
-                AppLog.w(TAG, "No live stream for $entity: ${e.message}")
+                AppLog.w(TAG, "No live stream for $entity: ${e.javaClass.simpleName}")
                 null
             }
             callback(url)
@@ -112,6 +115,7 @@ class HaApi(private val settings: Settings, private val auth: HaAuth) {
 
     companion object {
         private const val TAG = "HaApi"
+        private val ENTITY_ID = Regex("[a-z_]+\\.[a-z0-9_]{1,100}")
         private const val TIMEOUT_MILLIS = 8000
     }
 }

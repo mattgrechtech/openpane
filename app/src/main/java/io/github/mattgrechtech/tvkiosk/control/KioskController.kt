@@ -115,9 +115,7 @@ class KioskController(
     private fun runPopupAction(popup: Popup, action: Popup.Action) {
         action.toggle?.let { entity ->
             AppLog.i(TAG, "Pop-up button: toggle $entity")
-            val domain = entity.substringBefore('.')
-            val service = if (domain == "scene" || domain == "script") "turn_on" else "toggle"
-            haService(if (service == "toggle") "homeassistant" else domain, service, JSONObject().put("entity_id", entity))
+            haService("homeassistant", "toggle", JSONObject().put("entity_id", entity))
             return
         }
         action.event?.let { event ->
@@ -201,7 +199,7 @@ class KioskController(
         "motion" -> motion(args)
         "now_playing" -> {
             val entity = args.optString("entity").trim()
-            if (!entity.startsWith("media_player.")) CommandResult.error(400, "entity must be a media_player")
+            if (!MEDIA_PLAYER.matches(entity)) CommandResult.error(400, "entity must be a media_player entity id")
             else {
                 nowPlaying.start(entity, JSONObject().apply {
                     for (key in listOf("corner", "size", "opacity", "text_size")) if (args.has(key)) put(key, args.get(key))
@@ -568,6 +566,7 @@ class KioskController(
     companion object {
         private const val TAG = "KioskController"
         private const val REST_DIM_LEVEL = 80
+        private val MEDIA_PLAYER = Regex("media_player\\.[a-z0-9_]{1,100}")
         const val ACTION_EVENT = "tv_kiosk_action"
         const val KEY_EVENT = "tv_kiosk_key"
         private val PAGE_COMMANDS = setOf("url", "navigate", "start_page")

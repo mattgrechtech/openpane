@@ -206,15 +206,28 @@ class TvOverlayCompatHandler(
                 val type = request.header("content-type")?.substringBefore(';')?.trim()?.lowercase()
                 if (type != "application/json") return ApiHandler.error(415, "send the body as application/json")
                 val args = ApiHandler.body(request) ?: return ApiHandler.error(400, "body must be a JSON object")
-                // No token here, so nothing that acts with the TV's own sign-in: no buttons (they
-                // could open any page or fire events) and no live cameras by entity.
-                args.remove("actions")
-                args.remove("camera")
-                ApiHandler.result(notify(args))
+                // No token here: only TvOverlay's own fields and the look, nothing that speaks,
+                // plays, streams, acts with the TV's sign-in, overrides do-not-disturb or stays up.
+                ApiHandler.result(notify(tvOverlayOnly(args)))
             }
             "/notify_fixed", "/set/overlay", "/set/notifications", "/set/settings", "/set/mqtt" ->
                 ApiHandler.error(501, "not supported by this app")
             else -> ApiHandler.error(404, "not found")
+        }
+    }
+
+    companion object {
+        private val ALLOWED = setOf(
+            "title", "message", "source", "image", "largeIcon", "smallIcon", "smallIconColor", "icon", "color",
+            "corner", "duration", "id", "size", "opacity", "text_size",
+        )
+
+        /** TvOverlay's fields and the look; a duration of at least a second. */
+        fun tvOverlayOnly(args: JSONObject): JSONObject {
+            val kept = JSONObject()
+            for (key in args.keys()) if (key in ALLOWED) kept.put(key, args.get(key))
+            if (kept.has("duration") && kept.optInt("duration", 1) < 1) kept.remove("duration")
+            return kept
         }
     }
 }

@@ -4,7 +4,7 @@
 
 First public version. Pre-alpha: tested on one TCL Google TV (Android 14), including a 72-hour run.
 
-- Pop-up buttons can `toggle` a light, switch, fan, cover, media player, scene or script directly (never locks or alarms).
+- Pop-up buttons can `toggle` a light, fan, input boolean or media player directly; anything that could open, unlock or run something needs `event` and an automation.
 - Do not disturb (`do_not_disturb`, a switch over MQTT and in the integration): pop-ups wait unless they have `priority: high`.
 - Now playing: `now_playing` follows a Home Assistant media player in a pop-up (artwork, title, artist, progress), and closes itself after the music stops. Pop-ups replaced by `id` now keep their place without fading in again, and recent pictures are reused instead of downloaded again.
 - Remote keys for automations (`key_events`, off by default): the colour keys and digits fire `tv_kiosk_key` (short or long press) while the dashboard is in front.

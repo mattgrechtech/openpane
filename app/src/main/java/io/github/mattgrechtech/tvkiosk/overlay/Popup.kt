@@ -54,8 +54,8 @@ data class Popup(
     /**
      * A button on the pop-up: open a Home Assistant path ([navigate]), open a web page ([url]),
      * send [event] to Home Assistant (a `tv_kiosk_action` event, and the MQTT pop-up button
-     * entity) for an automation to act on, or [toggle] an entity in a safe domain ([TOGGLE_DOMAINS]:
-     * never locks, alarms or doors). Every button closes the pop-up.
+     * entity) for an automation to act on, or [toggle] an entity in a harmless domain
+     * ([TOGGLE_DOMAINS]). Every button closes the pop-up.
      */
     data class Action(
         val label: String,
@@ -92,8 +92,12 @@ data class Popup(
         private val CAMERA_ENTITY = Regex("camera\\.[a-z0-9_]{1,100}")
         private val ENTITY = Regex("[a-z_]+\\.[a-z0-9_]{1,100}")
 
-        /** What a button may toggle without an automation: lights and the like, never security. */
-        val TOGGLE_DOMAINS = setOf("light", "switch", "fan", "cover", "input_boolean", "scene", "script", "media_player")
+        /**
+         * What a button may toggle without an automation. Not covers (garage doors, gates), switches
+         * (relays), scripts or scenes (they can do anything, unlocking included), locks or alarms:
+         * those need an `event` and an automation the household wrote.
+         */
+        val TOGGLE_DOMAINS = setOf("light", "fan", "input_boolean", "media_player")
 
         /** 4:59, 1:02:03. */
         fun formatCountdown(seconds: Int): String {

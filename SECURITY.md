@@ -6,8 +6,8 @@ This app trusts your **local network**, like the rest of ha-tv-kit. Read this be
 
 | Port | What | Protection |
 |---|---|---|
-| 2424 (configurable) | REST API, and the web admin page | API: bearer token (random, 256-bit, rotatable); `Host` header must be the TV's address; 10 bad tokens per minute blocks the sender for a minute. The admin page's own files (`/`, `/admin.js`, `/admin.css`) are served without the token because they contain nothing secret; the page asks for the token and does everything through the API. It loads nothing from the internet, can't be framed (`frame-ancestors 'none'`), runs only its own script (strict Content-Security-Policy) and shows TV data as text only |
-| 5001 (off by default) | TvOverlay-compatible `/notify` | **None**, like TvOverlay itself. It can only show pop-ups, and pop-up buttons (`actions`) are ignored there, so it can't make the dashboard open a page |
+| 2424 (configurable), announced as `_tvkiosk._tcp` | REST API, and the web admin page | API: bearer token (random, 256-bit, rotatable); `Host` header must be the TV's address; 10 bad tokens per minute blocks the sender for a minute. The admin page's own files (`/`, `/admin.js`, `/admin.css`) are served without the token because they contain nothing secret; the page asks for the token and does everything through the API. It loads nothing from the internet, can't be framed (`frame-ancestors 'none'`), runs only its own script (strict Content-Security-Policy) and shows TV data as text only |
+| 5001 (off by default) | TvOverlay-compatible `/notify` | **None**, like TvOverlay itself. It can only show plain pop-ups: it passes TvOverlay's fields and the look, and drops buttons, cameras, streams, sounds, speech, QR codes, priority and pop-ups that stay up |
 | none | MQTT | Outgoing connection to your broker with its own user; TLS optional |
 
 Never forward these ports from the internet. Put visitors and untrusted gadgets on a guest Wi-Fi that can't reach your TVs.
@@ -22,6 +22,12 @@ Never forward these ports from the internet. Put visitors and untrusted gadgets 
 - The API answers one request per connection within 10 seconds, at most three connections per address. Pictures in pop-ups are scaled down as they load, so a huge image can't run the TV out of memory.
 - Web pages can't open other apps (`intent:` links are blocked) and can't read files on the TV.
 - No cloud, no analytics, no crash reporting to anyone.
+
+## Acting in Home Assistant
+
+The TV's own Home Assistant sign-in is used only for: firing `tv_kiosk_action` / `tv_kiosk_key` events, reading the state of a `camera.*` or `media_player.*` entity named in a pop-up or `now_playing` (entity ids are checked strictly before they go into a URL), and toggling a `light`, `fan`, `input_boolean` or `media_player` from a pop-up button. Anything that could open, unlock or run something (covers, switches, scripts, scenes, locks, alarms) needs an event and an automation the household wrote. Answers from Home Assistant are never written to the log.
+
+The Home Assistant integration never follows a network announcement to a new address by itself: a TV that moved is fixed by the user, so a fake announcement can't collect the token.
 
 ## Secrets
 

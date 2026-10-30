@@ -109,9 +109,13 @@ class PopupTest {
         val popup = Popup.fromJson(JSONObject("""{"title":"T","actions":[
             {"label":"Porch light","toggle":"light.porch"},
             {"label":"Unlock","toggle":"lock.front_door"},
-            {"label":"Disarm","toggle":"alarm_control_panel.home"}
+            {"label":"Disarm","toggle":"alarm_control_panel.home"},
+            {"label":"Garage","toggle":"cover.garage_door"},
+            {"label":"Relay","toggle":"switch.gate"},
+            {"label":"Script","toggle":"script.unlock_everything"}
         ]}"""))!!
         assertEquals(listOf(Popup.Action("Porch light", null, null, toggle = "light.porch")), popup.actions)
+        assertEquals(1, popup.actions.size)
     }
 
     @Test fun liveStreamAndCameraAreChecked() {

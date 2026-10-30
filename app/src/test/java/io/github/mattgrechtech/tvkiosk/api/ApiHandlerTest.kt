@@ -125,12 +125,14 @@ class ApiHandlerTest {
         val compat = TvOverlayCompatHandler({ setOf("10.0.0.5") }) { shown += it; CommandResult.ok() }
         fun call(path: String, method: String = "POST", type: String? = "application/json; charset=utf-8") = compat(HttpServer.Request(
             method, path, emptyMap(), listOfNotNull("host" to "10.0.0.5:5001", type?.let { "content-type" to it }).toMap(),
-            """{"title":"Bins","camera":"camera.front","actions":[{"label":"Open","url":"https://evil.test"}]}""".toByteArray(), "x",
+            """{"title":"Bins","camera":"camera.front","tts":"hello","sound":"https://x.test/a.mp3","priority":"high","qr":"https://phish.test","stream":"http://x.test/s","duration":0,"actions":[{"label":"Open","url":"https://evil.test"}]}""".toByteArray(), "x",
         ))
         assertEquals(200, call("/notify").status)
         assertEquals("Bins", shown.single().getString("title"))
         assertEquals(false, shown.single().has("actions"))
-        assertEquals(false, shown.single().has("camera"))
+        for (dropped in listOf("camera", "tts", "sound", "priority", "qr", "stream", "duration")) {
+            assertEquals(dropped, false, shown.single().has(dropped))
+        }
         assertEquals(501, call("/notify_fixed").status)
         assertEquals(404, call("/api/v1/reload").status)
         assertEquals(405, call("/notify", "GET").status)

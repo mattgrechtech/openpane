@@ -27,6 +27,25 @@ object SettingsJson {
     }
 
     /**
+     * Every setting that can be changed, for the web admin page: name, type (`boolean`, `integer`
+     * or `text`), default, whether it's a secret (write-only) and, for fixed sets, the choices.
+     */
+    fun schema(): JSONArray {
+        val array = JSONArray()
+        for (key in Keys.ALL) {
+            if (key in Keys.NOT_IMPORTABLE) continue
+            val item = JSONObject()
+                .put("name", key.name)
+                .put("type", when (key.default) { is Boolean -> "boolean"; is Int -> "integer"; else -> "text" })
+                .put("default", key.default)
+                .put("secret", key.secret)
+            key.choices?.let { item.put("choices", JSONArray(it())) }
+            array.put(item)
+        }
+        return array
+    }
+
+    /**
      * Applies every known, valid key in [json] in one edit. Unknown keys, internal keys and
      * invalid values are reported in [ImportResult.rejected] and change nothing.
      */

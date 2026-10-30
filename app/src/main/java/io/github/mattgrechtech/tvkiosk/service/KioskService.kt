@@ -15,6 +15,7 @@ import android.os.Looper
 import io.github.mattgrechtech.tvkiosk.BuildConfig
 import io.github.mattgrechtech.tvkiosk.KioskApp
 import io.github.mattgrechtech.tvkiosk.R
+import io.github.mattgrechtech.tvkiosk.api.AdminPage
 import io.github.mattgrechtech.tvkiosk.api.ApiHandler
 import io.github.mattgrechtech.tvkiosk.api.HttpServer
 import io.github.mattgrechtech.tvkiosk.api.TvOverlayCompatHandler
@@ -39,6 +40,7 @@ class KioskService : Service() {
     private var api: HttpServer? = null
     private var compat: HttpServer? = null
     private var mqtt: MqttBridge? = null
+    private val adminPage by lazy { AdminPage(this) }
 
     private val settingsListener: (Set<String>) -> Unit = { changed ->
         if (changed.any { it in RESTART_KEYS }) {
@@ -94,6 +96,8 @@ class KioskService : Service() {
                 exportSettings = { SettingsJson.export(settings, includeSecrets = false) },
                 importSettings = { json -> SettingsJson.import(settings, json).toJson() },
                 diagnostics = { Diagnostics.collect(this) },
+                settingsSchema = { SettingsJson.schema() },
+                staticFile = adminPage::file,
             )
             api = startServer(settings[Keys.API_PORT], handler, "API")
         }

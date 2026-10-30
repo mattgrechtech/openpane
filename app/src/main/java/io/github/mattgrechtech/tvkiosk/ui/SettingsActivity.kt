@@ -831,7 +831,8 @@ class SettingsActivity : Activity() {
 
     private fun showToken() {
         val token = app.settings[Keys.API_TOKEN]
-        val content = JSONObject().put("url", apiAddress()).put("token", token).toString()
+        // Scanning it opens the web admin page on a phone, already connected (the token stays in the # part).
+        val content = "${apiAddress()}/#token=$token"
         Dialogs.qr(this, getString(R.string.settings_show_token), content, getString(R.string.token_caption, apiAddress(), token))
     }
 

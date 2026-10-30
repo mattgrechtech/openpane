@@ -18,8 +18,28 @@ class ApiHandlerTest {
         },
         exportSettings = { JSONObject().put("start_url", "http://ha.test") },
         importSettings = { JSONObject().put("applied", it.length()) },
+        settingsSchema = { org.json.JSONArray().put(JSONObject().put("name", "mode")) },
+        staticFile = { path -> if (path == "/") HttpServer.Response(200, "<html>", "text/html") else null },
         clock = { now },
     )
+
+    @Test fun adminPageNeedsNoTokenButKeepsTheHostCheck() {
+        val page = request("GET", "/", auth = null)
+        assertEquals(200, page.status)
+        assertEquals("text/html", page.contentType)
+        assertEquals("DENY", page.headers["X-Frame-Options"])
+        assertEquals(true, page.headers["Content-Security-Policy"]?.contains("frame-ancestors 'none'"))
+        assertEquals(404, request("GET", "/missing.js", auth = null).status)
+        assertEquals(405, request("POST", "/", auth = null).status)
+        assertEquals(421, request("GET", "/", auth = null, host = "evil.example").status)
+    }
+
+    @Test fun settingsSchemaNeedsTheToken() {
+        assertEquals(401, request("GET", "/api/v1/settings/schema", auth = null).status)
+        val schema = request("GET", "/api/v1/settings/schema")
+        assertEquals(200, schema.status)
+        assertEquals("mode", JSONObject(String(schema.body)).getJSONArray("settings").getJSONObject(0).getString("name"))
+    }
 
     private fun request(
         method: String,

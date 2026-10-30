@@ -2,6 +2,10 @@
 
 Three ways to control the app, all LAN-only: a REST API, MQTT, and adb. They run the same commands, and take the same [settings](#settings).
 
+## Web admin page
+
+Open `http://<tv-ip>:2424/` in a browser on the same network, or scan the QR code in the TV's Settings → Pop-ups and API → *Web admin, API address and token* (it opens the page already connected). The page uses the API below with the token, so anything it does an automation can do too. It has: status and *Ready to wake*, screen and page controls, a pop-up and speech sender, every setting (grouped, searchable, only changed ones are saved), the log, and a diagnostics download. The token is kept in the browser only if you tick *Remember on this device*.
+
 ## REST API
 
 - Base: `http://<tv-ip>:2424/api/v1` (port in settings).
@@ -37,6 +41,7 @@ curl -X POST -H "Authorization: Bearer $TOKEN" -H "Content-Type: application/jso
 | `POST /sound` | `{"url", "volume"}` | Play a sound or HA TTS audio URL |
 | `POST /sound/stop` | | Stop sound and speech |
 | `GET /settings` | | Settings as JSON (no secrets) |
+| `GET /settings/schema` | | Every setting's type, default, choices and whether it's secret (write-only) |
 | `POST /settings` | partial settings JSON | Change settings (see [Settings](#settings)); answers which keys were applied and which were rejected |
 | `GET /diagnostics` | | State, settings without secrets, the last crash and the recent log, for bug reports |
 | `GET /logs?lines=200` | | The recent log as plain text (tokens and passwords blanked) |

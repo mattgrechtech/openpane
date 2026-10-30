@@ -44,9 +44,14 @@ class HttpServer(
         fun bodyText(): String = String(body, Charsets.UTF_8)
     }
 
-    class Response(val status: Int, val body: ByteArray, val contentType: String = "application/json") {
-        constructor(status: Int, text: String, contentType: String = "application/json") :
-            this(status, text.toByteArray(Charsets.UTF_8), contentType)
+    class Response(
+        val status: Int,
+        val body: ByteArray,
+        val contentType: String = "application/json",
+        val headers: Map<String, String> = emptyMap(),
+    ) {
+        constructor(status: Int, text: String, contentType: String = "application/json", headers: Map<String, String> = emptyMap()) :
+            this(status, text.toByteArray(Charsets.UTF_8), contentType, headers)
     }
 
     class BadRequest(val status: Int, message: String) : IOException(message)
@@ -236,6 +241,7 @@ class HttpServer(
                 append("Content-Length: ").append(response.body.size).append("\r\n")
                 append("Cache-Control: no-store\r\n")
                 append("X-Content-Type-Options: nosniff\r\n")
+                for ((name, value) in response.headers) append(name).append(": ").append(value).append("\r\n")
                 append("Connection: close\r\n\r\n")
             }
             out.write(head.toByteArray(Charsets.ISO_8859_1))

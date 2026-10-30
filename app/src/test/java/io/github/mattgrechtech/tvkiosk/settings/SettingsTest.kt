@@ -178,4 +178,16 @@ class SettingsTest {
         assertTrue(settings.haCredentialsMatch())
         assertEquals("http://ha.test:8123", settings[Keys.HA_CREDENTIAL_ORIGIN])
     }
+
+    @Test fun schemaDescribesEveryChangeableSetting() {
+        val schema = SettingsJson.schema()
+        val byName = (0 until schema.length()).map { schema.getJSONObject(it) }.associateBy { it.getString("name") }
+        assertEquals("text", byName.getValue("mode").getString("type"))
+        assertEquals(Keys.MODES, byName.getValue("mode").getJSONArray("choices").let { a -> (0 until a.length()).map { a.getString(it) } })
+        assertEquals("integer", byName.getValue("api_port").getString("type"))
+        assertEquals("boolean", byName.getValue("keep_screen_on").getString("type"))
+        assertTrue(byName.getValue("api_token").getBoolean("secret"))
+        assertFalse(byName.containsKey("ha_refresh_token"))
+        assertFalse(byName.containsKey("device_id"))
+    }
 }

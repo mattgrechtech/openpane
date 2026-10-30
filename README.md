@@ -32,6 +32,7 @@ That's the dashboard, the pop-ups and remote control of the TV, without a second
   - **REST API** with a token, LAN only.
   - **MQTT** with HA discovery: the TV shows up as a device with buttons, a screen select, a dim slider and diagnostics.
 - **Stays up:** retries failed loads; replaces a crashed or frozen WebView; reloads when the network comes back, when HA stays unreachable, and optionally every night; restarts itself after a crash.
+- **Web admin page:** manage the TV from a phone or computer: scan the QR code in the TV's settings and you're in. Status, wake and screen controls, sending pop-ups and speech, every setting with search, the log and diagnostics. No app to install, nothing in the cloud.
 - **Easy to look after:** a log and diagnostics on the TV and over the API (passwords and tokens blanked), a settings PIN, settings export and import, and set-up over adb in one script.
 
 Not included on purpose: remote shell or script injection, camera motion detection, device-owner lockdown, replacing the TV launcher.

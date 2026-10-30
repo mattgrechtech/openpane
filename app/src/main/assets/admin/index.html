@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="referrer" content="no-referrer">
+<title>TV Kiosk</title>
+<link rel="stylesheet" href="admin.css">
+<script src="admin.js" defer></script>
+</head>
+<body>
+<header class="bar">
+  <div class="brand"><span class="logo" aria-hidden="true">▣</span> TV Kiosk <span id="device" class="device"></span></div>
+  <nav id="tabs" class="tabs" hidden>
+    <button data-tab="overview" class="active">Overview</button>
+    <button data-tab="control">Control</button>
+    <button data-tab="popup">Pop-up</button>
+    <button data-tab="settings">Settings</button>
+    <button data-tab="log">Log</button>
+  </nav>
+</header>
+
+<main>
+  <section id="connect" class="panel narrow">
+    <h1>Connect to this TV</h1>
+    <p class="muted">Enter the TV's API token. On the TV: Settings → Pop-ups and API → <em>Show API address and token</em>. Scanning its QR code with your phone fills this in.</p>
+    <form id="connect-form">
+      <label>API token <input id="token" type="password" autocomplete="off" spellcheck="false" required></label>
+      <label class="check"><input id="remember" type="checkbox"> Remember on this device</label>
+      <button class="primary" type="submit">Connect</button>
+      <p id="connect-error" class="error" role="alert"></p>
+    </form>
+  </section>
+
+  <section id="overview" class="panel" hidden>
+    <div class="grid" id="cards"></div>
+    <h2>Ready to wake</h2>
+    <div class="grid" id="wake"></div>
+  </section>
+
+  <section id="control" class="panel" hidden>
+    <h2>Screen</h2>
+    <div class="buttons">
+      <button data-cmd="wake">Wake</button>
+      <button data-cmd="motion">Motion</button>
+      <button data-cmd="screen" data-args='{"mode":"on"}'>On</button>
+      <button data-cmd="screen" data-args='{"mode":"dim","level":60}'>Dim</button>
+      <button data-cmd="screen" data-args='{"mode":"blank"}'>Black</button>
+    </div>
+    <label>Brightness <input id="brightness" type="range" min="-1" max="100" step="1"> <span id="brightness-value" class="muted"></span></label>
+    <h2>Page</h2>
+    <div class="buttons">
+      <button data-cmd="start_page">Start page</button>
+      <button data-cmd="reload">Reload</button>
+      <button data-cmd="reload" data-args='{"hard":true}'>Reload and clear cache</button>
+    </div>
+    <form id="open-form" class="row">
+      <input id="open-target" placeholder="/lovelace/cameras or https://…" aria-label="Page to open" required>
+      <input id="open-return" type="number" min="0" placeholder="back after (s)" aria-label="Go back to the start page after, seconds">
+      <button type="submit">Open</button>
+    </form>
+    <h2>Sound</h2>
+    <form id="say-form" class="row">
+      <input id="say-text" placeholder="Text to speak" aria-label="Text to speak" required>
+      <button type="submit">Speak</button>
+    </form>
+    <div class="buttons">
+      <button data-cmd="notify" data-args='{"title":"Chime","duration":3,"sound":"chime"}'>Chime</button>
+      <button data-cmd="notify" data-args='{"title":"Doorbell","duration":3,"sound":"doorbell"}'>Doorbell</button>
+      <button data-cmd="stop_sound">Stop sound</button>
+    </div>
+  </section>
+
+  <section id="popup" class="panel narrow" hidden>
+    <h2>Send a pop-up</h2>
+    <form id="popup-form">
+      <label>Title <input name="title" value="Hello from the admin page"></label>
+      <label>Message <input name="message" value="Pop-ups show over any app."></label>
+      <label>Picture URL <input name="image" placeholder="optional"></label>
+      <div class="row">
+        <label>Corner <select name="corner"><option value="">default</option><option>top_start</option><option>top_end</option><option>bottom_start</option><option>bottom_end</option></select></label>
+        <label>Seconds <input name="duration" type="number" min="0" max="600" placeholder="default"></label>
+        <label>Sound <select name="sound"><option value="">none</option><option>chime</option><option>doorbell</option><option>alert</option></select></label>
+      </div>
+      <label>Speak <input name="tts" placeholder="optional"></label>
+      <button class="primary" type="submit">Send</button>
+    </form>
+    <p class="muted">For automations, see <code>POST /api/v1/notify</code> in the API docs.</p>
+  </section>
+
+  <section id="settings" class="panel" hidden>
+    <div class="toolbar">
+      <input id="filter" placeholder="Find a setting" aria-label="Find a setting">
+      <button id="save" class="primary" disabled>Save changes</button>
+    </div>
+    <p id="save-result" role="status" class="muted"></p>
+    <div id="groups"></div>
+  </section>
+
+  <section id="log" class="panel" hidden>
+    <div class="toolbar">
+      <button id="log-refresh">Refresh</button>
+      <a id="diag" href="#" download="tv-kiosk-diagnostics.json">Download diagnostics</a>
+    </div>
+    <pre id="log-text"></pre>
+  </section>
+</main>
+
+<div id="toast" role="status" aria-live="polite"></div>
+<footer class="muted">TV Kiosk · open source (Apache-2.0) · <button id="disconnect" class="link" hidden>Forget token</button></footer>
+</body>
+</html>

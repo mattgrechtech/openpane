@@ -22,6 +22,9 @@ class ApiHandler(
     private val exportSettings: () -> JSONObject,
     private val importSettings: (JSONObject) -> JSONObject,
     private val diagnostics: () -> JSONObject = { JSONObject() },
+    private val settingsSchema: () -> org.json.JSONArray = { org.json.JSONArray() },
+    /** The web admin page's files by path ("/", "/admin.js"), or null. They hold no secrets. */
+    private val staticFile: (String) -> Response? = { null },
     private val clock: () -> Long = System::currentTimeMillis,
 ) : (Request) -> Response {
 
@@ -31,6 +34,12 @@ class ApiHandler(
 
     override fun invoke(request: Request): Response {
         hostProblem(request, allowedHosts())?.let { return it }
+
+        // The admin page itself is public (it asks for the token); everything it does goes through the API.
+        if (!request.path.startsWith(PREFIX)) {
+            val file = staticFile(request.path) ?: return error(404, "not found")
+            return if (request.method == "GET") withPageHeaders(file) else error(405, "use GET")
+        }
 
         val now = clock()
         synchronized(failures) {
@@ -60,6 +69,10 @@ class ApiHandler(
             val text = (maxOf(0, log.length() - wanted) until log.length()).joinToString("\n") { log.optString(it) }
             return HttpServer.Response(200, text, "text/plain")
         }
+        if (route == "/settings/schema") {
+            return if (request.method == "GET") json(200, JSONObject().put("ok", true).put("settings", settingsSchema()))
+            else error(405, "use GET")
+        }
         if (route == "/settings") {
             return when (request.method) {
                 "GET" -> json(200, JSONObject().put("ok", true).put("settings", exportSettings()))
@@ -73,6 +86,11 @@ class ApiHandler(
         val args = body(request) ?: return error(400, "body must be a JSON object")
         return result(execute(command, args))
     }
+
+    private fun withPageHeaders(response: Response) = Response(
+        response.status, response.body, response.contentType,
+        response.headers + PAGE_HEADERS,
+    )
 
     private fun authorised(request: Request): Boolean {
         val expected = token()
@@ -101,6 +119,14 @@ class ApiHandler(
 
     companion object {
         const val PREFIX = "/api/v1"
+
+        /** The admin page loads only its own files, can't be framed, and sends no referrer. */
+        private val PAGE_HEADERS = mapOf(
+            "Content-Security-Policy" to "default-src 'self'; img-src 'self' data:; style-src 'self'; script-src 'self'; " +
+                "connect-src 'self'; frame-ancestors 'none'; base-uri 'none'; form-action 'none'",
+            "X-Frame-Options" to "DENY",
+            "Referrer-Policy" to "no-referrer",
+        )
         private const val MAX_FAILURES = 10
         private const val WINDOW_MILLIS = 60_000L
 

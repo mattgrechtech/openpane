@@ -19,9 +19,18 @@ class Key<T : Any>(
     val secret: Boolean = false,
     /** Returns an error message, or null when the value is acceptable. */
     val check: (T) -> String? = { null },
+    /** The allowed values of a text setting with a fixed set (read late: the lists are declared below the keys). */
+    val choices: (() -> List<String>)? = null,
 )
 
 object Keys {
+    /** A text setting that must be one of [values]. */
+    private fun oneOf(name: String, default: String, values: () -> List<String>) = Key(
+        name, default,
+        check = { if (it in values()) null else "must be one of ${values()}" },
+        choices = values,
+    )
+
     private fun port(value: Int) = if (value in 1..65535) null else "must be a port number (1-65535)"
     private fun url(value: String) =
         if (value.isEmpty() || value.startsWith("http://") || value.startsWith("https://")) null
@@ -29,17 +38,17 @@ object Keys {
 
     // What the TV shows
     /** home_assistant: a Home Assistant dashboard (sign-in, picker, pop-up bridge); web: any web page. */
-    val MODE = Key("mode", "home_assistant", check = { if (it in MODES) null else "must be one of $MODES" })
+    val MODE = oneOf("mode", "home_assistant") { MODES }
     val START_URL = Key("start_url", "", check = ::url)
     /** Home Assistant base URL. Empty means "the origin of the start URL". */
     val HA_URL = Key("ha_url", "", check = ::url)
     /** login: sign in once in the app (default); token: long-lived token; none: the page handles login. */
-    val AUTH_MODE = Key("auth_mode", "login", check = { if (it in AUTH_MODES) null else "must be one of $AUTH_MODES" })
+    val AUTH_MODE = oneOf("auth_mode", "login") { AUTH_MODES }
     val HA_KIOSK_MODE = Key("ha_kiosk_mode", true)
     val KEEP_SCREEN_ON = Key("keep_screen_on", true)
     val BOOT_START = Key("boot_start", false)
     /** buttons: arrows jump between clickable items; pointer: an on-screen pointer; page: arrows go to the page. */
-    val REMOTE_MODE = Key("remote_mode", "buttons", check = { if (it in REMOTE_MODES) null else "must be one of $REMOTE_MODES" })
+    val REMOTE_MODE = oneOf("remote_mode", "buttons") { REMOTE_MODES }
 
     // Rotation and schedule
     /** More pages to rotate through after the start page, one URL per line. */
@@ -65,13 +74,13 @@ object Keys {
         if (it in 0..240) null else "must be 0 (never) or 1-240"
     })
     /** black, or dim (the page stays faintly visible). */
-    val REST_STYLE = Key("rest_style", "black", check = { if (it in REST_STYLES) null else "must be one of $REST_STYLES" })
+    val REST_STYLE = oneOf("rest_style", "black") { REST_STYLES }
     /** Moves the page a few pixels every couple of minutes, against burn-in on OLED screens. */
     val BURN_IN_GUARD = Key("burn_in_guard", false)
     /** Whether motion wakes the screen during the night hours. */
     val MOTION_AT_NIGHT = Key("motion_at_night", false)
     /** When motion brings the dashboard in front of another app: unless_playing, always or never. */
-    val MOTION_FRONT = Key("motion_front", "unless_playing", check = { if (it in MOTION_FRONTS) null else "must be one of $MOTION_FRONTS" })
+    val MOTION_FRONT = oneOf("motion_front", "unless_playing") { MOTION_FRONTS }
 
     // Recovery
     val RELOAD_ON_NETWORK = Key("reload_on_network", true)
@@ -83,11 +92,11 @@ object Keys {
     })
 
     // Pop-up look and behaviour (defaults; each pop-up can override size, opacity, text, corner, duration)
-    val POPUP_SIZE = Key("popup_size", "medium", check = { if (it in POPUP_SIZES) null else "must be one of $POPUP_SIZES" })
+    val POPUP_SIZE = oneOf("popup_size", "medium") { POPUP_SIZES }
     /** Background opacity in percent; images always stay solid. */
     val POPUP_OPACITY = Key("popup_opacity", 93, check = { if (it in 40..100) null else "must be 40-100" })
-    val POPUP_TEXT_SIZE = Key("popup_text_size", "normal", check = { if (it in POPUP_TEXT_SIZES) null else "must be one of $POPUP_TEXT_SIZES" })
-    val POPUP_CORNER = Key("popup_corner", "top_end", check = { if (it in POPUP_CORNERS) null else "must be one of $POPUP_CORNERS" })
+    val POPUP_TEXT_SIZE = oneOf("popup_text_size", "normal") { POPUP_TEXT_SIZES }
+    val POPUP_CORNER = oneOf("popup_corner", "top_end") { POPUP_CORNERS }
     val POPUP_DURATION = Key("popup_duration", 10, check = { if (it in 1..600) null else "must be 1-600 seconds" })
     val POPUP_MAX_PER_CORNER = Key("popup_max_per_corner", 3, check = { if (it in 1..3) null else "must be 1-3" })
     /** Pop-ups with buttons take the remote over other apps too (Back closes, OK presses). */

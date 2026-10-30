@@ -17,7 +17,7 @@
     <string name="settings_not_saved">Not saved</string>
     <string name="settings_sign_in">Sign in to Home Assistant</string>
     <string name="settings_sign_out">Sign out</string>
-    <string name="settings_show_token">Show API address and token</string>
+    <string name="settings_show_token">Web admin, API address and token</string>
     <string name="settings_new_token">New API token</string>
     <string name="settings_test_popup">Test pop-up</string>
     <string name="settings_export">Export settings</string>
@@ -43,7 +43,7 @@
     <string name="label_device_name">Device name (shown in Home Assistant)</string>
     <string name="label_settings_pin">Settings PIN (4-8 digits)</string>
 
-    <string name="token_caption">Address: %1$s\nToken: %2$s\n\nSend it as: Authorization: Bearer &lt;token&gt;</string>
+    <string name="token_caption">Scan to manage this TV from your phone, or open %1$s on a computer.\nToken: %2$s\n\nFor the API, send it as: Authorization: Bearer &lt;token&gt;</string>
     <string name="new_token_confirm">Anything using the old token (Home Assistant, scripts) stops working until you update it.</string>
     <string name="overlay_adb">This TV has no screen for that permission. From a computer, run:\n\nadb shell appops set %1$s SYSTEM_ALERT_WINDOW allow</string>
     <string name="test_popup_message">Pop-ups work.</string>

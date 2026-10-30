@@ -31,7 +31,7 @@ That's the dashboard, the pop-ups and remote control of the TV, without a second
 - **Home Assistant control:** load a page, navigate, reload, dim or blank the screen, wake, pop-ups, volume, speech, sounds, open another TV app, read state (page, connection, memory, uptime, WebView version).
   - **REST API** with a token, LAN only.
   - **MQTT** with HA discovery: the TV shows up as a device with buttons, a screen select, a dim slider and diagnostics.
-- **Stays up:** retries failed loads; replaces a crashed or frozen WebView; reloads when the network comes back, when HA stays unreachable, and optionally every night; restarts itself after a crash.
+- **Stays up:** retries failed loads; replaces a crashed or frozen WebView; reloads when the network comes back, when HA stays unreachable, when memory runs low while nobody is looking, and optionally every night; restarts itself after a crash.
 - **Web admin page:** manage the TV from a phone or computer: scan the QR code in the TV's settings and you're in. Status, wake and screen controls, sending pop-ups and speech, every setting with search, the log and diagnostics. No app to install, nothing in the cloud.
 - **Easy to look after:** a log and diagnostics on the TV and over the API (passwords and tokens blanked), a settings PIN, settings export and import, and set-up over adb in one script.
 

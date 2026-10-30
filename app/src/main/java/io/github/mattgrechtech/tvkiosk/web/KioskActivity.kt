@@ -2,6 +2,7 @@ package io.github.mattgrechtech.tvkiosk.web
 
 import android.annotation.SuppressLint
 import android.app.Activity
+import android.app.ActivityManager
 import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.Color
@@ -94,6 +95,7 @@ class KioskActivity : Activity(), DashboardSurface {
     private var lastInteraction = 0L
     /** True while the night schedule has the screen black, so only the schedule turns it back on. */
     private var nightBlank = false
+    private var lastMemoryReload = 0L
     /** The page to go back to when a "page" rest ends. */
     private var restReturnUrl: String? = null
     private lateinit var clock: RestClock
@@ -263,6 +265,8 @@ class KioskActivity : Activity(), DashboardSurface {
             userAgentString = "$userAgentString TvKiosk/${BuildConfig.VERSION_NAME}"
         }
         view.setBackgroundColor(Color.BLACK)
+        // Keep the dashboard's renderer among the last things a low-memory device stops.
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) view.setRendererPriorityPolicy(WebView.RENDERER_PRIORITY_IMPORTANT, true)
         view.isFocusable = true
         view.isFocusableInTouchMode = true
         view.webViewClient = Client()
@@ -443,6 +447,7 @@ class KioskActivity : Activity(), DashboardSurface {
         nightlyReload()
         nightScreen()
         burnInGuard()
+        relieveMemory()
         app.controller.restTick(SystemClock.elapsedRealtime())
         scheduleTick()
     }
@@ -491,6 +496,27 @@ class KioskActivity : Activity(), DashboardSurface {
             if (app.state.screen == KioskState.Screen.BLANK) app.controller.setScreen(KioskState.Screen.ON, 0)
         }
         if (app.state.nightDark != nightBlank) app.state.update { nightDark(nightBlank) }
+    }
+
+    /**
+     * When Android says memory is low and nobody is using the screen, reload the page: a dashboard
+     * that has run for days gives back what it has piled up. At most every half hour.
+     */
+    private fun relieveMemory() {
+        val memory = ActivityManager.MemoryInfo().also { getSystemService(ActivityManager::class.java).getMemoryInfo(it) }
+        if (!memory.lowMemory) return
+        val now = SystemClock.elapsedRealtime()
+        val idle = app.state.resting || app.state.screen != KioskState.Screen.ON || now - lastInteraction > IDLE_FOR_RELOAD_MILLIS
+        if (!idle || now - lastMemoryReload < MEMORY_RELOAD_GAP_MILLIS) return
+        lastMemoryReload = now
+        AppLog.w(TAG, "Memory is low: reloading the page while nobody is looking")
+        reload(false, "low memory")
+    }
+
+    override fun onTrimMemory(level: Int) {
+        super.onTrimMemory(level)
+        @Suppress("DEPRECATION")
+        if (level >= TRIM_MEMORY_RUNNING_CRITICAL && level < TRIM_MEMORY_UI_HIDDEN) relieveMemory()
     }
 
     /** Nudges the page a few pixels now and then, so an OLED never shows the same pixels all day. */
@@ -903,6 +929,8 @@ class KioskActivity : Activity(), DashboardSurface {
         val RETRY_DELAYS_SECONDS = intArrayOf(5, 10, 20, 30, 60)
         const val TICK_MILLIS = 30_000L
         const val BURN_IN_DP = 4
+        const val IDLE_FOR_RELOAD_MILLIS = 10 * 60_000L
+        const val MEMORY_RELOAD_GAP_MILLIS = 30 * 60_000L
         /** The rest clock is dim, but must stay readable where black sets the backlight to its lowest. */
         const val CLOCK_BRIGHTNESS = 0.15f
         const val LONG_PRESS_MILLIS = 800L

@@ -4,6 +4,10 @@
 
 First public version. Pre-alpha: tested on one TCL Google TV (Android 14), including a 72-hour run.
 
+- Family planner (`kiosk:planner`): a built-in week view of Home Assistant calendars, each in its own colour, with to-do lists beside it; items tick off by touch or remote. Upright layout for tablets. Choose calendars, lists and days with `planner_calendars`, `planner_todos`, `planner_days`. New API routes `GET /planner` and `POST /planner/todo`.
+- Phone remote: the admin page's Control tab has a D-pad, Back, Menu, play/pause and a box that types into the TV's focused field (`POST /remote`).
+- Scenes by time of day (`scenes`): from a time, a page, brightness and rest style, one line each.
+- Offline screen: when Home Assistant or the network drops and the page can't load, the last good dashboard shows dimmed with the time and "Reconnecting", instead of a warning.
 - Pop-up buttons can `toggle` a light, fan, input boolean or media player directly; anything that could open, unlock or run something needs `event` and an automation.
 - Do not disturb (`do_not_disturb`, a switch over MQTT and in the integration): pop-ups wait unless they have `priority: high`.
 - Now playing: `now_playing` follows a Home Assistant media player in a pop-up (artwork, title, artist, progress), and closes itself after the music stops. Pop-ups replaced by `id` now keep their place without fading in again, and recent pictures are reused instead of downloaded again.

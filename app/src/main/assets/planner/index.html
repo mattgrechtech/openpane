@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark light">
+  <title>Family planner</title>
+  <link rel="stylesheet" href="planner.css">
+  <script src="planner.js" defer></script>
+</head>
+<body>
+  <header>
+    <div class="when">
+      <div id="clock" class="clock"></div>
+      <div id="today" class="today"></div>
+    </div>
+    <ul id="legend" class="legend" aria-label="Calendars"></ul>
+  </header>
+  <main id="main">
+    <section id="week" class="week" aria-label="This week"></section>
+    <aside id="todos" class="todos" aria-label="To-do lists"></aside>
+  </main>
+  <p id="message" class="message" role="status">Connecting…</p>
+  <footer id="updated" class="updated"></footer>
+</body>
+</html>

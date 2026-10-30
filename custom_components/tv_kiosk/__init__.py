@@ -64,7 +64,7 @@ SERVICES: dict[str, tuple[str, dict]] = {
     }),
     "clear_popup": ("notify/clear", {vol.Optional("id"): cv.string}),
     "navigate": ("navigate", {vol.Required("path"): cv.string, vol.Optional("return_after"): vol.Coerce(int)}),
-    "open_url": ("url", {vol.Required("url"): cv.url, vol.Optional("return_after"): vol.Coerce(int)}),
+    "open_url": ("url", {vol.Required("url"): vol.Any("kiosk:planner", cv.url), vol.Optional("return_after"): vol.Coerce(int)}),
     "motion": ("motion", {vol.Optional("present"): cv.boolean}),
     "wake": ("wake", {vol.Optional("minutes"): vol.All(vol.Coerce(int), vol.Range(min=1, max=240))}),
     "speak": ("tts", {vol.Required("message"): cv.string, vol.Optional("language"): cv.string}),

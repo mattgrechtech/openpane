@@ -25,6 +25,10 @@ class ApiHandler(
     private val settingsSchema: () -> org.json.JSONArray = { org.json.JSONArray() },
     /** The web admin page's files by path ("/", "/admin.js"), or null. They hold no secrets. */
     private val staticFile: (String) -> Response? = { null },
+    /** The family planner's data for a number of days. Blocking (Home Assistant calls). */
+    private val plannerData: (Int) -> JSONObject = { JSONObject().put("ok", false).put("error", "no planner") },
+    /** Marks a planner to-do item done or not: entity, uid, done. */
+    private val plannerTodo: (String, String, Boolean) -> JSONObject = { _, _, _ -> JSONObject().put("ok", false) },
     private val clock: () -> Long = System::currentTimeMillis,
 ) : (Request) -> Response {
 
@@ -68,6 +72,18 @@ class ApiHandler(
             val log = all.optJSONArray("log") ?: org.json.JSONArray()
             val text = (maxOf(0, log.length() - wanted) until log.length()).joinToString("\n") { log.optString(it) }
             return HttpServer.Response(200, text, "text/plain")
+        }
+        if (route == "/planner") {
+            if (request.method != "GET") return error(405, "use GET")
+            val days = request.query["days"]?.toIntOrNull() ?: 7
+            val data = plannerData(days)
+            return if (data.optBoolean("ok")) json(200, data) else json(503, data)
+        }
+        if (route == "/planner/todo") {
+            if (request.method != "POST") return error(405, "use POST")
+            val args = body(request) ?: return error(400, "body must be a JSON object")
+            val answer = plannerTodo(args.optString("entity_id"), args.optString("uid"), args.optBoolean("done", true))
+            return json(if (answer.optBoolean("ok")) 200 else 400, answer)
         }
         if (route == "/settings/schema") {
             return if (request.method == "GET") json(200, JSONObject().put("ok", true).put("settings", settingsSchema()))

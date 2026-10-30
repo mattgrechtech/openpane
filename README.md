@@ -27,6 +27,9 @@ That's the dashboard, the pop-ups and remote control of the TV, without a second
 - **Dashboard:** any HA dashboard full screen, signed in without typing a password on the TV, HA's header and sidebar hidden.
 - **Remote-friendly:** the arrows jump between a page's buttons and OK presses them, so touch dashboards work with a remote. An on-screen pointer for anything else. Hold **OK** (or press Menu) for a quick menu. Works by touch on tablets.
 - **Several pages:** rotate through dashboards or web pages; the remote holds the current one. Automations can open a page and come back by themselves (`return_after`).
+- **Scenes by time of day:** the planner and a bright screen at breakfast, the cameras in the evening, dim and quick to rest at night. One line each.
+- **Family planner:** a built-in week view of every Home Assistant calendar, in colour, with the shopping and chores lists beside it; tick items off by touch or remote. [More](docs/planner.md).
+- **Offline, calmly:** if Home Assistant or the network drops, the screen keeps the dashboard as it last was, dimmed, with the time and "Reconnecting", instead of an error page.
 
 **Pop-ups over any app** (YouTube, Netflix, live TV)
 - Doorbell snapshots, or the camera **live**; bin night; alerts. Any corner, stacked, replaced or closed by id, your choice of size, opacity and text size.
@@ -46,6 +49,7 @@ That's the dashboard, the pop-ups and remote control of the TV, without a second
 
 **Easy to look after**
 - **Web admin page:** scan the QR code in the TV's settings and manage it from your phone: status, controls, pop-ups, every setting, the log, export and import. No app, nothing in the cloud.
+- **Phone remote:** arrows, OK, Back and Menu in the admin page, and a box to **type into the TV** (search, Wi-Fi passwords, sign-ins) instead of the on-screen keyboard.
 - **Stays up:** retries failed loads; replaces a crashed or frozen WebView; reloads when the network comes back, when HA stays unreachable, when memory runs low while nobody is looking, and optionally every night; restarts itself after a crash.
 - A settings PIN, a log and diagnostics with passwords and tokens blanked, set-up over adb in one script, and an opt-in check for new releases.
 - **TVs, tablets and wall displays** on Android 7 and newer: orientation setting, "use as home screen", brightness control.
@@ -93,6 +97,7 @@ The app talks only to the addresses you give it (Home Assistant, the web pages y
 
 ## Docs
 
+- [Family planner](docs/planner.md): calendars and to-do lists on the TV or a wall tablet.
 - [Home Assistant set-up](docs/home-assistant.md): doorbell pop-ups with a camera picture, wake on motion, REST commands, MQTT, moving TvOverlay or ha-tv-kit pop-ups over.
 - [API](docs/api.md): REST routes, every setting, pop-up fields, MQTT topics and entities, adb, remote keys for your own pages.
 - [Troubleshooting](docs/troubleshooting.md): setup, sign-in, pop-ups, a forgotten PIN, updating and uninstalling.

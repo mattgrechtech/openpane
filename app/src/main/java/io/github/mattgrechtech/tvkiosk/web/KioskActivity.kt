@@ -320,6 +320,10 @@ class KioskActivity : Activity(), DashboardSurface {
     private fun open(url: String) {
         val view = webView ?: return
         requestedUrl = url
+        if (url == Keys.PLANNER_PAGE) {
+            view.loadUrl(plannerAddress())
+            return
+        }
         val base = app.settings.haBaseUrl()
         val managed = app.settings[Keys.AUTH_MODE] != "none"
         view.loadUrl(if (managed && base != null) HaUrls.withExternalAuth(url, base) else url)
@@ -344,6 +348,13 @@ class KioskActivity : Activity(), DashboardSurface {
         }
 
         override fun onPageFinished(view: WebView, url: String) {
+            if (url.startsWith(plannerAddress())) {
+                // Only into our own page, checked by its address now: no other page gets the token.
+                val days = app.settings[Keys.PLANNER_DAYS]
+                view.evaluateJavascript(
+                    "window.tvKioskConnect && window.tvKioskConnect(${org.json.JSONObject.quote(app.settings[Keys.API_TOKEN])}, $days)", null,
+                )
+            }
             AppLog.i(TAG, "Page loaded" + if (mainFrameFailed) " (with an error)" else "")
             // Also when HA handles its own sign-in (no bus events): hide the header on load.
             if (!mainFrameFailed && app.settings[Keys.HA_KIOSK_MODE]) bridge?.setKioskMode(true)
@@ -429,6 +440,9 @@ class KioskActivity : Activity(), DashboardSurface {
             AppLog.w(TAG, "Can't keep the last dashboard picture: ${e.javaClass.simpleName}")
         }
     }
+
+    /** The family planner, served by the app's own API port. */
+    private fun plannerAddress() = "http://127.0.0.1:${app.settings[Keys.API_PORT]}/planner/"
 
     private val retry = Runnable {
         AppLog.i(TAG, "Retrying the dashboard")
@@ -546,7 +560,7 @@ class KioskActivity : Activity(), DashboardSurface {
 
     /** A scene's page: a URL, or a path on the Home Assistant server. */
     private fun scenePage(page: String): String? =
-        if (page.startsWith("/")) app.settings.haBaseUrl()?.let { it + page } else page
+        if (page.startsWith("/")) app.settings.haBaseUrl()?.let { it + page } else page // kiosk:planner too
 
     /**
      * Switches to the scene for the time of day when it changes: its page, brightness and rest

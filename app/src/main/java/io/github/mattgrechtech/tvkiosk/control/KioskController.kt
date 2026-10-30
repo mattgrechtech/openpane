@@ -244,8 +244,8 @@ class KioskController(
 
     private fun loadUrl(args: JSONObject): CommandResult {
         val url = args.optString("url").trim()
-        if (!url.startsWith("http://") && !url.startsWith("https://")) {
-            return CommandResult.error(400, "url must start with http:// or https://")
+        if (!url.startsWith("http://") && !url.startsWith("https://") && url != Keys.PLANNER_PAGE) {
+            return CommandResult.error(400, "url must start with http:// or https:// (or be ${Keys.PLANNER_PAGE})")
         }
         val current = surface
         if (current != null) current.loadUrl(url) else {

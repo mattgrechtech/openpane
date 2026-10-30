@@ -33,8 +33,11 @@ object Keys {
 
     private fun port(value: Int) = if (value in 1..65535) null else "must be a port number (1-65535)"
     private fun url(value: String) =
-        if (value.isEmpty() || value.startsWith("http://") || value.startsWith("https://")) null
-        else "must start with http:// or https://"
+        if (value.isEmpty() || value.startsWith("http://") || value.startsWith("https://") || value == PLANNER_PAGE) null
+        else "must start with http:// or https:// (or be $PLANNER_PAGE)"
+
+    /** The built-in family planner, usable wherever a page is: start page, pages, scenes. */
+    const val PLANNER_PAGE = "kiosk:planner"
 
     // What the TV shows
     /** home_assistant: a Home Assistant dashboard (sign-in, picker, pop-up bridge); web: any web page. */
@@ -55,6 +58,13 @@ object Keys {
     val PAGES = Key("pages", "", check = { value ->
         splitPages(value).firstNotNullOfOrNull { page -> url(page)?.let { "has a line that $it" } }
     })
+    // Family planner (kiosk:planner)
+    /** Calendars on the planner, entity ids separated by commas or lines; empty means all. */
+    val PLANNER_CALENDARS = Key("planner_calendars", "", check = { list("calendar", it) })
+    /** To-do lists on the planner; empty means all. */
+    val PLANNER_TODOS = Key("planner_todos", "", check = { list("todo", it) })
+    val PLANNER_DAYS = Key("planner_days", 7, check = { if (it in 1..14) null else "must be 1-14" })
+
     /** Scenes by time of day, one per line: see [io.github.mattgrechtech.tvkiosk.control.Scenes]. */
     val SCENES = Key("scenes", "", check = { io.github.mattgrechtech.tvkiosk.control.Scenes.problem(it) })
     /** Seconds on each page before the next; 0 turns rotation off. */
@@ -157,6 +167,12 @@ object Keys {
     val ORIENTATIONS = listOf("auto", "landscape", "portrait", "reverse_landscape", "reverse_portrait")
     val MOTION_FRONTS = listOf("unless_playing", "always", "never")
 
+    /** Entity ids separated by commas, spaces or lines. */
+    fun splitList(value: String): List<String> = value.split(',', '\n', ' ').map { it.trim() }.filter { it.isNotEmpty() }
+
+    private fun list(domain: String, value: String): String? =
+        splitList(value).firstOrNull { !Regex("$domain\\.[a-z0-9_]{1,100}").matches(it) }?.let { "\"$it\" isn't a $domain entity id" }
+
     /** The non-blank lines of a [PAGES] value, trimmed. */
     fun splitPages(value: String): List<String> = value.lines().map { it.trim() }.filter { it.isNotEmpty() }
 
@@ -165,7 +181,7 @@ object Keys {
 
     val ALL: List<Key<*>> = listOf(
         MODE, START_URL, HA_URL, AUTH_MODE, HA_KIOSK_MODE, KEEP_SCREEN_ON, BOOT_START, REMOTE_MODE,
-        PAGES, ROTATE_SECONDS, SCENES, SCREEN_OFF_FROM, SCREEN_OFF_TO,
+        PAGES, ROTATE_SECONDS, SCENES, PLANNER_CALENDARS, PLANNER_TODOS, PLANNER_DAYS, SCREEN_OFF_FROM, SCREEN_OFF_TO,
         CHECK_UPDATES, REST_AFTER_MINUTES, REST_STYLE, REST_PAGE, MOTION_AT_NIGHT, MOTION_FRONT, BURN_IN_GUARD, ORIENTATION, HOME_APP, KEY_EVENTS, DO_NOT_DISTURB,
         POPUP_SIZE, POPUP_OPACITY, POPUP_TEXT_SIZE, POPUP_CORNER, POPUP_DURATION, POPUP_MAX_PER_CORNER, POPUP_TAKE_REMOTE,
         RELOAD_ON_NETWORK, RELOAD_ON_DISCONNECT_SECONDS, NIGHTLY_RELOAD_HOUR,

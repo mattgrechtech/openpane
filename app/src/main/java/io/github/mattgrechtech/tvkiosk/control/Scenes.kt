@@ -57,7 +57,7 @@ object Scenes {
             val name = part.substringBefore('=', "")
             val value = part.substringAfter('=', "")
             scene = when {
-                name.isEmpty() && (part.startsWith("http://") || part.startsWith("https://") || part.startsWith("/")) ->
+                name.isEmpty() && (part.startsWith("http://") || part.startsWith("https://") || part.startsWith("/") || part == Keys.PLANNER_PAGE) ->
                     if (scene.page != null) return fail("has two pages") else scene.copy(page = part)
                 name == "brightness" -> value.toIntOrNull()?.takeIf { it in -1..100 }?.let { scene.copy(brightness = it) }
                     ?: return fail("brightness must be 0-100, or -1 for the device's own")

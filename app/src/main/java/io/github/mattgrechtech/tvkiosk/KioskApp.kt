@@ -27,6 +27,8 @@ class KioskApp : Application() {
         private set
     lateinit var auth: HaAuth
         private set
+    lateinit var planner: io.github.mattgrechtech.tvkiosk.web.Planner
+        private set
 
     override fun onCreate() {
         super.onCreate()
@@ -39,6 +41,7 @@ class KioskApp : Application() {
         controller = KioskController(this, settings, state)
         auth = HaAuth(settings)
         val ha = HaApi(settings, auth)
+        planner = io.github.mattgrechtech.tvkiosk.web.Planner(settings, ha)
         controller.eventListeners += { type, data -> ha.fire(type, data) }
         controller.cameraStream = ha::cameraStream
         controller.haState = ha::state

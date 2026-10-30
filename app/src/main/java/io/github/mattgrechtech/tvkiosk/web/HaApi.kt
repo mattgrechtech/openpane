@@ -56,6 +56,48 @@ class HaApi(private val settings: Settings, private val auth: HaAuth) {
         Thread({ post(base, "/api/services/$domain/$service", data, "$domain.$service") }, "ha-service").start()
     }
 
+    /** GET [path] from Home Assistant's REST API as JSON (object or array), or null. Blocking. */
+    fun getJson(path: String): Any? = request("GET", path, null)
+
+    /** POST [body] to [path], answer as JSON (or an empty object), or null on failure. Blocking. */
+    fun postJson(path: String, body: JSONObject): Any? = request("POST", path, body)
+
+    private fun request(method: String, path: String, body: JSONObject?): Any? {
+        val base = settings.haBaseUrl()
+        if (settings.isWebMode() || base == null) return null
+        return try {
+            val token = auth.accessToken(force = false).accessToken
+            val connection = URL(base + path).openConnection() as HttpURLConnection
+            try {
+                connection.requestMethod = method
+                connection.connectTimeout = TIMEOUT_MILLIS
+                connection.readTimeout = TIMEOUT_MILLIS
+                connection.setRequestProperty("Authorization", "Bearer $token")
+                if (body != null) {
+                    connection.doOutput = true
+                    connection.setRequestProperty("Content-Type", "application/json")
+                    connection.outputStream.use { it.write(body.toString().toByteArray()) }
+                }
+                val status = connection.responseCode
+                if (status != 200 && status != 201) {
+                    AppLog.w(TAG, "Home Assistant answered $status to $method ${path.substringBefore('?')}")
+                    return null
+                }
+                val text = connection.inputStream.bufferedReader().readText().trim()
+                when {
+                    text.startsWith("[") -> org.json.JSONArray(text)
+                    text.startsWith("{") -> JSONObject(text)
+                    else -> JSONObject()
+                }
+            } finally {
+                connection.disconnect()
+            }
+        } catch (e: Exception) {
+            AppLog.w(TAG, "Can't $method ${path.substringBefore('?')}: ${e.javaClass.simpleName}")
+            null
+        }
+    }
+
     /** [entity]'s state and attributes from Home Assistant, or null. Blocking: call off the main thread. */
     fun state(entity: String): JSONObject? {
         // Checked here too: the id goes into a URL path, where "../" would reach other API routes.

@@ -269,7 +269,7 @@
         },
         "url": {
           "name": "URL",
-          "description": "http:// or https://."
+          "description": "http:// or https://, or kiosk:planner for the family planner."
         },
         "return_after": {
           "name": "Back after",

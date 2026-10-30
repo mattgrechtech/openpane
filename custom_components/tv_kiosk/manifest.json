@@ -1,0 +1,13 @@
+{
+  "domain": "tv_kiosk",
+  "name": "TV Kiosk",
+  "codeowners": ["@mattgrechtech"],
+  "config_flow": true,
+  "documentation": "https://github.com/mattgrechtech/ha-tv-kiosk/blob/main/docs/home-assistant.md#the-tv-kiosk-integration",
+  "integration_type": "device",
+  "iot_class": "local_polling",
+  "issue_tracker": "https://github.com/mattgrechtech/ha-tv-kiosk/issues",
+  "requirements": [],
+  "version": "0.1.0",
+  "zeroconf": ["_tvkiosk._tcp.local."]
+}

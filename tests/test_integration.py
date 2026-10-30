@@ -1,0 +1,113 @@
+"""Set-up, entities and actions of the TV Kiosk integration, against a mocked TV."""
+
+from ipaddress import ip_address
+
+from homeassistant import config_entries
+from homeassistant.const import CONF_HOST, CONF_PORT, CONF_TOKEN
+from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
+from pytest_homeassistant_custom_component.common import MockConfigEntry
+from pytest_homeassistant_custom_component.test_util.aiohttp import AiohttpClientMocker
+
+from custom_components.tv_kiosk.const import DOMAIN
+
+HOST = "192.168.1.60"
+BASE = f"http://{HOST}:2424/api/v1"
+STATE = {
+    "ok": True, "url": "http://192.168.1.50:8123/house", "title": "House", "screen": "on", "resting": False,
+    "night": False, "present": False, "brightness": -1, "dashboard_visible": True, "overlay_permission": True,
+    "ha_connection": "connected", "last_error": "", "last_motion_at": None, "last_wake_ms": 207,
+    "app_memory_mb": 180, "memory_available_mb": 640, "app_started_at": 1793000000, "app_version": "0.1.0",
+    "webview_version": "130.0", "model": "Smart TV Pro", "manufacturer": "TCL",
+    "device_id": "a1b2c3d4", "device_name": "Living room TV",
+}
+
+
+async def test_user_flow_creates_the_tv(hass: HomeAssistant, aioclient_mock: AiohttpClientMocker) -> None:
+    aioclient_mock.get(f"{BASE}/state", json=STATE)
+    result = await hass.config_entries.flow.async_init(DOMAIN, context={"source": config_entries.SOURCE_USER})
+    assert result["type"] is FlowResultType.FORM
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_HOST: HOST, CONF_PORT: 2424, CONF_TOKEN: "secret"}
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "Living room TV"
+    assert result["result"].unique_id == "a1b2c3d4"
+    assert aioclient_mock.mock_calls[0][3]["Authorization"] == "Bearer secret"
+
+
+async def test_user_flow_wrong_token(hass: HomeAssistant, aioclient_mock: AiohttpClientMocker) -> None:
+    aioclient_mock.get(f"{BASE}/state", status=401, json={"ok": False, "error": "missing or wrong token"})
+    result = await hass.config_entries.flow.async_init(DOMAIN, context={"source": config_entries.SOURCE_USER})
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_HOST: HOST, CONF_PORT: 2424, CONF_TOKEN: "wrong"}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "invalid_auth"}
+
+
+async def test_discovered_tv_asks_only_for_the_token(hass: HomeAssistant, aioclient_mock: AiohttpClientMocker) -> None:
+    aioclient_mock.get(f"{BASE}/state", json=STATE)
+    info = ZeroconfServiceInfo(
+        ip_address=ip_address(HOST), ip_addresses=[ip_address(HOST)], hostname="tv.local.", name="TV Kiosk Living room TV",
+        port=2424, type="_tvkiosk._tcp.local.", properties={"id": "a1b2c3d4", "name": "Living room TV", "version": "0.1.0"},
+    )
+    result = await hass.config_entries.flow.async_init(DOMAIN, context={"source": config_entries.SOURCE_ZEROCONF}, data=info)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "zeroconf_confirm"
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {CONF_TOKEN: "secret"})
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"] == {CONF_HOST: HOST, CONF_PORT: 2424, CONF_TOKEN: "secret"}
+
+
+async def test_rediscovery_never_moves_the_tv(hass: HomeAssistant) -> None:
+    entry = MockConfigEntry(domain=DOMAIN, unique_id="a1b2c3d4", data={CONF_HOST: "192.168.1.61", CONF_PORT: 2424, CONF_TOKEN: "t"})
+    entry.add_to_hass(hass)
+    info = ZeroconfServiceInfo(
+        ip_address=ip_address(HOST), ip_addresses=[ip_address(HOST)], hostname="tv.local.", name="x",
+        port=2424, type="_tvkiosk._tcp.local.", properties={"id": "a1b2c3d4"},
+    )
+    result = await hass.config_entries.flow.async_init(DOMAIN, context={"source": config_entries.SOURCE_ZEROCONF}, data=info)
+    assert result["type"] is FlowResultType.ABORT
+    # An announcement alone must not send the token somewhere new.
+    assert entry.data[CONF_HOST] == "192.168.1.61"
+
+
+async def _set_up(hass: HomeAssistant, aioclient_mock: AiohttpClientMocker) -> MockConfigEntry:
+    aioclient_mock.get(f"{BASE}/state", json=STATE)
+    entry = MockConfigEntry(domain=DOMAIN, unique_id="a1b2c3d4", title="Living room TV",
+                            data={CONF_HOST: HOST, CONF_PORT: 2424, CONF_TOKEN: "secret"})
+    entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+    return entry
+
+
+async def test_entities_show_the_state(hass: HomeAssistant, aioclient_mock: AiohttpClientMocker) -> None:
+    await _set_up(hass, aioclient_mock)
+    assert hass.states.get("sensor.living_room_tv_page").state == "House"
+    assert hass.states.get("binary_sensor.living_room_tv_dashboard_in_front").state == "on"
+    assert hass.states.get("select.living_room_tv_screen").state == "on"
+    assert hass.states.get("sensor.living_room_tv_screen_state").state == "on"
+
+
+async def test_notify_action_reaches_the_tv(hass: HomeAssistant, aioclient_mock: AiohttpClientMocker) -> None:
+    await _set_up(hass, aioclient_mock)
+    aioclient_mock.post(f"{BASE}/notify", json={"ok": True, "id": "x"})
+    device = dr.async_get(hass).async_get_device(identifiers={(DOMAIN, "a1b2c3d4")})
+    await hass.services.async_call(
+        DOMAIN, "notify",
+        {"device_id": device.id, "title": "Front door", "sound": "doorbell", "actions": [{"label": "Unlock", "event": "unlock_front"}]},
+        blocking=True,
+    )
+    sent = [call for call in aioclient_mock.mock_calls if str(call[1]).endswith("/notify")]
+    assert sent[0][2] == {"title": "Front door", "sound": "doorbell", "actions": [{"label": "Unlock", "event": "unlock_front"}]}
+
+
+async def test_wake_button(hass: HomeAssistant, aioclient_mock: AiohttpClientMocker) -> None:
+    await _set_up(hass, aioclient_mock)
+    aioclient_mock.post(f"{BASE}/wake", json={"ok": True})
+    await hass.services.async_call("button", "press", {"entity_id": "button.living_room_tv_wake"}, blocking=True)
+    assert any(str(call[1]).endswith("/wake") for call in aioclient_mock.mock_calls)

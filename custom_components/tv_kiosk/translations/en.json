@@ -1,0 +1,405 @@
+{
+  "config": {
+    "flow_title": "{name}",
+    "step": {
+      "user": {
+        "title": "Add a TV running TV Kiosk",
+        "description": "On the TV: Settings → Pop-ups and API → Web admin, API address and token.",
+        "data": {
+          "host": "The TV's IP address",
+          "port": "API port",
+          "token": "API token"
+        }
+      },
+      "zeroconf_confirm": {
+        "title": "TV Kiosk found: {name}",
+        "description": "Enter the API token of {name} ({host}). On the TV: Settings → Pop-ups and API → Web admin, API address and token.",
+        "data": {
+          "token": "API token"
+        }
+      },
+      "reauth_confirm": {
+        "title": "New API token",
+        "description": "The TV refused the token (it may have been changed). Enter the current one.",
+        "data": {
+          "token": "API token"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Can't reach the TV. Check the IP address and port, that TV Kiosk is open and its API is on.",
+      "invalid_auth": "The TV refused the token."
+    },
+    "abort": {
+      "already_configured": "This TV is already set up.",
+      "not_tv_kiosk": "That isn't a TV Kiosk TV.",
+      "reauth_successful": "The new token works."
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "dashboard_visible": {
+        "name": "Dashboard in front"
+      },
+      "resting": {
+        "name": "Screen resting"
+      },
+      "present": {
+        "name": "Someone present"
+      },
+      "overlay_permission": {
+        "name": "Can show pop-ups over apps"
+      }
+    },
+    "button": {
+      "wake": {
+        "name": "Wake"
+      },
+      "motion": {
+        "name": "Motion"
+      },
+      "start_page": {
+        "name": "Go to start page"
+      },
+      "reload": {
+        "name": "Reload"
+      },
+      "hard_reload": {
+        "name": "Reload and clear cache"
+      },
+      "stop_sound": {
+        "name": "Stop sound"
+      }
+    },
+    "notify": {
+      "popup": {
+        "name": "Pop-up"
+      }
+    },
+    "number": {
+      "brightness": {
+        "name": "Brightness"
+      }
+    },
+    "select": {
+      "screen_mode": {
+        "name": "Screen",
+        "state": {
+          "on": "On",
+          "dim": "Dim",
+          "blank": "Black"
+        }
+      }
+    },
+    "sensor": {
+      "page": {
+        "name": "Page"
+      },
+      "screen": {
+        "name": "Screen state",
+        "state": {
+          "on": "On",
+          "dim": "Dim",
+          "blank": "Black",
+          "resting": "Resting",
+          "night": "Night"
+        }
+      },
+      "last_motion": {
+        "name": "Last motion"
+      },
+      "last_wake": {
+        "name": "Last wake time"
+      },
+      "ha_connection": {
+        "name": "Home Assistant connection"
+      },
+      "last_error": {
+        "name": "Last error"
+      },
+      "app_memory": {
+        "name": "App memory"
+      },
+      "memory_available": {
+        "name": "Memory available"
+      },
+      "app_started": {
+        "name": "App started"
+      },
+      "webview_version": {
+        "name": "WebView version"
+      }
+    },
+    "switch": {
+      "present_switch": {
+        "name": "Someone present"
+      },
+      "do_not_disturb": {
+        "name": "Do not disturb"
+      }
+    },
+    "update": {
+      "app_update": {
+        "name": "TV Kiosk app"
+      }
+    }
+  },
+  "services": {
+    "notify": {
+      "name": "Show a pop-up",
+      "description": "Shows a pop-up on the TV, over any app: text, a picture or a live camera, a sound, speech and buttons.",
+      "fields": {
+        "device_id": {
+          "name": "TV",
+          "description": "One or more TVs."
+        },
+        "title": {
+          "name": "Title",
+          "description": "Heading."
+        },
+        "message": {
+          "name": "Message",
+          "description": "Body text."
+        },
+        "image": {
+          "name": "Picture",
+          "description": "A full URL the TV can reach."
+        },
+        "camera": {
+          "name": "Live camera",
+          "description": "A camera to show live while the pop-up is up."
+        },
+        "stream": {
+          "name": "Live stream URL",
+          "description": "Any MJPEG stream, e.g. from go2rtc or Frigate."
+        },
+        "icon": {
+          "name": "Icon",
+          "description": "mdi:name or a URL."
+        },
+        "color": {
+          "name": "Colour",
+          "description": "Accent colour, #RRGGBB."
+        },
+        "corner": {
+          "name": "Corner",
+          "description": "Where it appears."
+        },
+        "duration": {
+          "name": "Seconds",
+          "description": "Time on screen; 0 stays until closed."
+        },
+        "size": {
+          "name": "Size",
+          "description": "small, medium or large."
+        },
+        "sound": {
+          "name": "Sound",
+          "description": "chime, doorbell, alert, or a URL."
+        },
+        "tts": {
+          "name": "Speak",
+          "description": "Text the TV says."
+        },
+        "id": {
+          "name": "ID",
+          "description": "The same ID replaces a pop-up on screen."
+        },
+        "actions": {
+          "name": "Buttons",
+          "description": "Up to 3: label plus navigate, url, event, or toggle (a light, switch, fan, cover, scene or script)."
+        },
+        "qr": {
+          "name": "QR code",
+          "description": "Text shown as a QR code, e.g. a guest Wi-Fi login."
+        },
+        "countdown": {
+          "name": "Countdown",
+          "description": "Seconds counting down in the pop-up."
+        },
+        "progress": {
+          "name": "Progress",
+          "description": "0-100, a progress bar; resend with the same ID to move it."
+        },
+        "priority": {
+          "name": "Priority",
+          "description": "high still shows during Do not disturb (smoke alarm, doorbell)."
+        }
+      }
+    },
+    "clear_popup": {
+      "name": "Close a pop-up",
+      "description": "Closes the pop-up with this ID, or all of them.",
+      "fields": {
+        "device_id": {
+          "name": "TV",
+          "description": "One or more TVs."
+        },
+        "id": {
+          "name": "ID",
+          "description": "Leave empty to close all."
+        }
+      }
+    },
+    "navigate": {
+      "name": "Open a Home Assistant page",
+      "description": "Opens a dashboard path on the TV without a reload.",
+      "fields": {
+        "device_id": {
+          "name": "TV",
+          "description": "One or more TVs."
+        },
+        "path": {
+          "name": "Path",
+          "description": "For example /lovelace/cameras."
+        },
+        "return_after": {
+          "name": "Back after",
+          "description": "Seconds until the start page comes back; empty stays."
+        }
+      }
+    },
+    "open_url": {
+      "name": "Open a web page",
+      "description": "Loads any page on the TV.",
+      "fields": {
+        "device_id": {
+          "name": "TV",
+          "description": "One or more TVs."
+        },
+        "url": {
+          "name": "URL",
+          "description": "http:// or https://."
+        },
+        "return_after": {
+          "name": "Back after",
+          "description": "Seconds until the start page comes back; empty stays."
+        }
+      }
+    },
+    "motion": {
+      "name": "Motion",
+      "description": "Someone was seen: wakes a resting screen. present true holds it awake until present false.",
+      "fields": {
+        "device_id": {
+          "name": "TV",
+          "description": "One or more TVs."
+        },
+        "present": {
+          "name": "Present",
+          "description": "For presence sensors."
+        }
+      }
+    },
+    "wake": {
+      "name": "Wake",
+      "description": "Turns the screen on and brings the dashboard to the front, even over another app.",
+      "fields": {
+        "device_id": {
+          "name": "TV",
+          "description": "One or more TVs."
+        },
+        "minutes": {
+          "name": "Minutes",
+          "description": "Keeps the night screen away this long."
+        }
+      }
+    },
+    "speak": {
+      "name": "Speak",
+      "description": "The TV says the text with its own text-to-speech.",
+      "fields": {
+        "device_id": {
+          "name": "TV",
+          "description": "One or more TVs."
+        },
+        "message": {
+          "name": "Text",
+          "description": "What to say."
+        },
+        "language": {
+          "name": "Language",
+          "description": "For example en-AU."
+        }
+      }
+    },
+    "play_sound": {
+      "name": "Play a sound",
+      "description": "Plays a sound URL on the TV.",
+      "fields": {
+        "device_id": {
+          "name": "TV",
+          "description": "One or more TVs."
+        },
+        "url": {
+          "name": "URL",
+          "description": "A sound the TV can reach."
+        },
+        "volume": {
+          "name": "Volume",
+          "description": "0-100."
+        }
+      }
+    },
+    "launch_app": {
+      "name": "Open an app",
+      "description": "Opens another app on the TV.",
+      "fields": {
+        "device_id": {
+          "name": "TV",
+          "description": "One or more TVs."
+        },
+        "package": {
+          "name": "Package",
+          "description": "For example com.google.android.youtube.tv."
+        }
+      }
+    },
+    "apply_settings": {
+      "name": "Apply settings",
+      "description": "Sets the same settings on every TV given (names as in the TV's settings export). Only the settings listed change.",
+      "fields": {
+        "device_id": {
+          "name": "TV",
+          "description": "One or more TVs."
+        },
+        "settings": {
+          "name": "Settings",
+          "description": "For example rest_after_minutes: 5."
+        }
+      }
+    },
+    "now_playing": {
+      "name": "Show now playing",
+      "description": "A pop-up that follows a media player: artwork, title, artist and progress. It closes by itself 30 seconds after the music stops.",
+      "fields": {
+        "device_id": {
+          "name": "TV",
+          "description": "One or more TVs."
+        },
+        "entity": {
+          "name": "Media player",
+          "description": "For example a Music Assistant player."
+        },
+        "corner": {
+          "name": "Corner",
+          "description": "Where it appears."
+        },
+        "size": {
+          "name": "Size",
+          "description": "small, medium or large."
+        }
+      }
+    },
+    "now_playing_stop": {
+      "name": "Hide now playing",
+      "description": "Closes the now-playing pop-up.",
+      "fields": {
+        "device_id": {
+          "name": "TV",
+          "description": "One or more TVs."
+        }
+      }
+    }
+  }
+}

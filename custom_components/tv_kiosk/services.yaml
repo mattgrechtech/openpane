@@ -1,0 +1,143 @@
+notify:
+  fields:
+    device_id: &tv
+      required: true
+      selector:
+        device:
+          multiple: true
+          filter:
+            - integration: tv_kiosk
+    title:
+      selector: { text: }
+    message:
+      selector: { text: { multiline: true } }
+    image:
+      selector: { text: }
+    camera:
+      selector: { entity: { filter: { domain: camera } } }
+    stream:
+      selector: { text: }
+    icon:
+      selector: { icon: }
+    color:
+      selector: { text: }
+    corner:
+      selector:
+        select:
+          options: [top_start, top_end, bottom_start, bottom_end]
+    duration:
+      selector: { number: { min: 0, max: 600, unit_of_measurement: s } }
+    size:
+      selector:
+        select:
+          options: [small, medium, large]
+    sound:
+      selector:
+        select:
+          custom_value: true
+          options: [chime, doorbell, alert]
+    tts:
+      selector: { text: }
+    id:
+      selector: { text: }
+    priority:
+      selector:
+        select:
+          options: [normal, high]
+    qr:
+      selector: { text: }
+    countdown:
+      selector: { number: { min: 1, max: 86400, unit_of_measurement: s } }
+    progress:
+      selector: { number: { min: 0, max: 100, unit_of_measurement: "%" } }
+    actions:
+      selector: { object: }
+
+clear_popup:
+  fields:
+    device_id: *tv
+    id:
+      selector: { text: }
+
+navigate:
+  fields:
+    device_id: *tv
+    path:
+      required: true
+      example: /lovelace/cameras
+      selector: { text: }
+    return_after:
+      selector: { number: { min: 5, max: 86400, unit_of_measurement: s } }
+
+open_url:
+  fields:
+    device_id: *tv
+    url:
+      required: true
+      selector: { text: { type: url } }
+    return_after:
+      selector: { number: { min: 5, max: 86400, unit_of_measurement: s } }
+
+motion:
+  fields:
+    device_id: *tv
+    present:
+      selector: { boolean: }
+
+wake:
+  fields:
+    device_id: *tv
+    minutes:
+      selector: { number: { min: 1, max: 240, unit_of_measurement: min } }
+
+speak:
+  fields:
+    device_id: *tv
+    message:
+      required: true
+      selector: { text: }
+    language:
+      selector: { text: }
+
+play_sound:
+  fields:
+    device_id: *tv
+    url:
+      required: true
+      selector: { text: { type: url } }
+    volume:
+      selector: { number: { min: 0, max: 100 } }
+
+apply_settings:
+  fields:
+    device_id: *tv
+    settings:
+      required: true
+      example: '{"rest_after_minutes": 5, "rest_style": "clock"}'
+      selector: { object: }
+
+now_playing:
+  fields:
+    device_id: *tv
+    entity:
+      required: true
+      selector: { entity: { filter: { domain: media_player } } }
+    corner:
+      selector:
+        select:
+          options: [top_start, top_end, bottom_start, bottom_end]
+    size:
+      selector:
+        select:
+          options: [small, medium, large]
+
+now_playing_stop:
+  fields:
+    device_id: *tv
+
+launch_app:
+  fields:
+    device_id: *tv
+    package:
+      required: true
+      selector: { text: }

@@ -55,6 +55,8 @@ object Keys {
     val PAGES = Key("pages", "", check = { value ->
         splitPages(value).firstNotNullOfOrNull { page -> url(page)?.let { "has a line that $it" } }
     })
+    /** Scenes by time of day, one per line: see [io.github.mattgrechtech.tvkiosk.control.Scenes]. */
+    val SCENES = Key("scenes", "", check = { io.github.mattgrechtech.tvkiosk.control.Scenes.problem(it) })
     /** Seconds on each page before the next; 0 turns rotation off. */
     val ROTATE_SECONDS = Key("rotate_seconds", 0, check = {
         if (it == 0 || it in 10..86_400) null else "must be 0 (off) or 10-86400"
@@ -163,7 +165,7 @@ object Keys {
 
     val ALL: List<Key<*>> = listOf(
         MODE, START_URL, HA_URL, AUTH_MODE, HA_KIOSK_MODE, KEEP_SCREEN_ON, BOOT_START, REMOTE_MODE,
-        PAGES, ROTATE_SECONDS, SCREEN_OFF_FROM, SCREEN_OFF_TO,
+        PAGES, ROTATE_SECONDS, SCENES, SCREEN_OFF_FROM, SCREEN_OFF_TO,
         CHECK_UPDATES, REST_AFTER_MINUTES, REST_STYLE, REST_PAGE, MOTION_AT_NIGHT, MOTION_FRONT, BURN_IN_GUARD, ORIENTATION, HOME_APP, KEY_EVENTS, DO_NOT_DISTURB,
         POPUP_SIZE, POPUP_OPACITY, POPUP_TEXT_SIZE, POPUP_CORNER, POPUP_DURATION, POPUP_MAX_PER_CORNER, POPUP_TAKE_REMOTE,
         RELOAD_ON_NETWORK, RELOAD_ON_DISCONNECT_SECONDS, NIGHTLY_RELOAD_HOUR,

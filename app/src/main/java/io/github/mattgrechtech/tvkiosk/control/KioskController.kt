@@ -289,6 +289,13 @@ class KioskController(
         if (mode == KioskState.Screen.ON) endRest()
     }
 
+    /** Applies a scene's brightness, as the brightness command would. */
+    fun sceneBrightness(level: Int) {
+        state.update { brightness(level) }
+        // A dark or resting screen keeps its own backlight; the new level applies when it lights up.
+        if (state.screen == KioskState.Screen.ON && !state.resting) surface?.applyBrightness(level)
+    }
+
     /** Screen brightness for the dashboard, 0-100, or -1 for the device's own setting. */
     private fun brightness(args: JSONObject): CommandResult {
         if (!args.has("level")) return CommandResult.error(400, "level is required: 0-100, or -1 for the device's setting")
@@ -356,14 +363,17 @@ class KioskController(
     private fun somethingPlaying(): Boolean =
         context.getSystemService(AudioManager::class.java)?.isMusicActive == true
 
+    /** The scene by time of day in force, if any: its rest settings win over the normal ones. */
+    var scene: Scenes.Scene? = null
+
     /** Called by the dashboard about every half minute while it's in front: rests the screen when due. */
     fun restTick(now: Long) {
-        presence.restAfterMillis = settings[Keys.REST_AFTER_MINUTES] * 60_000L
+        presence.restAfterMillis = (scene?.restAfterMinutes ?: settings[Keys.REST_AFTER_MINUTES]) * 60_000L
         // A pop-up on screen counts as activity: never rest behind a doorbell camera.
         if (popups.showing) presence.awake(now)
         if (!presence.restDue(now) || state.screen != KioskState.Screen.ON) return
         if (surface?.nightActive() == true) return
-        var style = settings[Keys.REST_STYLE]
+        var style = scene?.restStyle ?: settings[Keys.REST_STYLE]
         if (style == "page" && settings[Keys.REST_PAGE].isEmpty()) style = "black"
         presence.rest(now)
         AppLog.i(TAG, "Nobody around: screen resting ($style)")

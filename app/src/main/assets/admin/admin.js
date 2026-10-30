@@ -6,7 +6,7 @@ const API = "/api/v1";
 const STORE = "tvkiosk-token";
 
 const GROUPS = [
-  ["What the TV shows", ["mode", "start_url", "ha_url", "auth_mode", "ha_long_lived_token", "ha_kiosk_mode", "pages", "rotate_seconds"]],
+  ["What the TV shows", ["mode", "start_url", "ha_url", "auth_mode", "ha_long_lived_token", "ha_kiosk_mode", "pages", "rotate_seconds", "scenes"]],
   ["Screen and remote", ["remote_mode", "keep_screen_on", "boot_start", "burn_in_guard", "screen_off_from", "screen_off_to"]],
   ["Wake on motion", ["rest_after_minutes", "rest_style", "motion_front", "motion_at_night"]],
   ["Pop-ups", ["popup_size", "popup_opacity", "popup_text_size", "popup_corner", "popup_duration", "popup_max_per_corner", "popup_take_remote"]],
@@ -18,7 +18,7 @@ const GROUPS = [
 
 const LABELS = {
   mode: "Shows", start_url: "Start page", ha_url: "Home Assistant address", auth_mode: "Sign-in",
-  ha_long_lived_token: "Long-lived token", ha_kiosk_mode: "Hide HA header and sidebar", pages: "More pages (one per line)",
+  ha_long_lived_token: "Long-lived token", ha_kiosk_mode: "Hide HA header and sidebar", pages: "More pages (one per line)", scenes: "Scenes by time of day (one per line: 07:00 /page brightness=80 rest=clock rest_after=10)",
   rotate_seconds: "Seconds on each page (0 = off)", remote_mode: "Remote", keep_screen_on: "Keep the screen on",
   boot_start: "Start when the TV starts", burn_in_guard: "Burn-in guard", screen_off_from: "Night: black from hour (-1 = never)",
   screen_off_to: "Night: until hour", rest_after_minutes: "Rest after minutes without motion (0 = never)", rest_style: "While resting",
@@ -201,7 +201,7 @@ function field(item) {
     input = el("select", {}, ...item.choices.map((c) => el("option", { value: c, textContent: c, selected: c === value })));
   } else if (item.type === "integer") {
     input = el("input", { type: "number", value: value });
-  } else if (name === "pages") {
+  } else if (name === "pages" || name === "scenes") {
     input = el("textarea", { value: value });
   } else {
     input = el("input", { type: item.secret ? "password" : "text", value: item.secret ? "" : value, autocomplete: "off",

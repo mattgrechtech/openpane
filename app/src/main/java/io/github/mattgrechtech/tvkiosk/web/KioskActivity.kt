@@ -39,6 +39,7 @@ import io.github.mattgrechtech.tvkiosk.R
 import io.github.mattgrechtech.tvkiosk.control.DashboardSurface
 import io.github.mattgrechtech.tvkiosk.control.KioskState
 import io.github.mattgrechtech.tvkiosk.control.RemoteKeys
+import io.github.mattgrechtech.tvkiosk.control.Scenes
 import io.github.mattgrechtech.tvkiosk.control.Schedule
 import io.github.mattgrechtech.tvkiosk.service.KioskService
 import io.github.mattgrechtech.tvkiosk.settings.Keys
@@ -86,6 +87,8 @@ class KioskActivity : Activity(), DashboardSurface {
     private var retryDelayIndex = 0
     private var mainFrameFailed = false
     private var networkLost = false
+    /** The scene by time of day last put in place (null: none). */
+    private var appliedScene: Scenes.Scene? = null
     /** The dashboard as it last looked while connected, shown dimmed while it can't load; and when. */
     private var lastGood: android.graphics.Bitmap? = null
     private var lastGoodAt = 0L
@@ -228,7 +231,11 @@ class KioskActivity : Activity(), DashboardSurface {
         // With only a Home Assistant address set, show HA's home page until a dashboard is chosen.
         pageIndex = 0
         pageShownAt = SystemClock.elapsedRealtime()
-        val start = app.controller.takePendingUrl() ?: app.settings.pages().firstOrNull().orEmpty()
+        val scene = currentScene()
+        appliedScene = scene
+        app.controller.scene = scene
+        val start = app.controller.takePendingUrl() ?: scene?.page?.let { scenePage(it) }
+            ?: app.settings.pages().firstOrNull().orEmpty()
         if (start.isEmpty()) {
             destroyWebView()
             showPanel(Panel.NO_URL, getString(R.string.panel_setup_title), getString(R.string.panel_setup_message), MessagePanel.ICON_TV,
@@ -495,6 +502,7 @@ class KioskActivity : Activity(), DashboardSurface {
         nightScreen()
         burnInGuard()
         relieveMemory()
+        applyScene()
         app.controller.restTick(SystemClock.elapsedRealtime())
         scheduleTick()
     }
@@ -525,6 +533,37 @@ class KioskActivity : Activity(), DashboardSurface {
         if (now.get(Calendar.HOUR_OF_DAY) == hour && day != lastNightlyReloadDay) {
             lastNightlyReloadDay = day
             reload(true, "nightly")
+        }
+    }
+
+    private fun currentScene(): Scenes.Scene? {
+        val now = java.util.Calendar.getInstance()
+        return Scenes.active(
+            Scenes.parse(app.settings[Keys.SCENES]),
+            now.get(java.util.Calendar.HOUR_OF_DAY) * 60 + now.get(java.util.Calendar.MINUTE),
+        )
+    }
+
+    /** A scene's page: a URL, or a path on the Home Assistant server. */
+    private fun scenePage(page: String): String? =
+        if (page.startsWith("/")) app.settings.haBaseUrl()?.let { it + page } else page
+
+    /**
+     * Switches to the scene for the time of day when it changes: its page, brightness and rest
+     * settings. In between, the remote, commands and automations change things as usual.
+     */
+    private fun applyScene(force: Boolean = false) {
+        val scene = currentScene()
+        if (!force && scene == appliedScene) return
+        appliedScene = scene
+        app.controller.scene = scene
+        app.state.update { scene(scene?.label) }
+        if (scene == null) return
+        AppLog.i(TAG, "Scene from ${scene.label}")
+        scene.brightness?.let { app.controller.sceneBrightness(it) }
+        scene.page?.let { scenePage(it) }?.let { url ->
+            // Behind a rest the page changes too, so it's ready when someone comes.
+            if (url != requestedUrl) loadUrl(url)
         }
     }
 
@@ -625,7 +664,9 @@ class KioskActivity : Activity(), DashboardSurface {
     private val rotation: Runnable = Runnable {
         val pages = app.settings.pages()
         val now = SystemClock.elapsedRealtime()
-        val busy = panel.isShowing || mainFrameFailed || app.state.screen == KioskState.Screen.BLANK || app.state.resting
+        // A scene's own page holds the screen until the next scene.
+        val busy = panel.isShowing || mainFrameFailed || app.state.screen == KioskState.Screen.BLANK || app.state.resting ||
+            appliedScene?.page != null
         if (pages.size > 1 && !busy && Schedule.rotationDue(now, pageShownAt, lastInteraction, app.settings[Keys.ROTATE_SECONDS])) {
             showPage(Schedule.nextIndex(pageIndex, pages.size), pages)
         }
@@ -920,6 +961,7 @@ class KioskActivity : Activity(), DashboardSurface {
             scheduleRotation()
         }
         if (changed.contains(Keys.SCREEN_OFF_FROM.name) || changed.contains(Keys.SCREEN_OFF_TO.name)) nightScreen()
+        if (changed.contains(Keys.SCENES.name)) applyScene(force = true)
         val reloadKeys = setOf(
             Keys.MODE.name, Keys.START_URL.name, Keys.HA_URL.name, Keys.AUTH_MODE.name,
             Keys.HA_LONG_LIVED_TOKEN.name, Keys.HA_REFRESH_TOKEN.name,

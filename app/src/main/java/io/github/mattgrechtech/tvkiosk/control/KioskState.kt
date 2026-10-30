@@ -67,6 +67,9 @@ class KioskState {
     /** Dashboard brightness 0-100, or -1 for the device's own setting. */
     @Volatile var brightness: Int = -1
         private set
+    /** The scene by time of day in force ("07:00"), or null. */
+    @Volatile var scene: String? = null
+        private set
 
     private val startedElapsed = SystemClock.elapsedRealtime()
     private val listeners = mutableListOf<() -> Unit>()
@@ -93,6 +96,7 @@ class KioskState {
         fun presentOnly(present: Boolean) { this@KioskState.present = present }
         fun wakeTook(millis: Long) { lastWakeMillis = millis }
         fun brightness(level: Int) { brightness = level }
+        fun scene(label: String?) { scene = label }
         fun latest(version: String?, url: String?) { latestVersion = version; latestUrl = url }
         fun reloaded(reason: String) {
             lastReloadReason = reason
@@ -117,6 +121,7 @@ class KioskState {
             .put("screen", screen.name.lowercase())
             .put("dim_level", dimLevel)
             .put("brightness", brightness)
+            .put("scene", scene)
             .put("update", latestVersion?.let { latest ->
                 JSONObject().put("latest", latest).put("url", latestUrl)
                     .put("available", UpdateCheck.isNewer(latest, BuildConfig.VERSION_NAME))

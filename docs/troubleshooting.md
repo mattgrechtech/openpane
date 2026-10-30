@@ -24,6 +24,35 @@ adb shell appops set io.github.mattgrechtech.tvkiosk SYSTEM_ALERT_WINDOW allow
 
 **A camera picture doesn't show.** `image` must be a full URL the TV can reach, with a fresh token: prefix the camera's `entity_picture` with your Home Assistant address when the automation runs, not before.
 
+**A live camera stays black.** `camera` needs the TV signed in to Home Assistant (not web mode) and a camera whose live view works in Home Assistant. For the smoothest picture use `stream` with a go2rtc or Frigate MJPEG link. The log (Settings → Status and about) says why a stream stopped.
+
+## Wake on motion
+
+**Motion doesn't wake the screen.** Settings → Screen → *Ready to wake* names what's missing. Also check: is it the night hours (motion is ignored then unless *Motion wakes it at night* is on), and is something playing (the dashboard stays behind a film unless *Motion brings the dashboard back* is *Always*)?
+
+**It wakes from resting but not when the TV is off.** In standby an app can't hear anything. Home Assistant has to switch the TV on first: see [Wake on motion](home-assistant.md#wake-on-motion) for the TV settings that allow it.
+
+## Permissions over adb
+
+Many TVs and some tablets have no settings screen for these. Connect once from a computer (`adb connect <tv-ip>:5555`, after turning on network debugging in the TV's developer options), then paste the ones you need. The provisioning script does all of them.
+
+```bash
+# Pop-ups over other apps, and bringing the dashboard forward
+adb shell appops set io.github.mattgrechtech.tvkiosk SYSTEM_ALERT_WINDOW allow
+```
+
+```bash
+# Android 14+: wake on motion may turn the screen on
+adb shell appops set io.github.mattgrechtech.tvkiosk TURN_SCREEN_ON allow
+```
+
+```bash
+# Keep running in the background (API, MQTT, pop-ups)
+adb shell dumpsys deviceidle whitelist +io.github.mattgrechtech.tvkiosk
+```
+
+Some makes add their own app-killers on top: on Xiaomi/Mi boxes allow *Autostart*; on Fire TV and Fire tablets keep the app out of any "optimise" or "clean" lists; on Samsung tablets set the app's battery use to *Unrestricted*. Reports for other makes are welcome: [device report](https://github.com/mattgrechtech/ha-tv-kiosk/issues/new?template=device_report.yml).
+
 ## Remote
 
 **A button on the page can't be reached.** Switch the remote to *Pointer* in the quick menu (hold OK), or set Settings → Screen and remote → Remote to *Pointer* for that TV.

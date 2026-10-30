@@ -2,6 +2,10 @@
 
 Thanks for helping. Bug reports from TVs other than the one it was built on are the most useful thing right now.
 
+## Tested a TV or tablet?
+
+Please report it, even if everything worked: open an issue with the **Device report** template. Reports fill the [tested devices](docs/devices.md) list, which is how people find out whether TV Kiosk suits their hardware.
+
 ## Reporting a bug
 
 Open an issue with the TV's make and model, the Android and WebView versions (Settings → Status and about), what you did and what happened. Attach the diagnostics file (Settings → Status and about → *Save diagnostics*, or `GET /api/v1/diagnostics`). It leaves out passwords and tokens, but read it before posting: it includes your TV's IP address and your start URL.
@@ -21,3 +25,8 @@ The project's rules, also followed by AI coding assistants (see [CLAUDE.md](CLAU
 - **Settings** are declared once in `settings/Settings.kt`; **commands** in `control/KioskController`, then exposed in the API, MQTT and `docs/api.md`.
 - **No personal data** in code, docs or tests: use `192.168.1.50` (Home Assistant), `192.168.1.60` (a TV) and `.test` hosts.
 - Australian/British spelling and plain English in anything users read.
+
+## Maintenance
+
+- **Issues get a first reply within about a week.** Bugs that break the app for people come first.
+- **If the project ever stops,** the README will say so plainly, and the repository will be handed to a willing maintainer or archived, not left to rot. The licence lets anyone fork it and carry on.

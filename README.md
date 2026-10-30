@@ -54,6 +54,23 @@ Developers can build it instead ([docs/build-setup.md](docs/build-setup.md): JDK
 
 The example IPs are placeholders: `192.168.1.50` for Home Assistant, `192.168.1.60` for a TV.
 
+## Open source, for real
+
+TV Kiosk is open source under the [Apache-2.0 licence](LICENSE). That means you can:
+
+- use it at home, in a business, or as part of something you sell or install for clients;
+- change it, and share or sell your changed version;
+- fork it and carry on if this project ever stops.
+
+The only conditions are the usual Apache ones: keep the licence and notices, and say what you changed. There are no licence keys, no per-device fees and no "Plus" version: every feature in this repository is free.
+
+## How it's made and released
+
+- **Built in the open.** Every change is in this repository. CI runs the unit tests, lint and a build on every change, and you can [build it yourself](docs/build-setup.md).
+- **Made with an AI coding assistant.** Much of the code is written with Claude Code, following the rules in [CONTRIBUTING.md](CONTRIBUTING.md). The maintainer decides what ships, tests on real TVs, and pushes every release by hand. The [tested devices](docs/devices.md) list says exactly what has been tried where.
+- **Calm releases.** About one release a month, plus a fix release only when something is broken. No surprise updates: the app never updates itself and never contacts anything you didn't set up. See [Releasing](docs/releasing.md#release-policy).
+- **Signed APKs** with SHA-256 checksums, built by GitHub Actions from a tagged commit.
+
 ## Privacy
 
 The app talks only to the addresses you give it (Home Assistant, the web pages you choose, your MQTT broker) and to devices on your network that use its API. It has no accounts, no analytics, no crash reporting and no Google services. Sign-in tokens and passwords are stored encrypted on the TV. See [SECURITY.md](SECURITY.md) for what listens on the network and how it's protected.
@@ -63,6 +80,7 @@ The app talks only to the addresses you give it (Home Assistant, the web pages y
 - [Home Assistant set-up](docs/home-assistant.md): doorbell pop-ups with a camera picture, wake on motion, REST commands, MQTT, moving TvOverlay or ha-tv-kit pop-ups over.
 - [API](docs/api.md): REST routes, every setting, pop-up fields, MQTT topics and entities, adb, remote keys for your own pages.
 - [Troubleshooting](docs/troubleshooting.md): setup, sign-in, pop-ups, a forgotten PIN, updating and uninstalling.
+- [Tested devices](docs/devices.md): what has been tested on which TV, and how to add yours.
 - [Build set-up](docs/build-setup.md), [Releasing](docs/releasing.md) and [Contributing](CONTRIBUTING.md).
 - [Security](SECURITY.md) and [Changelog](CHANGELOG.md).
 

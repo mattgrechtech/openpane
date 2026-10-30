@@ -1,0 +1,40 @@
+name: Device report
+description: Tried TV Kiosk on a TV or tablet? Tell us how it went, good or bad.
+labels: [device-report]
+body:
+  - type: input
+    id: device
+    attributes:
+      label: Device
+      description: Make and model, for example "Chromecast with Google TV (4K)" or "Fire HD 10 (2021)".
+    validations:
+      required: true
+  - type: input
+    id: versions
+    attributes:
+      label: Versions
+      description: TV Kiosk, Android and WebView versions (Settings → Status and about).
+    validations:
+      required: true
+  - type: checkboxes
+    id: worked
+    attributes:
+      label: What worked
+      options:
+        - label: Setup found Home Assistant and signed in
+        - label: Dashboard and remote navigation
+        - label: Pop-ups over other apps
+        - label: Pop-ups with a camera picture
+        - label: Wake on motion
+        - label: Starts after the TV restarts
+        - label: Ran for a day or more without trouble
+  - type: textarea
+    id: problems
+    attributes:
+      label: Anything that didn't work, or felt slow?
+      description: What you did and what happened. A diagnostics file helps (Settings → Status and about → Save diagnostics; read it before posting, it includes your IP addresses).
+  - type: textarea
+    id: notes
+    attributes:
+      label: Set-up notes for others
+      description: Settings you had to change on this device, adb steps, anything that would help the next person.

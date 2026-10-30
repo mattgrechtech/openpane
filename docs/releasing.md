@@ -2,6 +2,16 @@
 
 How a version gets from `main` to an APK people can install. The first time includes creating the signing key.
 
+## Release policy
+
+What users can expect, and what the maintainer commits to:
+
+- **About one release a month,** with everything since the last one and a changelog in plain English.
+- **Fix releases only for breakage:** a crash, a security problem, or something that stopped working. They contain only the fix.
+- **Nothing breaks on update:** settings carry over (new settings get defaults), and API routes and MQTT topics stay as they are. If one has to change, the old one keeps working for at least one release and the changelog says so.
+- **No surprise updates:** the app never installs updates by itself and contacts nothing you didn't set up.
+- **Tested before release** on at least one real TV, listed in [devices.md](devices.md).
+
 ## Once: the signing key
 
 Every release must be signed with the same key, or Android won't install it over the last one (people would have to uninstall and set up again). Keep the key **outside the repo**, and keep its passwords in a password manager, with a backup of the `.jks` file somewhere safe.

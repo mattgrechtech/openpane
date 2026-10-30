@@ -349,14 +349,14 @@ class PopupManager(private val context: Context) {
 
     /** m:ss, ticking down to 0:00 while the pop-up is up. */
     private fun countdown(seconds: Int, sizeSp: Float, colour: Int): TextView {
-        val view = text(formatCountdown(seconds), sizeSp, colour, bold = true, maxLines = 1)
+        val view = text(Popup.formatCountdown(seconds), sizeSp, colour, bold = true, maxLines = 1)
         val endsAt = SystemClock.elapsedRealtime() + seconds * 1000L
         val tick = object : Runnable {
             override fun run() {
                 if (!view.isAttachedToWindow && view.tag == TICKING) return
                 view.tag = TICKING
                 val left = ((endsAt - SystemClock.elapsedRealtime() + 999) / 1000).toInt().coerceAtLeast(0)
-                view.text = formatCountdown(left)
+                view.text = Popup.formatCountdown(left)
                 if (left > 0) main.postDelayed(this, 250)
             }
         }
@@ -421,13 +421,6 @@ class PopupManager(private val context: Context) {
         const val TICKING = "ticking"
         const val QR_DP = 120
 
-        /** 4:59, 1:02:03. */
-        fun formatCountdown(seconds: Int): String {
-            val h = seconds / 3600
-            val m = seconds % 3600 / 60
-            val s = seconds % 60
-            return if (h > 0) "%d:%02d:%02d".format(h, m, s) else "%d:%02d".format(m, s)
-        }
 
         /** The window type for drawing over other apps; Android 7 only has the older one. */
         @Suppress("DEPRECATION")

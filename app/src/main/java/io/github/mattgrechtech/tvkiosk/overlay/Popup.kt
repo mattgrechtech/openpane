@@ -84,6 +84,14 @@ data class Popup(
         private val EVENT_NAME = Regex("[a-z0-9_]{1,50}")
         private val CAMERA_ENTITY = Regex("camera\\.[a-z0-9_]{1,100}")
 
+        /** 4:59, 1:02:03. */
+        fun formatCountdown(seconds: Int): String {
+            val h = seconds / 3600
+            val m = seconds % 3600 / 60
+            val s = seconds % 60
+            return if (h > 0) "%d:%02d:%02d".format(h, m, s) else "%d:%02d".format(m, s)
+        }
+
         /** Returns null when there is nothing to show (no title and no message). */
         fun fromJson(json: JSONObject, defaults: Defaults = Defaults()): Popup? {
             val title = text(json, "title")

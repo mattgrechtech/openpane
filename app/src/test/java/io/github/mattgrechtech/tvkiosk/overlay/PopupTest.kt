@@ -125,9 +125,9 @@ class PopupTest {
         assertNull(bad.qr)
         assertNull(bad.countdownSeconds)
         assertEquals(100, bad.progress)
-        assertEquals("4:59", PopupManager.formatCountdown(299))
-        assertEquals("0:05", PopupManager.formatCountdown(5))
-        assertEquals("1:02:03", PopupManager.formatCountdown(3723))
+        assertEquals("4:59", Popup.formatCountdown(299))
+        assertEquals("0:05", Popup.formatCountdown(5))
+        assertEquals("1:02:03", Popup.formatCountdown(3723))
     }
 
     @Test fun mdiNamesMapToEmoji() {

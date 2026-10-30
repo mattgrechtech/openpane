@@ -22,20 +22,35 @@ That's the dashboard, the pop-ups and remote control of the TV, without a second
 
 ## What it does
 
+**On the screen**
 - **Set up with the remote:** first-run setup finds Home Assistant on the network, signs in and lists your dashboards. Or choose "A web page" for any site: no Home Assistant needed.
 - **Dashboard:** any HA dashboard full screen, signed in without typing a password on the TV, HA's header and sidebar hidden.
-- **Wake on motion:** the screen rests (goes dark) when nobody is around and wakes when your Home Assistant motion or presence sensors see someone. The page keeps running behind the dark screen, so it's back at once with current values. It never takes the screen from a film, and a blueprint switches the TV on first if it's off. No camera needed. New, and still being tested on TVs.
-- **Several pages:** rotate through dashboards or web pages; the remote holds the current one. A night schedule blacks the screen for set hours.
-- **Remote-friendly:** the arrows jump between a page's buttons and OK presses them, so touch dashboards work with a remote. An on-screen pointer for anything else. Back goes back, then home. Hold **OK** (or press Menu) for a quick menu.
-- **Pop-ups over any app:** doorbell snapshots or the camera **live**, bin night, alerts, with a chime or spoken text, and buttons that act in Home Assistant ("Unlock"), in any corner, stacked, replaceable by id, with your choice of size, opacity and text size, and optional buttons ("Open camera"). Speaks TvOverlay's `/notify` format, so existing automations keep working.
-- **Home Assistant control:** load a page, navigate, reload, dim or blank the screen, wake, pop-ups, volume, speech, sounds, open another TV app, read state (page, connection, memory, uptime, WebView version).
-  - **REST API** with a token, LAN only.
-  - **MQTT** with HA discovery: the TV shows up as a device with buttons, a screen select, a dim slider and diagnostics.
-- **Stays up:** retries failed loads; replaces a crashed or frozen WebView; reloads when the network comes back, when HA stays unreachable, when memory runs low while nobody is looking, and optionally every night; restarts itself after a crash.
-- **Web admin page:** manage the TV from a phone or computer: scan the QR code in the TV's settings and you're in. Status, wake and screen controls, sending pop-ups and speech, every setting with search, the log and diagnostics. No app to install, nothing in the cloud.
-- **Easy to look after:** a log and diagnostics on the TV and over the API (passwords and tokens blanked), a settings PIN, settings export and import, and set-up over adb in one script.
+- **Remote-friendly:** the arrows jump between a page's buttons and OK presses them, so touch dashboards work with a remote. An on-screen pointer for anything else. Hold **OK** (or press Menu) for a quick menu. Works by touch on tablets.
+- **Several pages:** rotate through dashboards or web pages; the remote holds the current one. Automations can open a page and come back by themselves (`return_after`).
 
-Not included on purpose: remote shell or script injection, camera motion detection, device-owner lockdown, replacing the TV launcher.
+**Pop-ups over any app** (YouTube, Netflix, live TV)
+- Doorbell snapshots, or the camera **live**; bin night; alerts. Any corner, stacked, replaced or closed by id, your choice of size, opacity and text size.
+- A built-in **chime, doorbell or alert sound**, or **spoken text**.
+- **Buttons** that open a page or **act in Home Assistant** ("Unlock").
+- Extras: a **QR code** (guest Wi-Fi), a **countdown** ("Pizza ready in 4:59"), a **progress bar** ("Washing 75 %"), and **now playing** that follows a media player.
+- Speaks TvOverlay's `/notify` format, so existing automations keep working.
+
+**When nobody's watching**
+- **Wake on motion:** the screen rests when nobody is around (black, dimmed, a drifting clock, or a photo-frame page) and wakes when your Home Assistant motion or presence sensors see someone. The page keeps running behind it, so it's back at once with current values. It never takes the screen from a film, and a blueprint switches the TV on first if it's off. No camera needed. New, and still being tested on TVs.
+- **Night screen** for set hours, a **burn-in guard** for OLED screens, and the backlight turned down when black where the device allows it.
+
+**Home Assistant**
+- **The TV Kiosk integration** (HACS): found automatically, no YAML, actions like `tv_kiosk.notify` for one TV or all of them, entities for the screen, presence, page and health, and `apply_settings` to set up several TVs at once.
+- Or **REST** (token, LAN only) or **MQTT** with discovery.
+- **Remote keys for automations:** the colour keys and digits can trigger anything in Home Assistant.
+
+**Easy to look after**
+- **Web admin page:** scan the QR code in the TV's settings and manage it from your phone: status, controls, pop-ups, every setting, the log, export and import. No app, nothing in the cloud.
+- **Stays up:** retries failed loads; replaces a crashed or frozen WebView; reloads when the network comes back, when HA stays unreachable, when memory runs low while nobody is looking, and optionally every night; restarts itself after a crash.
+- A settings PIN, a log and diagnostics with passwords and tokens blanked, set-up over adb in one script, and an opt-in check for new releases.
+- **TVs, tablets and wall displays** on Android 7 and newer: orientation setting, "use as home screen", brightness control.
+
+Not included on purpose: remote shell or script injection, camera motion detection, device-owner lockdown.
 
 ## Install
 

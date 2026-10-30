@@ -73,7 +73,7 @@ object Keys {
     val REST_AFTER_MINUTES = Key("rest_after_minutes", 0, check = {
         if (it in 0..240) null else "must be 0 (never) or 1-240"
     })
-    /** black, or dim (the page stays faintly visible). */
+    /** black, dim (the page stays faintly visible), clock (a drifting clock on black) or page ([REST_PAGE]). */
     val REST_STYLE = oneOf("rest_style", "black") { REST_STYLES }
     /** auto follows the device; tablets and wall displays may want portrait. */
     val ORIENTATION = oneOf("orientation", "auto") { ORIENTATIONS }
@@ -81,6 +81,8 @@ object Keys {
     val HOME_APP = Key("home_app", false)
     /** Moves the page a few pixels every couple of minutes, against burn-in on OLED screens. */
     val BURN_IN_GUARD = Key("burn_in_guard", false)
+    /** The page shown while resting with the "page" style: a photo frame or ambient dashboard. */
+    val REST_PAGE = Key("rest_page", "", check = ::url)
     /** Whether motion wakes the screen during the night hours. */
     val MOTION_AT_NIGHT = Key("motion_at_night", false)
     /** When motion brings the dashboard in front of another app: unless_playing, always or never. */
@@ -142,7 +144,7 @@ object Keys {
     val POPUP_CORNERS = listOf("top_start", "top_end", "bottom_start", "bottom_end")
     val AUTH_MODES = listOf("none", "login", "token")
     val REMOTE_MODES = listOf("buttons", "pointer", "page")
-    val REST_STYLES = listOf("black", "dim")
+    val REST_STYLES = listOf("black", "dim", "clock", "page")
     val ORIENTATIONS = listOf("auto", "landscape", "portrait", "reverse_landscape", "reverse_portrait")
     val MOTION_FRONTS = listOf("unless_playing", "always", "never")
 
@@ -155,7 +157,7 @@ object Keys {
     val ALL: List<Key<*>> = listOf(
         MODE, START_URL, HA_URL, AUTH_MODE, HA_KIOSK_MODE, KEEP_SCREEN_ON, BOOT_START, REMOTE_MODE,
         PAGES, ROTATE_SECONDS, SCREEN_OFF_FROM, SCREEN_OFF_TO,
-        REST_AFTER_MINUTES, REST_STYLE, MOTION_AT_NIGHT, MOTION_FRONT, BURN_IN_GUARD, ORIENTATION, HOME_APP,
+        REST_AFTER_MINUTES, REST_STYLE, REST_PAGE, MOTION_AT_NIGHT, MOTION_FRONT, BURN_IN_GUARD, ORIENTATION, HOME_APP,
         POPUP_SIZE, POPUP_OPACITY, POPUP_TEXT_SIZE, POPUP_CORNER, POPUP_DURATION, POPUP_MAX_PER_CORNER, POPUP_TAKE_REMOTE,
         RELOAD_ON_NETWORK, RELOAD_ON_DISCONNECT_SECONDS, NIGHTLY_RELOAD_HOUR,
         API_ENABLED, API_PORT, TVOVERLAY_COMPAT, TVOVERLAY_PORT,

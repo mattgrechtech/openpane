@@ -94,6 +94,9 @@ class KioskActivity : Activity(), DashboardSurface {
     private var lastInteraction = 0L
     /** True while the night schedule has the screen black, so only the schedule turns it back on. */
     private var nightBlank = false
+    /** The page to go back to when a "page" rest ends. */
+    private var restReturnUrl: String? = null
+    private lateinit var clock: RestClock
     /** A wake command or motion keeps the night hours from darkening the screen until then. */
     private var nightWakeUntil = 0L
     /** When a wake started, until the dashboard draws its next frame; 0 when none is pending. */
@@ -140,6 +143,8 @@ class KioskActivity : Activity(), DashboardSurface {
         root.addView(pointer.view, FrameLayout.LayoutParams(match))
         root.addView(navigator.view, FrameLayout.LayoutParams(match))
         root.addView(dim, FrameLayout.LayoutParams(match))
+        clock = RestClock(this)
+        root.addView(clock.view, FrameLayout.LayoutParams(match))
         setContentView(root)
 
         applyWindowFlags()
@@ -513,6 +518,17 @@ class KioskActivity : Activity(), DashboardSurface {
         }
     }
 
+    override fun restChanged(style: String?) {
+        clock.show(style == "clock")
+        if (style == "clock") window.attributes = window.attributes.apply { screenBrightness = CLOCK_BRIGHTNESS }
+        if (style == "page") {
+            restReturnUrl = requestedUrl
+            open(app.settings[Keys.REST_PAGE])
+        } else if (style == null) {
+            restReturnUrl?.let { url -> restReturnUrl = null; open(url) }
+        }
+    }
+
     override fun nightActive(): Boolean {
         val hour = Calendar.getInstance().get(Calendar.HOUR_OF_DAY)
         return Schedule.inNightWindow(hour, app.settings[Keys.SCREEN_OFF_FROM], app.settings[Keys.SCREEN_OFF_TO])
@@ -674,7 +690,8 @@ class KioskActivity : Activity(), DashboardSurface {
         val code = event.keyCode
         if (event.action == KeyEvent.ACTION_DOWN) {
             lastInteraction = SystemClock.elapsedRealtime()
-            app.controller.interaction(lastInteraction)
+            // A key during a rest only wakes the screen.
+            if (app.controller.interaction(lastInteraction)) return true
         }
         val isCentre = code == KeyEvent.KEYCODE_DPAD_CENTER || code == KeyEvent.KEYCODE_ENTER ||
             code == KeyEvent.KEYCODE_NUMPAD_ENTER
@@ -886,6 +903,8 @@ class KioskActivity : Activity(), DashboardSurface {
         val RETRY_DELAYS_SECONDS = intArrayOf(5, 10, 20, 30, 60)
         const val TICK_MILLIS = 30_000L
         const val BURN_IN_DP = 4
+        /** The rest clock is dim, but must stay readable where black sets the backlight to its lowest. */
+        const val CLOCK_BRIGHTNESS = 0.15f
         const val LONG_PRESS_MILLIS = 800L
         const val ROTATION_CHECK_MILLIS = 5_000L
         val ARROWS = setOf(KeyEvent.KEYCODE_DPAD_LEFT, KeyEvent.KEYCODE_DPAD_RIGHT, KeyEvent.KEYCODE_DPAD_UP, KeyEvent.KEYCODE_DPAD_DOWN)

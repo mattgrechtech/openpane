@@ -543,6 +543,11 @@ class SettingsActivity : Activity() {
             rows += Row.Value(getString(R.string.row_rest_style), restStyleLabel(app.settings[Keys.REST_STYLE])) {
                 choose(getString(R.string.row_rest_style), Keys.REST_STYLE, Keys.REST_STYLES.map { restStyleLabel(it) to it })
             }
+            if (app.settings[Keys.REST_STYLE] == "page") {
+                rows += Row.Value(getString(R.string.row_rest_page), app.settings[Keys.REST_PAGE].ifEmpty { getString(R.string.value_not_set) }) {
+                    editText(Keys.REST_PAGE, getString(R.string.row_rest_page), getString(R.string.row_rest_page_sub))
+                }
+            }
         }
         rows += Row.Value(getString(R.string.row_motion_front), motionFrontLabel(app.settings[Keys.MOTION_FRONT])) {
             choose(getString(R.string.row_motion_front), Keys.MOTION_FRONT, Keys.MOTION_FRONTS.map { motionFrontLabel(it) to it })
@@ -563,8 +568,14 @@ class SettingsActivity : Activity() {
         }
     )
 
-    private fun restStyleLabel(value: String) =
-        getString(if (value == "dim") R.string.value_rest_dim else R.string.value_rest_black)
+    private fun restStyleLabel(value: String) = getString(
+        when (value) {
+            "dim" -> R.string.value_rest_dim
+            "clock" -> R.string.value_rest_clock
+            "page" -> R.string.value_rest_page
+            else -> R.string.value_rest_black
+        }
+    )
 
     private fun motionFrontLabel(value: String) = getString(
         when (value) {

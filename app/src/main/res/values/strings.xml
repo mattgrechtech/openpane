@@ -198,6 +198,10 @@
     <string name="row_rest_style">While resting</string>
     <string name="value_rest_black">Black</string>
     <string name="value_rest_dim">Dimmed</string>
+    <string name="value_rest_clock">A clock on black</string>
+    <string name="value_rest_page">Another page (photos, ambient dashboard)</string>
+    <string name="row_rest_page">Page while resting</string>
+    <string name="row_rest_page_sub">For example a Home Assistant dashboard with a photo frame or a big clock and weather. The dashboard comes back when someone is around.</string>
     <string name="row_motion_front">Motion brings the dashboard back</string>
     <string name="value_front_unless_playing">Unless something is playing</string>
     <string name="value_front_always">Always, even over a film</string>

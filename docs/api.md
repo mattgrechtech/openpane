@@ -69,7 +69,8 @@ The same names work in `POST /settings`, adb `CONFIGURE` and a settings export. 
 | `home_app` | `false` | Offer TV Kiosk as the home screen (tablets, wall displays); then press Home and choose it |
 | `burn_in_guard` | `false` | Move the page a few pixels every 2 minutes, against burn-in on OLED screens |
 | `rest_after_minutes` | `0` | Rest (darken) the screen after this many minutes without motion, presence or the remote; `0` is never, else 1–240 |
-| `rest_style` | `black` | `black` or `dim` (80 %) while resting |
+| `rest_style` | `black` | While resting: `black`, `dim` (80 %), `clock` (time and date on black, moving every minute) or `page` (shows `rest_page`) |
+| `rest_page` | | The page shown while resting with `rest_style: page`: a photo frame or ambient dashboard. The dashboard comes back on wake |
 | `motion_front` | `unless_playing` | When motion brings the dashboard in front of another app: `unless_playing` (not while sound is playing), `always`, `never` (only wake the screen) |
 | `motion_at_night` | `false` | Whether motion wakes the screen during the night hours |
 | `boot_start` | `false` | Open the dashboard when the TV starts |

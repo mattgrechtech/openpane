@@ -38,6 +38,8 @@ interface DashboardSurface {
     fun timeNextFrame(startedAt: Long)
     /** Window brightness, 0-100, or -1 for the device's own setting. */
     fun applyBrightness(level: Int)
+    /** Resting starts ([style]: black, dim, clock or page) or ends (null). */
+    fun restChanged(style: String?)
 }
 
 /**
@@ -230,11 +232,9 @@ class KioskController(
 
     fun setScreen(mode: KioskState.Screen, level: Int) {
         if (mode == KioskState.Screen.ON) presence.awake(SystemClock.elapsedRealtime())
-        state.update {
-            screen(mode, level)
-            if (mode == KioskState.Screen.ON) resting(false)
-        }
+        state.update { screen(mode, level) }
         surface?.applyScreen(mode, level)
+        if (mode == KioskState.Screen.ON) endRest()
     }
 
     /** Screen brightness for the dashboard, 0-100, or -1 for the device's own setting. */
@@ -286,7 +286,7 @@ class KioskController(
         val body = JSONObject()
         body.put("screen_was_off", WakeReadiness.turnScreenOn(context))
         if (holdMillis > 0) surface?.holdAwake(holdMillis)
-        val wasDark = state.screen != KioskState.Screen.ON
+        val wasDark = state.screen != KioskState.Screen.ON || state.resting
         if (wasDark) setScreen(KioskState.Screen.ON, 0)
         body.put("was_dark", wasDark)
         when {
@@ -309,21 +309,40 @@ class KioskController(
         presence.restAfterMillis = settings[Keys.REST_AFTER_MINUTES] * 60_000L
         if (!presence.restDue(now) || state.screen != KioskState.Screen.ON) return
         if (surface?.nightActive() == true) return
+        var style = settings[Keys.REST_STYLE]
+        if (style == "page" && settings[Keys.REST_PAGE].isEmpty()) style = "black"
         presence.rest(now)
-        AppLog.i(TAG, "Nobody around: screen resting")
-        val dim = settings[Keys.REST_STYLE] == "dim"
-        val mode = if (dim) KioskState.Screen.DIM else KioskState.Screen.BLANK
-        val level = if (dim) REST_DIM_LEVEL else 100
-        state.update {
-            resting(true)
-            screen(mode, level)
+        AppLog.i(TAG, "Nobody around: screen resting ($style)")
+        state.update { resting(true) }
+        when (style) {
+            "dim" -> applyDark(KioskState.Screen.DIM, REST_DIM_LEVEL)
+            "page" -> Unit
+            else -> applyDark(KioskState.Screen.BLANK, 100)
         }
+        surface?.restChanged(style)
+    }
+
+    private fun applyDark(mode: KioskState.Screen, level: Int) {
+        state.update { screen(mode, level) }
         surface?.applyScreen(mode, level)
     }
 
-    /** The remote was used: it counts as someone being around. */
-    fun interaction(now: Long) {
-        presence.awake(now)
+    /** Ends resting, whatever its style. */
+    private fun endRest() {
+        if (!state.resting) return
+        state.update { resting(false) }
+        surface?.restChanged(null)
+    }
+
+    /**
+     * The remote was used: it counts as someone being around. Returns true if that ended a rest
+     * (the key only wakes the screen).
+     */
+    fun interaction(now: Long): Boolean {
+        val wasResting = presence.awake(now)
+        if (!wasResting && !state.resting) return false
+        setScreen(KioskState.Screen.ON, 0)
+        return true
     }
 
     /**

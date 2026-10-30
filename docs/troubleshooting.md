@@ -30,7 +30,7 @@ adb shell appops set io.github.mattgrechtech.tvkiosk SYSTEM_ALERT_WINDOW allow
 
 **Motion doesn't wake the screen.** Settings → Screen → *Ready to wake* names what's missing. Also check: is it the night hours (motion is ignored then unless *Motion wakes it at night* is on), and is something playing (the dashboard stays behind a film unless *Motion brings the dashboard back* is *Always*)?
 
-**It wakes from resting but not when the TV is off.** In standby an app can't hear anything. Home Assistant has to switch the TV on first: see [Wake on motion](home-assistant.md#wake-on-motion) for the TV settings that allow it.
+**It wakes from resting but not when the TV is off.** In standby an app can't hear anything, and on most TVs Home Assistant can't switch it on either. Turn off the TV's own sleep timer and let TV Kiosk rest the screen instead: see [Wake on motion](home-assistant.md#wake-on-motion).
 
 ## Permissions over adb
 

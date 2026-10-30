@@ -162,7 +162,8 @@ Home Assistant sends `motion` when your sensors see someone ([blueprint](home-as
 - **Waking:** `motion` wakes a resting screen, turns the screen on if Android has it off or a screensaver is up, and brings the dashboard forward as `motion_front` allows. Any remote button wakes it too.
 - **Not straight back:** for 3 seconds after resting starts, motion is ignored, so the change in light can't wake it again.
 - **Night:** in the night hours (`screen_off_from` / `screen_off_to`) motion is ignored unless `motion_at_night` is on.
-- **Standby:** a TV in standby can't hear the app's API (Android 14 cuts apps off the network). Home Assistant has to switch the TV on first; the blueprint does.
+- **Pop-ups:** a pop-up wakes a resting screen, and the screen doesn't rest while one is showing.
+- **Standby:** a TV in standby can't hear the app's API (Android TV cuts apps off the network), and often Home Assistant can't switch it on either. On TVs, let the app rest and keep the TV out of standby; tablets wake from screen-off. See [Wake on motion](home-assistant.md#wake-on-motion).
 
 The answer says what happened, for example `{"result": "woke", "present": true, "screen_was_off": false, "was_dark": true, "dashboard": "in front"}`. `result` is `woke`, `awake` (wasn't resting: the timer starts again), `cleared`, `ignored_grace` or `ignored_quiet`. `dashboard` is `in front`, `brought to front`, `left behind the app in front` or `behind other apps` (with a `warning`).
 

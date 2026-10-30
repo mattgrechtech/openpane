@@ -7,8 +7,9 @@ blueprint:
 
 
     Set "Rest the screen after" in TV Kiosk's settings (Screen → Wake on motion) for how long the
-    screen waits before going dark. If the TV itself is off, pick its media player and this switches
-    it on first (Android TV Remote integration or similar), then waits for TV Kiosk to answer.
+    screen waits before going dark. On a TV, keep the TV itself out of standby (turn off its sleep
+    timer): most TVs drop off the network in standby, so nothing can wake them. Only for a TV that
+    stays reachable in standby, pick its media player and this switches it on first.
 
 
     Needs the TV's `rest_command` from the TV Kiosk docs (docs/home-assistant.md, Option A).

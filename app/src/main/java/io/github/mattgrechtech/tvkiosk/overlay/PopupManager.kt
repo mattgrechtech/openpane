@@ -79,6 +79,9 @@ class PopupManager(private val context: Context) {
         dashboardFrame = null
     }
 
+    /** True while any pop-up is on screen. */
+    val showing: Boolean get() = entries.isNotEmpty()
+
     fun show(popup: Popup): Shown {
         val overWindows = Settings.canDrawOverlays(context)
         if (!overWindows && dashboardFrame == null) return Shown.NOWHERE

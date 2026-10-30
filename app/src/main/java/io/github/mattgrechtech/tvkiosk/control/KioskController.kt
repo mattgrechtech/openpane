@@ -359,6 +359,8 @@ class KioskController(
     /** Called by the dashboard about every half minute while it's in front: rests the screen when due. */
     fun restTick(now: Long) {
         presence.restAfterMillis = settings[Keys.REST_AFTER_MINUTES] * 60_000L
+        // A pop-up on screen counts as activity: never rest behind a doorbell camera.
+        if (popups.showing) presence.awake(now)
         if (!presence.restDue(now) || state.screen != KioskState.Screen.ON) return
         if (surface?.nightActive() == true) return
         var style = settings[Keys.REST_STYLE]
@@ -428,7 +430,11 @@ class KioskController(
         }
         announce(args.optString("sound").trim(), args.optString("tts").trim(), args)
         val shown = popups.show(popup)
-        if (shown != PopupManager.Shown.NOWHERE) startLive(popup)
+        if (shown != PopupManager.Shown.NOWHERE) {
+            // A pop-up wakes a resting screen, so it isn't shown over black.
+            interaction(SystemClock.elapsedRealtime())
+            startLive(popup)
+        }
         return when (shown) {
             PopupManager.Shown.OVER_EVERYTHING -> CommandResult.ok(JSONObject().put("id", popup.id))
             PopupManager.Shown.IN_DASHBOARD -> CommandResult.ok(

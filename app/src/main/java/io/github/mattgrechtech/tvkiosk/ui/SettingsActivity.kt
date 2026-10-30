@@ -732,6 +732,11 @@ class SettingsActivity : Activity() {
                 Row.Info(getString(R.string.status_last_crash),
                     DateUtils.getRelativeTimeSpanString(crash.atMillis).toString() + " · " + crash.summary, TvUi.WARNING)
             } ?: Row.Info(getString(R.string.status_last_crash), getString(R.string.status_none)),
+            Row.Toggle(getString(R.string.row_check_updates), getString(R.string.row_check_updates_sub), Keys.CHECK_UPDATES),
+            s.optJSONObject("update")?.let { update ->
+                if (update.optBoolean("available")) Row.Info(getString(R.string.row_update), getString(R.string.row_update_available, update.optString("latest")), TvUi.WARNING)
+                else Row.Info(getString(R.string.row_update), getString(R.string.row_update_none), TvUi.SUCCESS)
+            },
             Row.Header(getString(R.string.header_troubleshooting)),
             Row.Action(getString(R.string.row_show_log), getString(R.string.row_show_log_sub)) {
                 Dialogs.message(this, getString(R.string.row_show_log), AppLog.recent(60).joinToString("\n"))

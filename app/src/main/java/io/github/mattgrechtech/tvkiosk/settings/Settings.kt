@@ -88,6 +88,9 @@ object Keys {
     /** When motion brings the dashboard in front of another app: unless_playing, always or never. */
     val MOTION_FRONT = oneOf("motion_front", "unless_playing") { MOTION_FRONTS }
 
+    /** Once a day, ask GitHub whether a newer release is out (never installs anything). Off by default. */
+    val CHECK_UPDATES = Key("check_updates", false)
+
     // Recovery
     val RELOAD_ON_NETWORK = Key("reload_on_network", true)
     val RELOAD_ON_DISCONNECT_SECONDS = Key("reload_on_disconnect_seconds", 60, check = {
@@ -157,7 +160,7 @@ object Keys {
     val ALL: List<Key<*>> = listOf(
         MODE, START_URL, HA_URL, AUTH_MODE, HA_KIOSK_MODE, KEEP_SCREEN_ON, BOOT_START, REMOTE_MODE,
         PAGES, ROTATE_SECONDS, SCREEN_OFF_FROM, SCREEN_OFF_TO,
-        REST_AFTER_MINUTES, REST_STYLE, REST_PAGE, MOTION_AT_NIGHT, MOTION_FRONT, BURN_IN_GUARD, ORIENTATION, HOME_APP,
+        CHECK_UPDATES, REST_AFTER_MINUTES, REST_STYLE, REST_PAGE, MOTION_AT_NIGHT, MOTION_FRONT, BURN_IN_GUARD, ORIENTATION, HOME_APP,
         POPUP_SIZE, POPUP_OPACITY, POPUP_TEXT_SIZE, POPUP_CORNER, POPUP_DURATION, POPUP_MAX_PER_CORNER, POPUP_TAKE_REMOTE,
         RELOAD_ON_NETWORK, RELOAD_ON_DISCONNECT_SECONDS, NIGHTLY_RELOAD_HOUR,
         API_ENABLED, API_PORT, TVOVERLAY_COMPAT, TVOVERLAY_PORT,

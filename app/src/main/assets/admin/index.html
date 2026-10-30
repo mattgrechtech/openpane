@@ -91,8 +91,11 @@
   <section id="settings" class="panel" hidden>
     <div class="toolbar">
       <input id="filter" placeholder="Find a setting" aria-label="Find a setting">
+      <button id="export">Export</button>
+      <label class="button" for="import">Import<input id="import" type="file" accept="application/json,.json" hidden></label>
       <button id="save" class="primary" disabled>Save changes</button>
     </div>
+    <p class="muted">Export copies this TV's settings (without passwords and tokens) to a file; import it on another TV to set it up the same way.</p>
     <p id="save-result" role="status" class="muted"></p>
     <div id="groups"></div>
   </section>

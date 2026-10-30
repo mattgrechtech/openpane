@@ -154,7 +154,9 @@ class KioskController(
     }
 
     private fun dispatch(name: String, args: JSONObject): CommandResult = when (name) {
-        "state" -> CommandResult.ok(state.toJson(context))
+        "state" -> CommandResult.ok(
+            state.toJson(context).put("device_id", settings[Keys.DEVICE_ID]).put("device_name", settings[Keys.DEVICE_NAME])
+        )
         "url" -> loadUrl(args)
         "start_page" -> {
             val start = settings[Keys.START_URL]

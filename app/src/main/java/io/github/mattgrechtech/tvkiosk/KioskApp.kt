@@ -6,6 +6,7 @@ import android.content.pm.PackageManager
 import android.os.Build
 import io.github.mattgrechtech.tvkiosk.control.KioskController
 import io.github.mattgrechtech.tvkiosk.control.KioskState
+import io.github.mattgrechtech.tvkiosk.control.UpdateCheck
 import io.github.mattgrechtech.tvkiosk.diag.AppLog
 import io.github.mattgrechtech.tvkiosk.diag.CrashGuard
 import io.github.mattgrechtech.tvkiosk.service.KioskService
@@ -42,11 +43,35 @@ class KioskApp : Application() {
         controller.cameraStream = ha::cameraStream
         KioskService.start(this)
         applyHomeScreen()
+        scheduleUpdateCheck()
         // Turning a control channel on or off starts or stops the service.
         settings.addListener { changed ->
             if (changed.any { it in SERVICE_KEYS }) KioskService.start(this)
             if (Keys.HOME_APP.name in changed) applyHomeScreen()
         }
+    }
+
+    private val updates = java.util.concurrent.Executors.newSingleThreadScheduledExecutor()
+    @Volatile private var lastUpdateCheck = 0L
+
+    /** Asks GitHub once a day, and only while the setting is on. */
+    private fun scheduleUpdateCheck() {
+        updates.scheduleWithFixedDelay({
+            if (!settings[Keys.CHECK_UPDATES]) {
+                lastUpdateCheck = 0
+                if (state.latestVersion != null) state.update { latest(null, null) }
+                return@scheduleWithFixedDelay
+            }
+            val now = System.currentTimeMillis()
+            if (now - lastUpdateCheck < UpdateCheck.INTERVAL_MILLIS) return@scheduleWithFixedDelay
+            lastUpdateCheck = now
+            UpdateCheck.latest()?.let { release ->
+                if (UpdateCheck.isNewer(release.version, BuildConfig.VERSION_NAME)) {
+                    AppLog.i("KioskApp", "TV Kiosk ${release.version} is out")
+                }
+                state.update { latest(release.version, release.url) }
+            }
+        }, 1, 60, java.util.concurrent.TimeUnit.MINUTES)
     }
 
     /** Offers the dashboard as a home screen, or stops offering it. The user then picks it once. */

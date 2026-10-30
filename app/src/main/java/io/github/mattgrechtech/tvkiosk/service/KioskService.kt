@@ -41,6 +41,7 @@ class KioskService : Service() {
     private var compat: HttpServer? = null
     private var mqtt: MqttBridge? = null
     private val adminPage by lazy { AdminPage(this) }
+    private val announcer by lazy { Announcer(this) }
 
     private val settingsListener: (Set<String>) -> Unit = { changed ->
         if (changed.any { it in RESTART_KEYS }) {
@@ -100,6 +101,7 @@ class KioskService : Service() {
                 staticFile = adminPage::file,
             )
             api = startServer(settings[Keys.API_PORT], handler, "API")
+            if (api != null) announcer.start(settings[Keys.API_PORT], settings[Keys.DEVICE_ID], settings[Keys.DEVICE_NAME])
         }
 
         if (settings[Keys.TVOVERLAY_COMPAT]) {
@@ -151,6 +153,7 @@ class KioskService : Service() {
     }
 
     private fun stopChannels() {
+        announcer.stop()
         api?.stop()
         api = null
         compat?.stop()

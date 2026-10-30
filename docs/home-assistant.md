@@ -1,6 +1,33 @@
 # Home Assistant set-up
 
-Two options. Start with REST if you don't run MQTT already.
+Three options. **The TV Kiosk integration is the easiest:** it finds the TV, needs no YAML, and gives you actions like `tv_kiosk.notify`. REST commands and MQTT work too, without installing anything.
+
+## The TV Kiosk integration
+
+1. In HACS: ⋮ → *Custom repositories* → add `https://github.com/mattgrechtech/ha-tv-kiosk` as an *Integration*, then download **TV Kiosk** and restart Home Assistant.
+2. Settings → Devices & services: the TV usually shows up under *Discovered* (it announces itself on the network). Otherwise *Add integration* → TV Kiosk and type the TV's IP address.
+3. Enter the TV's API token (on the TV: Settings → Pop-ups and API → *Web admin, API address and token*).
+
+The TV becomes a device with:
+
+- **Actions** for one or more TVs: `tv_kiosk.notify` (every pop-up field, including `camera`, `sound`, `tts` and buttons), `tv_kiosk.clear_popup`, `tv_kiosk.navigate` and `tv_kiosk.open_url` (with `return_after`), `tv_kiosk.motion`, `tv_kiosk.wake`, `tv_kiosk.speak`, `tv_kiosk.play_sound`, `tv_kiosk.launch_app`.
+- **Entities:** a Pop-up notify entity (for `notify.send_message`), Wake / Motion / Reload / Start page / Stop sound buttons, a Screen select, a Brightness number, a *Someone present* switch, Dashboard in front / Screen resting / Someone present sensors, the page, screen state, last motion, and diagnostics (memory, wake time, WebView version, HA connection).
+
+```yaml
+action: tv_kiosk.notify
+data:
+  device_id: <your TV>
+  title: Front door
+  message: Someone's at the door
+  camera: camera.front_door_live_view
+  sound: doorbell
+  duration: 30
+  actions:
+    - label: Unlock
+      event: unlock_front
+```
+
+Pop-up buttons with an `event` fire `tv_kiosk_action` in Home Assistant (see [api.md](api.md#pop-ups)).
 
 > **Using ha-tv-kit?** Its pop-ups, bin night, garage and doorbell flows already exist: [`tv_kit_config.yaml`](https://github.com/mattgrechtech/ha-tv-kit/blob/main/homeassistant/packages/tv_kit_config.yaml) holds the TV list and the `rest_command`, and [`script.tv_popup`](https://github.com/mattgrechtech/ha-tv-kit/blob/main/homeassistant/packages/tv_kit_scripts.yaml) sends to every TV that's on, with the [doorbell blueprint](https://github.com/mattgrechtech/ha-tv-kit/blob/main/homeassistant/blueprints/automation/ha-tv-kit/camera_motion_tv_popup.yaml) on top. They work with this app unchanged through the TvOverlay-compatible mode; see [Moving the kit's pop-ups over](#moving-the-kits-pop-ups-over).
 

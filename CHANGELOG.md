@@ -4,6 +4,8 @@
 
 First public version. Pre-alpha: tested on one TCL Google TV (Android 14), including a 72-hour run.
 
+- Opt-in update check (`check_updates`, off by default): once a day, asks GitHub for the latest release and says so; never downloads or installs anything. The admin page can export settings to a file and import them on another TV.
+- Home Assistant integration (`custom_components/tv_kiosk`, installable from HACS as a custom repository): found automatically (the TV announces `_tvkiosk._tcp`), set up with the token, actions `tv_kiosk.notify`, `navigate`, `open_url`, `motion`, `wake`, `speak`, `play_sound`, `launch_app`, `clear_popup`, and entities for the screen, brightness, presence, page, last motion and health. `/state` now includes `device_id` and `device_name`.
 - Resting styles: a drifting clock on black, or another page (a photo frame or ambient dashboard, `rest_page`) that hands back to the dashboard on wake. A key press during a rest only wakes the screen.
 - Live camera pop-ups: `camera` (a Home Assistant camera entity, streamed through Home Assistant with the TV's sign-in) or `stream` (any MJPEG URL, e.g. go2rtc or Frigate), shown at up to 10 frames a second over any app, with the snapshot as a placeholder. Ignored on the token-less TvOverlay port.
 - Runs on Android 7.0 and newer (was 10), so older TV boxes, tablets and wall displays can use it. For tablets: an orientation setting, *Use as the home screen*, and a black screen that also turns the backlight down where the device allows it. Not yet tested below Android 14.

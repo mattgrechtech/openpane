@@ -45,7 +45,7 @@ Not included on purpose: remote shell or script injection, camera motion detecti
    - or from a computer with adb: `adb connect 192.168.1.60:5555`, then `adb install tv-kiosk-v0.1.0.apk`.
 3. Open **TV Kiosk**. Setup asks whether the TV shows Home Assistant or a web page, finds Home Assistant on your network and signs in.
 4. For pop-ups over other apps, grant "display over other apps": the app asks, and many TVs need it done once over adb (see [Troubleshooting](docs/troubleshooting.md#pop-ups)).
-5. Connect Home Assistant to the TV: [docs/home-assistant.md](docs/home-assistant.md).
+5. Connect Home Assistant to the TV: install the **TV Kiosk integration** from HACS (it finds the TV by itself), or use REST commands or MQTT: [docs/home-assistant.md](docs/home-assistant.md).
 
 Developers can build it instead ([docs/build-setup.md](docs/build-setup.md): JDK 17 and the Android command-line tools, no Android Studio) and install and configure it in one step:
 
@@ -69,12 +69,12 @@ The only conditions are the usual Apache ones: keep the licence and notices, and
 
 - **Built in the open.** Every change is in this repository. CI runs the unit tests, lint and a build on every change, and you can [build it yourself](docs/build-setup.md).
 - **Made with an AI coding assistant.** Much of the code is written with Claude Code, following the rules in [CONTRIBUTING.md](CONTRIBUTING.md). The maintainer decides what ships, tests on real TVs, and pushes every release by hand. The [tested devices](docs/devices.md) list says exactly what has been tried where.
-- **Calm releases.** About one release a month, plus a fix release only when something is broken. No surprise updates: the app never updates itself and never contacts anything you didn't set up. See [Releasing](docs/releasing.md#release-policy).
+- **Calm releases.** About one release a month, plus a fix release only when something is broken. No surprise updates: the app never updates itself, and it only checks for new releases if you turn that on (once a day, GitHub only). See [Releasing](docs/releasing.md#release-policy).
 - **Signed APKs** with SHA-256 checksums, built by GitHub Actions from a tagged commit.
 
 ## Privacy
 
-The app talks only to the addresses you give it (Home Assistant, the web pages you choose, your MQTT broker) and to devices on your network that use its API. It has no accounts, no analytics, no crash reporting and no Google services. Sign-in tokens and passwords are stored encrypted on the TV. See [SECURITY.md](SECURITY.md) for what listens on the network and how it's protected.
+The app talks only to the addresses you give it (Home Assistant, the web pages you choose, your MQTT broker) and to devices on your network that use its API. While its API is on, it announces itself on your local network (mDNS: its name, id and version) so Home Assistant can find it. It has no accounts, no analytics, no crash reporting and no Google services. The only internet address it ever contacts by itself is GitHub, once a day, and only if you turn on *Check for updates*. Sign-in tokens and passwords are stored encrypted on the TV. See [SECURITY.md](SECURITY.md) for what listens on the network and how it's protected.
 
 ## Docs
 

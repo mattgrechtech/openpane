@@ -152,6 +152,9 @@ async function refreshState() {
     card("Running for", Math.round(s.app_uptime_s / 3600) + " h"),
     card("Versions", "TV Kiosk " + s.app_version + " · WebView " + s.webview_version + " · Android " + s.android_version),
     card("Device", (s.manufacturer || "") + " " + (s.model || "") + " · " + (s.ip || "")),
+    s.update
+      ? card("Updates", s.update.available ? "TV Kiosk " + s.update.latest + " is out" : "up to date", s.update.available ? "warn" : "ok")
+      : card("Updates", "not checked (Settings → check_updates)"),
   ];
   $("cards").replaceChildren(...cards);
   const w = s.wake || {};
@@ -249,6 +252,47 @@ async function save() {
   }
 }
 
+async function exportSettings() {
+  try {
+    const data = await api("/settings");
+    const name = "tv-kiosk-settings-" + (current.device_name || "tv").replace(/[^a-z0-9]+/gi, "-").toLowerCase() + ".json";
+    const url = URL.createObjectURL(new Blob([JSON.stringify(data.settings, null, 2)], { type: "application/json" }));
+    const a = el("a", { href: url, download: name });
+    document.body.append(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  } catch (e) {
+    toast(e.message);
+  }
+}
+
+async function importSettings(event) {
+  const file = event.target.files[0];
+  event.target.value = "";
+  if (!file) return;
+  let parsed;
+  try {
+    parsed = JSON.parse(await file.text());
+  } catch (e) {
+    $("save-result").textContent = "That file isn't a settings export.";
+    return;
+  }
+  // This TV keeps its own name and API token.
+  delete parsed.device_name;
+  delete parsed.api_token;
+  if (!confirm("Apply " + Object.keys(parsed).length + " settings from " + file.name + " to this TV?")) return;
+  try {
+    const result = await api("/settings", parsed);
+    const rejected = Object.entries(result.rejected || {});
+    $("save-result").textContent = "Imported " + result.applied.length + " settings." +
+      (rejected.length ? " Skipped: " + rejected.map(([k, v]) => k + " (" + v + ")").join(", ") : "");
+    await loadSettings();
+  } catch (e) {
+    $("save-result").textContent = e.message;
+  }
+}
+
 // ---- log -------------------------------------------------------------------------------
 
 async function loadLog() {
@@ -285,6 +329,8 @@ document.addEventListener("DOMContentLoaded", () => {
   $("disconnect").addEventListener("click", forget);
   $("filter").addEventListener("input", applyFilter);
   $("save").addEventListener("click", save);
+  $("export").addEventListener("click", exportSettings);
+  $("import").addEventListener("change", importSettings);
   $("log-refresh").addEventListener("click", loadLog);
   $("diag").addEventListener("click", downloadDiagnostics);
   $("brightness").addEventListener("change", (e) => command("brightness", { level: Number(e.target.value) }));

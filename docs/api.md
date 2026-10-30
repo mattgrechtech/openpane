@@ -68,6 +68,7 @@ The same names work in `POST /settings`, adb `CONFIGURE` and a settings export. 
 | `orientation` | `auto` | `auto`, `landscape`, `portrait`, `reverse_landscape`, `reverse_portrait` |
 | `home_app` | `false` | Offer TV Kiosk as the home screen (tablets, wall displays); then press Home and choose it |
 | `burn_in_guard` | `false` | Move the page a few pixels every 2 minutes, against burn-in on OLED screens |
+| `check_updates` | `false` | Once a day, ask GitHub whether a newer release is out; shown in Settings, the admin page, `/state` (`update`) and the integration's update entity. Never installs anything |
 | `rest_after_minutes` | `0` | Rest (darken) the screen after this many minutes without motion, presence or the remote; `0` is never, else 1–240 |
 | `rest_style` | `black` | While resting: `black`, `dim` (80 %), `clock` (time and date on black, moving every minute) or `page` (shows `rest_page`) |
 | `rest_page` | | The page shown while resting with `rest_style: page`: a photo frame or ambient dashboard. The dashboard comes back on wake |

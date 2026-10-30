@@ -59,6 +59,11 @@ class KioskState {
     /** How long the last wake took, from the command arriving to the dashboard's next frame. */
     @Volatile var lastWakeMillis: Long = -1
         private set
+    /** The newest release on GitHub when the update check is on, else null. */
+    @Volatile var latestVersion: String? = null
+        private set
+    @Volatile var latestUrl: String? = null
+        private set
     /** Dashboard brightness 0-100, or -1 for the device's own setting. */
     @Volatile var brightness: Int = -1
         private set
@@ -88,6 +93,7 @@ class KioskState {
         fun presentOnly(present: Boolean) { this@KioskState.present = present }
         fun wakeTook(millis: Long) { lastWakeMillis = millis }
         fun brightness(level: Int) { brightness = level }
+        fun latest(version: String?, url: String?) { latestVersion = version; latestUrl = url }
         fun reloaded(reason: String) {
             lastReloadReason = reason
             lastReloadAtMillis = System.currentTimeMillis()
@@ -111,6 +117,10 @@ class KioskState {
             .put("screen", screen.name.lowercase())
             .put("dim_level", dimLevel)
             .put("brightness", brightness)
+            .put("update", latestVersion?.let { latest ->
+                JSONObject().put("latest", latest).put("url", latestUrl)
+                    .put("available", UpdateCheck.isNewer(latest, BuildConfig.VERSION_NAME))
+            } ?: JSONObject.NULL)
             .put("resting", resting)
             .put("night", nightDark)
             .put("present", present)

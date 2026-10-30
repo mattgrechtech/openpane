@@ -505,6 +505,7 @@ class SettingsActivity : Activity() {
             choose(getString(R.string.row_orientation), Keys.ORIENTATION, Keys.ORIENTATIONS.map { orientationLabel(it) to it })
         },
         Row.Toggle(getString(R.string.row_home_app), getString(R.string.row_home_app_sub), Keys.HOME_APP),
+        Row.Toggle(getString(R.string.row_key_events), getString(R.string.row_key_events_sub), Keys.KEY_EVENTS),
         Row.Value(getString(R.string.row_remote_mode), remoteModeLabel(app.settings[Keys.REMOTE_MODE])) {
             choose(getString(R.string.row_remote_mode), Keys.REMOTE_MODE, Keys.REMOTE_MODES.map { remoteModeLabel(it) to it })
         },

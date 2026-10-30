@@ -1,5 +1,6 @@
 package io.github.mattgrechtech.tvkiosk.mqtt
 
+import io.github.mattgrechtech.tvkiosk.control.KioskController
 import org.eclipse.paho.client.mqttv3.IMqttDeliveryToken
 import org.eclipse.paho.client.mqttv3.MqttCallbackExtended
 import org.eclipse.paho.client.mqttv3.MqttClient
@@ -76,13 +77,14 @@ class MqttBridge(
         }
     }
 
-    /** A pop-up button press, for the MQTT event entity. */
-    fun publishEvent(data: JSONObject) {
+    /** A pop-up button or remote key press, for the MQTT event entity. */
+    fun publishEvent(type: String, data: JSONObject) {
         if (stopped) return
         scheduler.execute {
             val mqtt = client ?: return@execute
             if (!mqtt.isConnected) return@execute
-            val payload = JSONObject(data.toString()).put("event_type", Discovery.EVENT_PRESSED)
+            val payload = JSONObject(data.toString())
+                .put("event_type", if (type == KioskController.KEY_EVENT) Discovery.EVENT_KEY else Discovery.EVENT_PRESSED)
             runCatching { mqtt.publish(discovery.eventTopic, payload.toString().toByteArray(Charsets.UTF_8), 1, false) }
                 .onFailure { AppLog.w(TAG, "MQTT event publish failed", it) }
         }

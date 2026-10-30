@@ -78,8 +78,22 @@ class KioskController(
     /** Finds a live stream link for a camera entity (Home Assistant), or null. */
     var cameraStream: (String, (String?) -> Unit) -> Unit = { _, callback -> callback(null) }
 
-    /** Pop-up button events go to these: Home Assistant's event bus and MQTT. */
-    val actionListeners = CopyOnWriteArrayList<(JSONObject) -> Unit>()
+    /**
+     * Events for Home Assistant (type, data): pop-up buttons ([ACTION_EVENT]) and remote keys
+     * ([KEY_EVENT]). Listeners send them on: Home Assistant's event bus, MQTT.
+     */
+    val eventListeners = CopyOnWriteArrayList<(String, JSONObject) -> Unit>()
+
+    private fun emit(type: String, data: JSONObject) {
+        data.put("device_id", settings[Keys.DEVICE_ID]).put("device_name", settings[Keys.DEVICE_NAME])
+        eventListeners.forEach { listener -> runCatching { listener(type, data) } }
+    }
+
+    /** A mapped remote key ([RemoteKeys]) was pressed while the dashboard was in front. */
+    fun keyPressed(name: String, long: Boolean) {
+        AppLog.i(TAG, "Remote key: $name" + if (long) " (long)" else "")
+        emit(KEY_EVENT, JSONObject().put("key", name).put("long", long))
+    }
 
     /**
      * A pop-up button: open a Home Assistant path or a web page on the dashboard (bringing it
@@ -87,15 +101,11 @@ class KioskController(
      */
     private fun runPopupAction(popup: Popup, action: Popup.Action) {
         action.event?.let { event ->
-            val data = JSONObject()
-                .put("action", event)
-                .put("label", action.label)
-                .put("popup_id", popup.id)
-                .put("title", popup.title)
-                .put("device_id", settings[Keys.DEVICE_ID])
-                .put("device_name", settings[Keys.DEVICE_NAME])
             AppLog.i(TAG, "Pop-up button: $event")
-            actionListeners.forEach { listener -> runCatching { listener(data) } }
+            emit(
+                ACTION_EVENT,
+                JSONObject().put("action", event).put("label", action.label).put("popup_id", popup.id).put("title", popup.title),
+            )
             return
         }
         val target = action.url ?: action.navigate?.let { path -> settings.haBaseUrl()?.let { it + path } } ?: return
@@ -512,6 +522,8 @@ class KioskController(
     companion object {
         private const val TAG = "KioskController"
         private const val REST_DIM_LEVEL = 80
+        const val ACTION_EVENT = "tv_kiosk_action"
+        const val KEY_EVENT = "tv_kiosk_key"
         private val PAGE_COMMANDS = setOf("url", "navigate", "start_page")
 
         /** Whether the settings ask for a dashboard at all. */

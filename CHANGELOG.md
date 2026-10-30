@@ -4,6 +4,7 @@
 
 First public version. Pre-alpha: tested on one TCL Google TV (Android 14), including a 72-hour run.
 
+- Remote keys for automations (`key_events`, off by default): the colour keys and digits fire `tv_kiosk_key` (short or long press) while the dashboard is in front.
 - Low-memory devices: the dashboard's renderer has important priority, and when Android reports low memory while nobody is using the screen, the page reloads (at most every 30 minutes) instead of slowing down for days.
 - Pop-ups can show a QR code (`qr`: guest Wi-Fi, a link), a live countdown (`countdown`) and a progress bar (`progress`, moved by resending with the same `id`).
 - Opt-in update check (`check_updates`, off by default): once a day, asks GitHub for the latest release and says so; never downloads or installs anything. The admin page can export settings to a file and import them on another TV.

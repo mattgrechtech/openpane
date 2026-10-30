@@ -78,8 +78,6 @@ class HaApi(private val settings: Settings, private val auth: HaAuth) {
     }
 
     companion object {
-        /** The event pop-up buttons fire; `event_data.action` names the button's event. */
-        const val ACTION_EVENT = "tv_kiosk_action"
         private const val TAG = "HaApi"
         private const val TIMEOUT_MILLIS = 8000
     }

@@ -156,6 +156,20 @@ mode: single
 
 **Using ha-tv-kit?** Its [doorbell blueprint](https://github.com/mattgrechtech/ha-tv-kit/blob/main/homeassistant/blueprints/automation/ha-tv-kit/camera_motion_tv_popup.yaml) does this for every TV that's on, with a cooldown and an optional phone alert. It's what the Ring test used.
 
+## Remote keys for automations
+
+Turn on Settings → Screen → *Colour keys and digits to Home Assistant*. Then, while the dashboard is in front, each colour key and digit fires a `tv_kiosk_key` event, with `long: true` for a long press:
+
+```yaml
+triggers:
+  - trigger: event
+    event_type: tv_kiosk_key
+    event_data: { key: red }
+actions:
+  - action: rest_command.tv_kiosk_living_room
+    data: { command: navigate, args: { path: /lovelace/cameras, return_after: 120 } }
+```
+
 ## Wake on motion
 
 The dashboard goes dark when nobody is around and comes back the moment your sensors see someone. Waking from dark is instant: the page keeps running behind the dark screen, still connected to Home Assistant.

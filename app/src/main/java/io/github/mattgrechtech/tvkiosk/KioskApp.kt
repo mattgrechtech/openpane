@@ -39,7 +39,7 @@ class KioskApp : Application() {
         controller = KioskController(this, settings, state)
         auth = HaAuth(settings)
         val ha = HaApi(settings, auth)
-        controller.actionListeners += { data -> ha.fire(HaApi.ACTION_EVENT, data) }
+        controller.eventListeners += { type, data -> ha.fire(type, data) }
         controller.cameraStream = ha::cameraStream
         KioskService.start(this)
         applyHomeScreen()

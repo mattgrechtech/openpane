@@ -196,6 +196,8 @@
     <string name="row_update">Updates</string>
     <string name="row_update_available">TV Kiosk %1$s is out: get it from github.com/mattgrechtech/ha-tv-kiosk/releases</string>
     <string name="row_update_none">Up to date</string>
+    <string name="row_key_events">Colour keys and digits to Home Assistant</string>
+    <string name="row_key_events_sub">While the dashboard is in front, the red, green, yellow and blue keys and 0-9 send a tv_kiosk_key event (short or long press) for your automations.</string>
     <string name="row_burn_in">Burn-in guard</string>
     <string name="row_burn_in_sub">Moves the page a few pixels every couple of minutes. For OLED screens that show the dashboard all day.</string>
     <string name="header_motion">Wake on motion</string>

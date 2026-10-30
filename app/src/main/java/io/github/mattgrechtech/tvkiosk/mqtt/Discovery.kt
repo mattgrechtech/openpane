@@ -101,9 +101,9 @@ class Discovery(
                 .put("max", 255)
                 .put("icon", "mdi:web")
         },
-        entity("event", "popup_button", "Pop-up button") {
+        entity("event", "popup_button", "Pop-up button or remote key") {
             put("state_topic", eventTopic)
-                .put("event_types", JSONArray(listOf(EVENT_PRESSED)))
+                .put("event_types", JSONArray(listOf(EVENT_PRESSED, EVENT_KEY)))
                 .put("icon", "mdi:gesture-tap-button")
         },
         entity("notify", "popup", "Pop-up") {
@@ -177,6 +177,7 @@ class Discovery(
     companion object {
         const val ONLINE = "online"
         const val EVENT_PRESSED = "pressed"
+        const val EVENT_KEY = "key"
         const val OFFLINE = "offline"
 
         /**

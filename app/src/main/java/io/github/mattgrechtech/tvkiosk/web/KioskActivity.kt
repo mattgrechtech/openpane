@@ -38,6 +38,7 @@ import io.github.mattgrechtech.tvkiosk.KioskApp
 import io.github.mattgrechtech.tvkiosk.R
 import io.github.mattgrechtech.tvkiosk.control.DashboardSurface
 import io.github.mattgrechtech.tvkiosk.control.KioskState
+import io.github.mattgrechtech.tvkiosk.control.RemoteKeys
 import io.github.mattgrechtech.tvkiosk.control.Schedule
 import io.github.mattgrechtech.tvkiosk.service.KioskService
 import io.github.mattgrechtech.tvkiosk.settings.Keys
@@ -726,6 +727,16 @@ class KioskActivity : Activity(), DashboardSurface {
         if (event.action == KeyEvent.ACTION_DOWN && app.state.screen != KioskState.Screen.ON) {
             app.controller.setScreen(KioskState.Screen.ON, 0)
             return true
+        }
+
+        // Colour keys and digits for Home Assistant: short or long press, decided on release.
+        if (app.settings[Keys.KEY_EVENTS] && !panel.isShowing) {
+            RemoteKeys.name(code)?.let { name ->
+                if (event.action == KeyEvent.ACTION_UP) {
+                    app.controller.keyPressed(name, event.eventTime - event.downTime >= RemoteKeys.LONG_PRESS_MILLIS)
+                }
+                return true
+            }
         }
 
         if (code == KeyEvent.KEYCODE_MENU) {

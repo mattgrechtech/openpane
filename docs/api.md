@@ -67,6 +67,7 @@ The same names work in `POST /settings`, adb `CONFIGURE` and a settings export. 
 | `keep_screen_on` | `true` | Stop the TV's screensaver over the dashboard |
 | `orientation` | `auto` | `auto`, `landscape`, `portrait`, `reverse_landscape`, `reverse_portrait` |
 | `home_app` | `false` | Offer TV Kiosk as the home screen (tablets, wall displays); then press Home and choose it |
+| `key_events` | `false` | While the dashboard is in front, the colour keys (`red`, `green`, `yellow`, `blue`) and digits `0`–`9` fire a `tv_kiosk_key` event in Home Assistant (`key`, `long`, `device_id`, `device_name`) and the MQTT event entity (`event_type: key`). Navigation, Back, Home, volume and media keys are never taken |
 | `burn_in_guard` | `false` | Move the page a few pixels every 2 minutes, against burn-in on OLED screens |
 | `check_updates` | `false` | Once a day, ask GitHub whether a newer release is out; shown in Settings, the admin page, `/state` (`update`) and the integration's update entity. Never installs anything |
 | `rest_after_minutes` | `0` | Rest (darken) the screen after this many minutes without motion, presence or the remote; `0` is never, else 1–240 |

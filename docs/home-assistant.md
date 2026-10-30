@@ -210,6 +210,16 @@ actions:
     data: { command: navigate, args: { path: /lovelace/cameras, return_after: 120 } }
 ```
 
+## Bedtime and screen time
+
+A blueprint ends TV time at bedtime, or once a daily limit is used up: a countdown pop-up warns first (over whatever is playing), then playback stops and the TV switches off. Switched back on before the "allowed again" time, it gets a minute's warning and goes off again.
+
+[![Import the blueprint](https://my.home-assistant.io/badges/blueprint_import.svg)](https://my.home-assistant.io/redirect/blueprint_import/?blueprint_url=https%3A%2F%2Fgithub.com%2Fmattgrechtech%2Fha-tv-kiosk%2Fblob%2Fmain%2Fblueprints%2Fautomation%2Ftv-kiosk%2Fbedtime.yaml)
+
+- **Needs** the TV Kiosk integration and the TV's own media player (Android TV Remote integration), which does the switching off.
+- **Daily limit:** add a *History stats* helper (Settings → Devices & services → Helpers), type *Time*, counting the TV's media player in state `on` from midnight today. Pick it in the blueprint with the number of hours.
+- **Honest about limits:** no app can lock a TV, so this switches it off rather than blocking apps. It's for a household agreement, not a determined teenager.
+
 ## Wake on motion
 
 The dashboard goes dark when nobody is around and comes back the moment your sensors see someone. Waking from dark is instant: the page keeps running behind the dark screen, still connected to Home Assistant.

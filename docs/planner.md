@@ -8,6 +8,16 @@ A built-in page that shows the household's week: every Home Assistant calendar i
 - **Upright tablets:** the days become rows, with the lists underneath.
 - **Nothing extra to install:** the TV app serves the page itself, reads Home Assistant with its own sign-in, and keeps it current every minute. Nothing goes to the cloud.
 
+## Family board
+
+Notes for everyone, across the top of the planner: "Gone to the shops, back at 5", "Dog fed". The board is just a Home Assistant to-do list, so:
+
+- **post** from the admin page (Control → Family board), from the Home Assistant app on any phone, by voice ("add … to the family board"), or from an automation (`todo.add_item`);
+- **clear** a note by tapping it, or with the remote and OK;
+- notes are kept in Home Assistant, on every phone too, and survive restarts.
+
+Create a list (Settings → Devices & services → Add integration → **Local To-do**, named "Family board"), then set `planner_board` to it, for example `todo.family_board`.
+
 ## Show it
 
 Use `kiosk:planner` wherever a page goes:
@@ -34,6 +44,7 @@ Admin page → Settings → Family planner (or `apply_settings` / the REST setti
 |---|---|---|
 | `planner_calendars` | all | Calendar entity ids, separated by commas: `calendar.family, calendar.school` |
 | `planner_todos` | all | To-do list entity ids: `todo.shopping_list, todo.chores` |
+| `planner_board` | none | A to-do list shown as the family board: `todo.family_board` |
 | `planner_days` | `7` | Days shown, 1-14 |
 
 Calendars take the planner's colours in the order Home Assistant lists them.

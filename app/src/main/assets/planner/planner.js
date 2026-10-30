@@ -115,6 +115,16 @@ function draw() {
   }
   week.replaceChildren(...cards);
 
+  // The family board: notes across the top, ticked off like any to-do item.
+  const board = data.board;
+  const notes = board ? board.items.slice(0, 6).map((item) => {
+    const note = el("button", { className: "note", type: "button", textContent: item.summary });
+    note.addEventListener("click", () => tick(board.entity_id, item, note));
+    return note;
+  }) : [];
+  $("board").replaceChildren(...notes);
+  $("board").hidden = !notes.length;
+
   const lists = data.todos.map((todo) => {
     const items = todo.items.slice(0, MAX_ITEMS).map((item) => {
       const button = el("button", { className: "item", type: "button" }, el("span", { className: "box" }), el("span", { textContent: item.summary }));

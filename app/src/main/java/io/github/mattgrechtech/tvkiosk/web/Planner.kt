@@ -41,16 +41,30 @@ class Planner(private val settings: Settings, private val ha: HaApi) {
             val answer = ha.getJson(path) as? JSONArray ?: continue
             for (event in events(id, answer, now.zone)) events.put(event)
         }
-        val todos = todos()
+        val board = settings[Keys.PLANNER_BOARD]
+        val found = todos(board)
+        val lists = (0 until found.length()).map { found.getJSONObject(it) }
         val result = JSONObject()
             .put("ok", true)
             .put("days", span)
             .put("start", start.toLocalDate().toString())
             .put("calendars", calendars)
             .put("events", events)
-            .put("todos", todos)
+            .put("todos", JSONArray(lists.filter { it.optString("entity_id") != board }))
+            .put("board", lists.firstOrNull { it.optString("entity_id") == board })
         cached = System.currentTimeMillis() to result
         return result
+    }
+
+    /** Adds a note to the family board (the [Keys.PLANNER_BOARD] to-do list). */
+    fun addNote(text: String): JSONObject {
+        val board = settings[Keys.PLANNER_BOARD]
+        val note = text.trim()
+        if (board.isEmpty()) return JSONObject().put("ok", false).put("error", "no family board set (planner_board)")
+        if (note.isEmpty() || note.length > 200) return JSONObject().put("ok", false).put("error", "a note is 1-200 characters")
+        val ok = ha.postJson("/api/services/todo/add_item", JSONObject().put("entity_id", board).put("item", note)) != null
+        cached = null
+        return JSONObject().put("ok", ok).apply { if (!ok) put("error", "Home Assistant didn't take it") }
     }
 
     /** Marks a to-do item done (or not done again), then forgets the cache so the page sees it. */
@@ -58,7 +72,7 @@ class Planner(private val settings: Settings, private val ha: HaApi) {
         if (!TODO_ENTITY.matches(entity) || uid.isEmpty() || uid.length > 200) {
             return JSONObject().put("ok", false).put("error", "entity must be a todo entity id, uid an item's uid")
         }
-        if (allowed(entity, Keys.PLANNER_TODOS, todoNames().keys).not()) {
+        if (entity != settings[Keys.PLANNER_BOARD] && allowed(entity, Keys.PLANNER_TODOS, todoNames().keys).not()) {
             return JSONObject().put("ok", false).put("error", "that list isn't on the planner")
         }
         val body = JSONObject().put("entity_id", entity).put("item", uid).put("status", if (done) "completed" else "needs_action")
@@ -67,9 +81,10 @@ class Planner(private val settings: Settings, private val ha: HaApi) {
         return JSONObject().put("ok", ok).apply { if (!ok) put("error", "Home Assistant didn't take it") }
     }
 
-    private fun todos(): JSONArray {
+    /** The planner's to-do lists, plus the [board] list whichever lists are chosen. */
+    private fun todos(board: String): JSONArray {
         val names = todoNames()
-        val ids = names.keys.filter { allowed(it, Keys.PLANNER_TODOS, names.keys) }
+        val ids = names.keys.filter { allowed(it, Keys.PLANNER_TODOS, names.keys) || it == board }
         val lists = JSONArray()
         if (ids.isEmpty()) return lists
         val body = JSONObject().put("entity_id", JSONArray(ids)).put("status", JSONArray(listOf("needs_action")))

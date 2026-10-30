@@ -36,6 +36,7 @@ curl -X POST -H "Authorization: Bearer $TOKEN" -H "Content-Type: application/jso
 | `POST /pointer` | `{"enabled": true}` | On-screen pointer on/off (omit `enabled` to toggle) |
 | `POST /remote` | `{"key": "ok"}` or `{"text": "kitchen"}` | The phone remote: `key` is `up`, `down`, `left`, `right`, `ok`, `back`, `menu`, `play_pause`, `enter` or `backspace`, pressed as on the TV's remote; `text` (up to 500 characters) is typed into the page's focused field |
 | `GET /planner?days=7` | | The [family planner](planner.md)'s data: calendars, events and open to-do items |
+| `POST /planner/note` | `{"text": "Back at 5"}` | Posts a note to the family board (`planner_board`) |
 | `POST /planner/todo` | `{"entity_id": "todo.shopping_list", "uid": "…", "done": true}` | Ticks a planner to-do item off (or `done: false` to bring it back) |
 | `POST /notify` | see [Pop-ups](#pop-ups) | Show a pop-up |
 | `POST /notify/clear` | `{"id"}` | Remove one pop-up, or all without `id` |
@@ -68,7 +69,7 @@ The same names work in `POST /settings`, adb `CONFIGURE` and a settings export. 
 | `pages` | | More pages to rotate through: one URL per line, or a JSON array |
 | `rotate_seconds` | `0` | Seconds on each page; `0` is off, else 10–86400 |
 | `scenes` | | Scenes by time of day, one per line: a time, then any of a page (a URL, a path on the HA server, or `kiosk:planner`), `brightness=0-100`, `rest=black\|dim\|clock`, `rest_after=minutes`. Example: `06:30 kiosk:planner brightness=90 rest=clock`. Each lasts until the next, past midnight too; what a scene leaves out comes from the settings above. A scene's page pauses rotation. `/state` reports the scene in force as `scene` |
-| `planner_calendars`, `planner_todos`, `planner_days` | all, all, `7` | What the [family planner](planner.md) shows |
+| `planner_calendars`, `planner_todos`, `planner_board`, `planner_days` | all, all, none, `7` | What the [family planner](planner.md) shows |
 | `screen_off_from` / `screen_off_to` | `-1` / `7` | Hours (0–23) the screen goes black each night; `-1` is never |
 | `remote_mode` | `buttons` | `buttons` (jump between items), `pointer` (on-screen pointer), `page` (arrows go to the page) |
 | `keep_screen_on` | `true` | Stop the TV's screensaver over the dashboard |

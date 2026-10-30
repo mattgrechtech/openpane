@@ -63,6 +63,8 @@ object Keys {
     val PLANNER_CALENDARS = Key("planner_calendars", "", check = { list("calendar", it) })
     /** To-do lists on the planner; empty means all. */
     val PLANNER_TODOS = Key("planner_todos", "", check = { list("todo", it) })
+    /** A to-do list shown as the family message board (sticky notes) at the top of the planner. */
+    val PLANNER_BOARD = Key("planner_board", "", check = { if (it.isEmpty() || Regex("todo\\.[a-z0-9_]{1,100}").matches(it)) null else "must be a todo entity id" })
     val PLANNER_DAYS = Key("planner_days", 7, check = { if (it in 1..14) null else "must be 1-14" })
 
     /** Scenes by time of day, one per line: see [io.github.mattgrechtech.tvkiosk.control.Scenes]. */
@@ -181,7 +183,7 @@ object Keys {
 
     val ALL: List<Key<*>> = listOf(
         MODE, START_URL, HA_URL, AUTH_MODE, HA_KIOSK_MODE, KEEP_SCREEN_ON, BOOT_START, REMOTE_MODE,
-        PAGES, ROTATE_SECONDS, SCENES, PLANNER_CALENDARS, PLANNER_TODOS, PLANNER_DAYS, SCREEN_OFF_FROM, SCREEN_OFF_TO,
+        PAGES, ROTATE_SECONDS, SCENES, PLANNER_CALENDARS, PLANNER_TODOS, PLANNER_BOARD, PLANNER_DAYS, SCREEN_OFF_FROM, SCREEN_OFF_TO,
         CHECK_UPDATES, REST_AFTER_MINUTES, REST_STYLE, REST_PAGE, MOTION_AT_NIGHT, MOTION_FRONT, BURN_IN_GUARD, ORIENTATION, HOME_APP, KEY_EVENTS, DO_NOT_DISTURB,
         POPUP_SIZE, POPUP_OPACITY, POPUP_TEXT_SIZE, POPUP_CORNER, POPUP_DURATION, POPUP_MAX_PER_CORNER, POPUP_TAKE_REMOTE,
         RELOAD_ON_NETWORK, RELOAD_ON_DISCONNECT_SECONDS, NIGHTLY_RELOAD_HOUR,

@@ -29,6 +29,8 @@ class ApiHandler(
     private val plannerData: (Int) -> JSONObject = { JSONObject().put("ok", false).put("error", "no planner") },
     /** Marks a planner to-do item done or not: entity, uid, done. */
     private val plannerTodo: (String, String, Boolean) -> JSONObject = { _, _, _ -> JSONObject().put("ok", false) },
+    /** Posts a note to the family board. */
+    private val plannerNote: (String) -> JSONObject = { JSONObject().put("ok", false) },
     private val clock: () -> Long = System::currentTimeMillis,
 ) : (Request) -> Response {
 
@@ -78,6 +80,12 @@ class ApiHandler(
             val days = request.query["days"]?.toIntOrNull() ?: 7
             val data = plannerData(days)
             return if (data.optBoolean("ok")) json(200, data) else json(503, data)
+        }
+        if (route == "/planner/note") {
+            if (request.method != "POST") return error(405, "use POST")
+            val args = body(request) ?: return error(400, "body must be a JSON object")
+            val answer = plannerNote(args.optString("text"))
+            return json(if (answer.optBoolean("ok")) 200 else 400, answer)
         }
         if (route == "/planner/todo") {
             if (request.method != "POST") return error(405, "use POST")

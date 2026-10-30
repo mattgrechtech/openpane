@@ -149,6 +149,8 @@ class KioskActivity : Activity(), DashboardSurface {
         registerNetworkCallback()
 
         applyScreen(app.state.screen, app.state.dimLevel)
+        applyBrightness(app.state.brightness)
+        burnInGuard()
         startDashboard(launchSetup = true)
         if (CrashGuard.takeUnseen(this)) {
             CrashGuard.clearGaveUp(this)
@@ -431,6 +433,7 @@ class KioskActivity : Activity(), DashboardSurface {
         heartbeat()
         nightlyReload()
         nightScreen()
+        burnInGuard()
         app.controller.restTick(SystemClock.elapsedRealtime())
         scheduleTick()
     }
@@ -479,6 +482,21 @@ class KioskActivity : Activity(), DashboardSurface {
             if (app.state.screen == KioskState.Screen.BLANK) app.controller.setScreen(KioskState.Screen.ON, 0)
         }
         if (app.state.nightDark != nightBlank) app.state.update { nightDark(nightBlank) }
+    }
+
+    /** Nudges the page a few pixels now and then, so an OLED never shows the same pixels all day. */
+    private fun burnInGuard() {
+        val (x, y) = if (app.settings[Keys.BURN_IN_GUARD]) {
+            Schedule.burnInOffset(SystemClock.elapsedRealtime(), (BURN_IN_DP * resources.displayMetrics.density).toInt())
+        } else 0 to 0
+        webFrame.translationX = x.toFloat()
+        webFrame.translationY = y.toFloat()
+    }
+
+    override fun applyBrightness(level: Int) {
+        window.attributes = window.attributes.apply {
+            screenBrightness = if (level < 0) WindowManager.LayoutParams.BRIGHTNESS_OVERRIDE_NONE else maxOf(0.01f, level / 100f)
+        }
     }
 
     override fun nightActive(): Boolean {
@@ -769,6 +787,7 @@ class KioskActivity : Activity(), DashboardSurface {
 
     private fun onSettingsChanged(changed: Set<String>) {
         if (changed.contains(Keys.KEEP_SCREEN_ON.name)) applyWindowFlags()
+        if (changed.contains(Keys.BURN_IN_GUARD.name)) burnInGuard()
         if (changed.contains(Keys.REMOTE_MODE.name)) applyRemoteMode(app.settings[Keys.REMOTE_MODE])
         if (changed.any { it in ROTATION_KEYS }) {
             pageShownAt = SystemClock.elapsedRealtime()
@@ -844,6 +863,7 @@ class KioskActivity : Activity(), DashboardSurface {
         const val TAG = "KioskActivity"
         val RETRY_DELAYS_SECONDS = intArrayOf(5, 10, 20, 30, 60)
         const val TICK_MILLIS = 30_000L
+        const val BURN_IN_DP = 4
         const val LONG_PRESS_MILLIS = 800L
         const val ROTATION_CHECK_MILLIS = 5_000L
         val ARROWS = setOf(KeyEvent.KEYCODE_DPAD_LEFT, KeyEvent.KEYCODE_DPAD_RIGHT, KeyEvent.KEYCODE_DPAD_UP, KeyEvent.KEYCODE_DPAD_DOWN)

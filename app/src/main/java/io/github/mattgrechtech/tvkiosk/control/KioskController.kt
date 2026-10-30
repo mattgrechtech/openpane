@@ -36,6 +36,8 @@ interface DashboardSurface {
     fun nightActive(): Boolean
     /** Logs and reports the time from [startedAt] (elapsed realtime) to the dashboard's next frame. */
     fun timeNextFrame(startedAt: Long)
+    /** Window brightness, 0-100, or -1 for the device's own setting. */
+    fun applyBrightness(level: Int)
 }
 
 /**
@@ -124,8 +126,26 @@ class KioskController(
 
     fun execute(name: String, args: JSONObject): CommandResult {
         val result = dispatch(name, args)
+        scheduleReturn(name, args, result)
         AppLog.i(TAG, "Command $name -> ${result.status}" + (result.body.optString("error").takeIf { it.isNotEmpty() }?.let { ": $it" } ?: ""))
         return result
+    }
+
+    /** Goes back to the start page after a page command with `return_after`. */
+    private val returnToStart = Runnable {
+        AppLog.i(TAG, "Back to the start page")
+        execute("start_page", JSONObject())
+    }
+
+    /**
+     * After [name] ran: a page command with `return_after` (seconds) goes back to the start page
+     * that long after, unless another page command comes first.
+     */
+    private fun scheduleReturn(name: String, args: JSONObject, result: CommandResult) {
+        if (name !in PAGE_COMMANDS || !result.ok) return
+        main.removeCallbacks(returnToStart)
+        val seconds = args.optInt("return_after", 0)
+        if (seconds > 0) main.postDelayed(returnToStart, seconds.coerceIn(5, 86_400) * 1000L)
     }
 
     private fun dispatch(name: String, args: JSONObject): CommandResult = when (name) {
@@ -139,6 +159,7 @@ class KioskController(
         "reload" -> reload(args)
         "screen" -> screen(args)
         "wake" -> wake(args)
+        "brightness" -> brightness(args)
         "motion" -> motion(args)
         "pointer" -> pointer(args)
         "notify" -> notify(args)
@@ -211,6 +232,15 @@ class KioskController(
             if (mode == KioskState.Screen.ON) resting(false)
         }
         surface?.applyScreen(mode, level)
+    }
+
+    /** Screen brightness for the dashboard, 0-100, or -1 for the device's own setting. */
+    private fun brightness(args: JSONObject): CommandResult {
+        if (!args.has("level")) return CommandResult.error(400, "level is required: 0-100, or -1 for the device's setting")
+        val level = args.optInt("level").coerceIn(-1, 100)
+        state.update { brightness(level) }
+        surface?.applyBrightness(level)
+        return CommandResult.ok(JSONObject().put("brightness", level))
     }
 
     /** Wakes the screen and brings the dashboard to the front, even over another app. */
@@ -449,6 +479,7 @@ class KioskController(
     companion object {
         private const val TAG = "KioskController"
         private const val REST_DIM_LEVEL = 80
+        private val PAGE_COMMANDS = setOf("url", "navigate", "start_page")
 
         /** Whether the settings ask for a dashboard at all. */
         fun hasStartUrl(settings: Settings) = settings[Keys.START_URL].isNotEmpty()

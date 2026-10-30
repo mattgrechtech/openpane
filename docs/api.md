@@ -20,12 +20,13 @@ curl -X POST -H "Authorization: Bearer $TOKEN" -H "Content-Type: application/jso
 | Route | Body | What it does |
 |---|---|---|
 | `GET /state` | | Everything below under [State](#state). `POST` works too, for Home Assistant's `rest_command` |
-| `POST /url` | `{"url"}` | Load a page (http/https only) |
+| `POST /url` | `{"url", "return_after"}` | Load a page (http/https only). `return_after` (seconds, 5–86400) goes back to the start page that long after, unless another page command comes first; also on `navigate` |
 | `POST /navigate` | `{"path"}` | Go to an HA page without a reload, e.g. `/lovelace/1` (falls back to a full load) |
 | `POST /reload` | `{"hard": false}` | Reload; `hard` clears the cache first |
 | `POST /screen` | `{"mode": "on"\|"dim"\|"blank", "level": 50}` | Dim (5–95 %) or blank the dashboard with a black layer. The backlight stays on: TVs don't let apps control it |
 | `POST /wake` | `{"minutes": 5}` | Turn the screen on (ending a screensaver), lift a dim, rest or night screen, and bring the dashboard to the front, even over another app. The night hours stay away for `minutes` (1–240) |
 | `POST /motion` | `{"present": true\|false}` | Someone was seen: see [Wake on motion](#wake-on-motion). Without `present` it's a moment of motion; `present: true` holds the screen awake until `present: false` |
+| `POST /brightness` | `{"level": 0-100}` | Screen brightness while the dashboard is in front; `-1` goes back to the device's own setting. Works on most tablets; many TVs ignore it |
 | `POST /pointer` | `{"enabled": true}` | On-screen pointer on/off (omit `enabled` to toggle) |
 | `POST /notify` | see [Pop-ups](#pop-ups) | Show a pop-up |
 | `POST /notify/clear` | `{"id"}` | Remove one pop-up, or all without `id` |
@@ -59,6 +60,7 @@ The same names work in `POST /settings`, adb `CONFIGURE` and a settings export. 
 | `screen_off_from` / `screen_off_to` | `-1` / `7` | Hours (0–23) the screen goes black each night; `-1` is never |
 | `remote_mode` | `buttons` | `buttons` (jump between items), `pointer` (on-screen pointer), `page` (arrows go to the page) |
 | `keep_screen_on` | `true` | Stop the TV's screensaver over the dashboard |
+| `burn_in_guard` | `false` | Move the page a few pixels every 2 minutes, against burn-in on OLED screens |
 | `rest_after_minutes` | `0` | Rest (darken) the screen after this many minutes without motion, presence or the remote; `0` is never, else 1–240 |
 | `rest_style` | `black` | `black` or `dim` (80 %) while resting |
 | `motion_front` | `unless_playing` | When motion brings the dashboard in front of another app: `unless_playing` (not while sound is playing), `always`, `never` (only wake the screen) |
@@ -184,7 +186,7 @@ The TV appears in Home Assistant as one device through MQTT discovery, with:
 | Screen resting | binary sensor |
 | Last motion | timestamp sensor |
 | Screen (on / dim / blank) | select |
-| Dim level | number |
+| Dim level, Brightness | numbers |
 | Pointer | switch |
 | Page (current URL; set it to load a page) | text |
 | Pop-up | notify (plain text, or a JSON pop-up) |

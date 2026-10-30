@@ -47,4 +47,14 @@ class ScheduleTest {
         assertFalse(Schedule.inNightWindow(3, from = -1, to = 7))
         assertFalse(Schedule.inNightWindow(7, from = 7, to = 7))
     }
+
+    @Test fun burnInGuardLoopsThroughSmallOffsets() {
+        val step = Schedule.BURN_IN_STEP_MILLIS
+        val offsets = (0 until 9).map { Schedule.burnInOffset(it * step, 8) }
+        assertEquals(9, offsets.toSet().size)
+        assertTrue(offsets.all { (x, y) -> x in -8..8 && y in -8..8 })
+        assertEquals(0 to 0, Schedule.burnInOffset(0, 8))
+        assertEquals(offsets[0], Schedule.burnInOffset(9 * step, 8))
+        assertEquals(offsets[1], Schedule.burnInOffset(step + step / 2, 8))
+    }
 }

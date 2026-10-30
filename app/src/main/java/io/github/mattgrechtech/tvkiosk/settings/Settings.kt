@@ -66,6 +66,8 @@ object Keys {
     })
     /** black, or dim (the page stays faintly visible). */
     val REST_STYLE = Key("rest_style", "black", check = { if (it in REST_STYLES) null else "must be one of $REST_STYLES" })
+    /** Moves the page a few pixels every couple of minutes, against burn-in on OLED screens. */
+    val BURN_IN_GUARD = Key("burn_in_guard", false)
     /** Whether motion wakes the screen during the night hours. */
     val MOTION_AT_NIGHT = Key("motion_at_night", false)
     /** When motion brings the dashboard in front of another app: unless_playing, always or never. */
@@ -139,7 +141,7 @@ object Keys {
     val ALL: List<Key<*>> = listOf(
         MODE, START_URL, HA_URL, AUTH_MODE, HA_KIOSK_MODE, KEEP_SCREEN_ON, BOOT_START, REMOTE_MODE,
         PAGES, ROTATE_SECONDS, SCREEN_OFF_FROM, SCREEN_OFF_TO,
-        REST_AFTER_MINUTES, REST_STYLE, MOTION_AT_NIGHT, MOTION_FRONT,
+        REST_AFTER_MINUTES, REST_STYLE, MOTION_AT_NIGHT, MOTION_FRONT, BURN_IN_GUARD,
         POPUP_SIZE, POPUP_OPACITY, POPUP_TEXT_SIZE, POPUP_CORNER, POPUP_DURATION, POPUP_MAX_PER_CORNER, POPUP_TAKE_REMOTE,
         RELOAD_ON_NETWORK, RELOAD_ON_DISCONNECT_SECONDS, NIGHTLY_RELOAD_HOUR,
         API_ENABLED, API_PORT, TVOVERLAY_COMPAT, TVOVERLAY_PORT,

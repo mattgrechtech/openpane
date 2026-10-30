@@ -183,6 +183,8 @@
     <string name="page_change">Change the address</string>
     <string name="page_move_up">Move up</string>
     <string name="page_remove">Remove</string>
+    <string name="row_burn_in">Burn-in guard</string>
+    <string name="row_burn_in_sub">Moves the page a few pixels every couple of minutes. For OLED screens that show the dashboard all day.</string>
     <string name="header_motion">Wake on motion</string>
     <string name="row_rest_after">Rest the screen after</string>
     <string name="row_rest_style">While resting</string>

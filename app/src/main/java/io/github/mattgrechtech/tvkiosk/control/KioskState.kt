@@ -59,6 +59,9 @@ class KioskState {
     /** How long the last wake took, from the command arriving to the dashboard's next frame. */
     @Volatile var lastWakeMillis: Long = -1
         private set
+    /** Dashboard brightness 0-100, or -1 for the device's own setting. */
+    @Volatile var brightness: Int = -1
+        private set
 
     private val startedElapsed = SystemClock.elapsedRealtime()
     private val listeners = mutableListOf<() -> Unit>()
@@ -84,6 +87,7 @@ class KioskState {
         fun motion(present: Boolean) { this@KioskState.present = present; lastMotionAtMillis = System.currentTimeMillis() }
         fun presentOnly(present: Boolean) { this@KioskState.present = present }
         fun wakeTook(millis: Long) { lastWakeMillis = millis }
+        fun brightness(level: Int) { brightness = level }
         fun reloaded(reason: String) {
             lastReloadReason = reason
             lastReloadAtMillis = System.currentTimeMillis()
@@ -104,6 +108,7 @@ class KioskState {
             .put("title", pageTitle)
             .put("screen", screen.name.lowercase())
             .put("dim_level", dimLevel)
+            .put("brightness", brightness)
             .put("resting", resting)
             .put("night", nightDark)
             .put("present", present)

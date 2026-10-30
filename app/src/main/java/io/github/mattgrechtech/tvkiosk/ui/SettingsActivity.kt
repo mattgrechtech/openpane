@@ -500,6 +500,7 @@ class SettingsActivity : Activity() {
     private fun screenRows() = listOf<Row>(
         Row.Toggle(getString(R.string.label_keep_screen_on), getString(R.string.row_keep_screen_on_sub), Keys.KEEP_SCREEN_ON),
         Row.Toggle(getString(R.string.label_boot_start), getString(R.string.row_boot_start_sub), Keys.BOOT_START),
+        Row.Toggle(getString(R.string.row_burn_in), getString(R.string.row_burn_in_sub), Keys.BURN_IN_GUARD),
         Row.Value(getString(R.string.row_remote_mode), remoteModeLabel(app.settings[Keys.REMOTE_MODE])) {
             choose(getString(R.string.row_remote_mode), Keys.REMOTE_MODE, Keys.REMOTE_MODES.map { remoteModeLabel(it) to it })
         },

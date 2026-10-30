@@ -81,6 +81,13 @@ class Discovery(
                 .put("unit_of_measurement", "%")
                 .put("icon", "mdi:brightness-4")
         },
+        entity("number", "brightness", "Brightness") {
+            put("command_topic", commandTopic("brightness_level"))
+                .put("state_topic", stateTopic)
+                .put("value_template", "{{ value_json.brightness }}")
+                .put("min", -1).put("max", 100).put("step", 1).put("mode", "slider")
+                .put("icon", "mdi:brightness-7")
+        },
         entity("switch", "pointer", "Pointer") {
             put("command_topic", commandTopic("pointer_switch"))
                 .put("state_topic", stateTopic)
@@ -188,6 +195,7 @@ class Discovery(
                 "dim_level" -> text.toDoubleOrNull()?.let {
                     "screen" to JSONObject().put("mode", "dim").put("level", it.toInt())
                 }
+                "brightness_level" -> text.toDoubleOrNull()?.let { "brightness" to JSONObject().put("level", it.toInt()) }
                 "pointer_switch" -> "pointer" to JSONObject().put("enabled", text.equals("ON", ignoreCase = true))
                 "present_switch" -> "motion" to JSONObject().put("present", text.equals("ON", ignoreCase = true))
                 "url_text" -> "url" to JSONObject().put("url", text)
@@ -202,7 +210,7 @@ class Discovery(
         }
 
         private val PASS_THROUGH = setOf(
-            "reload", "wake", "motion", "start_page", "screen", "pointer", "notify_clear", "launch", "volume", "sound", "stop_sound",
+            "reload", "wake", "motion", "brightness", "start_page", "screen", "pointer", "notify_clear", "launch", "volume", "sound", "stop_sound",
         )
     }
 }

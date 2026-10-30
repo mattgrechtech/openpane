@@ -40,7 +40,7 @@ class DiscoveryTest {
             val sample = when {
                 config.has("payload_press") -> config.getString("payload_press")
                 name == "screen_mode" -> "dim"
-                name == "dim_level" -> "40"
+                name == "dim_level" || name == "brightness_level" -> "40"
                 name == "pointer_switch" -> "ON"
                 name == "url_text" -> "http://ha.test"
                 else -> "hello"

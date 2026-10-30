@@ -19,6 +19,20 @@ object Schedule {
         return now - lastChange >= interval && now - lastInteraction >= maxOf(interval, INTERACTION_HOLD_MILLIS)
     }
 
+    /** How often the burn-in guard moves the page. */
+    const val BURN_IN_STEP_MILLIS = 2 * 60_000L
+
+    private val BURN_IN_PATH = listOf(0 to 0, 1 to 0, 1 to 1, 0 to 1, -1 to 1, -1 to 0, -1 to -1, 0 to -1, 1 to -1)
+
+    /**
+     * Where the burn-in guard puts the page at [now]: a slow loop of small offsets (x, y), each
+     * -[maxPx]..[maxPx], so no pixel shows the same thing all day.
+     */
+    fun burnInOffset(now: Long, maxPx: Int): Pair<Int, Int> {
+        val (x, y) = BURN_IN_PATH[((now / BURN_IN_STEP_MILLIS) % BURN_IN_PATH.size).toInt()]
+        return x * maxPx to y * maxPx
+    }
+
     /** The page after [current] in a list of [count], wrapping round. */
     fun nextIndex(current: Int, count: Int): Int = if (count <= 0) 0 else (current + 1).mod(count)
 

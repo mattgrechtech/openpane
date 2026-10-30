@@ -64,7 +64,9 @@ class KioskController(
         maxPerCorner = { settings[Keys.POPUP_MAX_PER_CORNER] }
         takeRemote = { settings[Keys.POPUP_TAKE_REMOTE] }
         onAction = { popup, action -> runPopupAction(popup, action) }
+        onRemoved = { popup -> if (popup.pauseMedia) mediaPause.release(popup.id) }
     }
+    private val mediaPause by lazy { MediaPause(context.getSystemService(AudioManager::class.java)) }
     /** Wake on motion: when the screen rests and what wakes it. */
     val presence = Presence()
     private var tts: TextToSpeech? = null
@@ -462,8 +464,11 @@ class KioskController(
             AppLog.i(TAG, "Do not disturb: pop-up held back")
             return CommandResult.ok(JSONObject().put("id", popup.id).put("shown", false).put("reason", "do not disturb"))
         }
+        // Before the chime or speech, so it can't be mistaken for the film still playing.
+        if (popup.pauseMedia) mediaPause.hold(popup.id)
         announce(args.optString("sound").trim(), args.optString("tts").trim(), args)
         val shown = popups.show(popup)
+        if (shown == PopupManager.Shown.NOWHERE && popup.pauseMedia) mediaPause.release(popup.id)
         if (shown != PopupManager.Shown.NOWHERE) {
             // A pop-up wakes a resting screen, so it isn't shown over black.
             interaction(SystemClock.elapsedRealtime())

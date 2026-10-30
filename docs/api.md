@@ -130,6 +130,7 @@ For example `{"pages": ["http://192.168.1.50:8123/cameras"], "rotate_seconds": 6
 | `priority` | | `high` still shows (with its sound) during *Do not disturb*; anything else waits |
 | `qr` | | Text shown as a QR code beside the message (up to 500 characters): a guest Wi-Fi login (`WIFI:T:WPA;S:Guest;P:password;;`), a link |
 | `countdown` | | Seconds counting down to 0:00 in the pop-up, e.g. `300` for "Pizza ready in 4:59" |
+| `pause_media` | `false` | Pause what's playing in other apps (Netflix, YouTube, live TV) while the pop-up is up, and resume when it closes. For the doorbell. Only resumes what it paused |
 | `progress` | | 0–100: a progress bar under the text. Send it again with the same `id` to move it ("Washing 75 %") |
 | `sound` | | `chime`, `doorbell` or `alert` (built in), or an http(s) URL. Plays when the pop-up appears |
 | `tts` | | Text the TV speaks when the pop-up appears, after the sound. `language` (e.g. `en-AU`) picks the voice |

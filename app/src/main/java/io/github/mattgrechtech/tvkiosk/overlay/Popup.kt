@@ -39,6 +39,8 @@ data class Popup(
     val countdownSeconds: Int? = null,
     /** 0-100: a progress bar under the text. */
     val progress: Int? = null,
+    /** Pause what's playing in other apps while this is on screen, and resume after. */
+    val pauseMedia: Boolean = false,
 ) {
     /** True when the pop-up has a picture area: a still, a stream or a camera. */
     val hasPicture get() = image != null || stream != null || camera != null
@@ -138,6 +140,7 @@ data class Popup(
                 qr = text(json, "qr").takeIf { it.isNotEmpty() && it.length <= MAX_QR },
                 countdownSeconds = if (json.has("countdown")) json.optInt("countdown", -1).takeIf { it in 1..86_400 } else null,
                 progress = if (json.has("progress")) json.optDouble("progress", -1.0).takeIf { it >= 0 }?.toInt()?.coerceAtMost(100) else null,
+                pauseMedia = json.optBoolean("pause_media", false),
             )
         }
 

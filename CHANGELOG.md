@@ -4,6 +4,8 @@
 
 First public version. Pre-alpha: tested on one TCL Google TV (Android 14), including a 72-hour run.
 
+- Pop-ups can pause what's playing (`pause_media`, for the doorbell): Netflix, YouTube or live TV pause while it's up and resume when it closes, only if the pop-up paused them.
+- TCL and similar TVs: the app reports when the maker's app manager blocks it restarting after an update or boot (*Auto-start*, *Background service* in the admin page); provisioning allows it.
 - Family planner (`kiosk:planner`): a built-in week view of Home Assistant calendars, each in its own colour, with to-do lists beside it; items tick off by touch or remote. Upright layout for tablets. Choose calendars, lists and days with `planner_calendars`, `planner_todos`, `planner_days`. New API routes `GET /planner` and `POST /planner/todo`.
 - Phone remote: the admin page's Control tab has a D-pad, Back, Menu, play/pause and a box that types into the TV's focused field (`POST /remote`).
 - Scenes by time of day (`scenes`): from a time, a page, brightness and rest style, one line each.

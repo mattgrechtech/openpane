@@ -23,6 +23,11 @@ class PopupTest {
         assertEquals(0xFFFF5A3C.toInt(), popup.color)
     }
 
+    @Test fun pauseMediaIsOptIn() {
+        assertEquals(false, Popup.fromJson(JSONObject("""{"title":"T"}"""))!!.pauseMedia)
+        assertEquals(true, Popup.fromJson(JSONObject("""{"title":"Doorbell","pause_media":true}"""))!!.pauseMedia)
+    }
+
     @Test fun shortNamesAndDefaults() {
         val popup = Popup.fromJson(JSONObject("""{"message":"Hi","icon":"mdi:home","color":"80FF0000","largeIcon":"x"}"""))!!
         assertEquals("", popup.title)

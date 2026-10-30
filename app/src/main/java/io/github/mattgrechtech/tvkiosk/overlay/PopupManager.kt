@@ -43,6 +43,8 @@ class PopupManager(private val context: Context) {
     var takeRemote: () -> Boolean = { false }
     /** Runs a pop-up button's action; the pop-up closes afterwards. */
     var onAction: (Popup, Popup.Action) -> Unit = { _, _ -> }
+    /** A pop-up left the screen (closed, timed out, replaced or cleared). */
+    var onRemoved: (Popup) -> Unit = {}
 
     /** Set by the dashboard: while it's in front, pop-ups with buttons always take the remote. */
     var dashboardInFront = false
@@ -187,6 +189,7 @@ class PopupManager(private val context: Context) {
     }
 
     private fun remove(entry: Entry) {
+        onRemoved(entry.popup)
         entry.stream?.stop()
         main.removeCallbacks(entry.dismiss)
         val corner = corners[entry.corner] ?: return

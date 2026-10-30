@@ -224,6 +224,10 @@
         "priority": {
           "name": "Priority",
           "description": "high still shows during Do not disturb (smoke alarm, doorbell)."
+        },
+        "pause_media": {
+          "name": "Pause what's playing",
+          "description": "Pause Netflix, YouTube or live TV while the pop-up is up, and resume after. For the doorbell."
         }
       }
     },

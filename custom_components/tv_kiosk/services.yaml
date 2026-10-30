@@ -50,6 +50,8 @@ notify:
       selector: { number: { min: 1, max: 86400, unit_of_measurement: s } }
     progress:
       selector: { number: { min: 0, max: 100, unit_of_measurement: "%" } }
+    pause_media:
+      selector: { boolean: }
     actions:
       selector: { object: }
 

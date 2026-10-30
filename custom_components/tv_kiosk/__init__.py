@@ -60,6 +60,7 @@ SERVICES: dict[str, tuple[str, dict]] = {
         vol.Optional("qr"): cv.string,
         vol.Optional("countdown"): vol.All(vol.Coerce(int), vol.Range(min=1, max=86400)),
         vol.Optional("progress"): vol.All(vol.Coerce(float), vol.Range(min=0, max=100)),
+        vol.Optional("pause_media"): cv.boolean,
         vol.Optional("actions"): vol.All(cv.ensure_list, [_BUTTON]),
     }),
     "clear_popup": ("notify/clear", {vol.Optional("id"): cv.string}),

@@ -234,6 +234,37 @@ On a tablet or wall panel with a microphone, OpenPane can be a push-to-talk Assi
 - Why not Home Assistant's own mic button? Browsers only allow the microphone on secure (https) pages, so it doesn't work on most local `http://` set-ups. OpenPane records natively instead.
 - Not for TVs: their remotes' mics belong to Google, and TV sound causes false triggers. A wake word ("Okay Nabu") for tablets is planned as an optional add-on.
 
+### Using Jarvis (or any AI assistant)
+
+"Jarvis" set-ups (the JARVIS AI Assistant integration, an OpenAI, Gemini or Ollama conversation agent with a Jarvis prompt and voice, or any other AI assistant) answer through an Assist pipeline, so push-to-talk talks to them as it is:
+
+1. In Home Assistant, Settings → Voice assistants: note the pipeline that uses your AI agent (the JARVIS integration creates one for you), with the voice you want.
+2. In OpenPane, set `voice_pipeline` to that pipeline's name or id. Leave it empty to use the preferred pipeline.
+3. Tap the mic and ask. The reply is spoken in the pipeline's voice and shown as a pop-up, and a follow-up question within 5 minutes keeps the conversation going.
+
+Keep it to tablets and wall panels, not TVs (the JARVIS integration's own advice too). OpenPane waits up to 20 seconds for an answer after you stop talking; a slow model with many tool calls can run past that, so pick a quick model for voice.
+
+**Showing what the assistant says.** To put an assistant's answer on the screen from an automation, ask it with `conversation.process` and pass the reply to `openpane.notify`:
+
+```yaml
+alias: Morning briefing on the kitchen panel
+sequence:
+  - action: conversation.process
+    data:
+      agent_id: conversation.jarvis   # your AI agent
+      text: Give me a short morning briefing
+    response_variable: reply
+  - action: openpane.notify
+    data:
+      device_id: <your tablet>
+      title: Jarvis
+      message: "{{ reply.response.speech.plain.speech }}"
+      tts: "{{ reply.response.speech.plain.speech }}"
+      duration: 30
+```
+
+The assistant's own announcements, the ones it makes without being asked, go to media players, and OpenPane doesn't have one yet; use the script above for those you want on the panel. A JARVIS dashboard panel can also be shown with `openpane.navigate`, though heavy 3D panels may be slow on cheap tablets.
+
 ## Wall tablet battery care
 
 A tablet on charge all day wears its battery out, and an old one can swell. With the OpenPane integration, a tablet shows its battery level, charging and battery temperature (TVs don't have one). The battery care blueprint keeps it between two levels (30-80 % by default) with a smart plug on the charger, pauses charging if the battery gets hot, and always charges if it gets very low.

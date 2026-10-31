@@ -118,7 +118,7 @@ object Dialogs {
             .show()
     }
 
-    fun qr(activity: Activity, title: String, content: String, caption: String) {
+    fun qr(activity: Activity, title: String, content: String, caption: String): AlertDialog {
         val size = (activity.resources.displayMetrics.heightPixels * 0.5).toInt()
         val image = ImageView(activity).apply { setImageBitmap(qrBitmap(content, size)) }
         val text = TextView(activity).apply {
@@ -132,7 +132,7 @@ object Dialogs {
             addView(image)
             addView(text)
         }
-        AlertDialog.Builder(activity)
+        return AlertDialog.Builder(activity)
             .setTitle(title)
             .setView(layout)
             .setPositiveButton(android.R.string.ok, null)

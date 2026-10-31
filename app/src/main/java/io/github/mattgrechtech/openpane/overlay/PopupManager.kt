@@ -186,7 +186,12 @@ class PopupManager(private val context: Context) {
     private fun timeFirstDraw(view: View, startedAt: Long) {
         val observer = view.viewTreeObserver
         val listener = object : ViewTreeObserver.OnDrawListener {
+            private var done = false
+
             override fun onDraw() {
+                // Only the first frame counts; the fade-in draws more before the listener is gone.
+                if (done) return
+                done = true
                 Perf.record(Perf.Metric.POPUP, SystemClock.elapsedRealtime() - startedAt)
                 val self = this
                 // Can't remove a draw listener while it's being called.

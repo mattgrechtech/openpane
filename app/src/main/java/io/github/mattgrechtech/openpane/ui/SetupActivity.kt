@@ -77,10 +77,24 @@ class SetupActivity : Activity() {
         setContentView(root)
 
         picker = DashboardPicker(this, panel, onSignIn = { signIn() }, onCancel = { focusFirst() })
+        app.settings.addListener(signedInListener)
         go(Step.WELCOME)
     }
 
+    /** Signed in from a phone while this screen is up: close the code and go on to choosing a dashboard. */
+    private val signedInListener: (Set<String>) -> Unit = { changed ->
+        if (Keys.HA_REFRESH_TOKEN.name in changed && app.settings[Keys.HA_REFRESH_TOKEN].isNotEmpty()) {
+            main.post {
+                phoneQr?.dismiss()
+                phoneQr = null
+                if (step != Step.PICK) go(Step.PICK)
+            }
+        }
+    }
+    private var phoneQr: android.app.Dialog? = null
+
     override fun onDestroy() {
+        app.settings.removeListener(signedInListener)
         stopSearch()
         main.removeCallbacksAndMessages(null)
         super.onDestroy()
@@ -235,7 +249,7 @@ class SetupActivity : Activity() {
         intro("📺", R.string.setup_welcome_title, getString(R.string.setup_welcome_message))
         showStatus(null, false)
         val list = mutableListOf(
-            Option("phone", getString(R.string.setup_choice_phone), getString(R.string.setup_choice_phone_sub)) { showPhoneQr() },
+            Option("phone", "📱 " + getString(R.string.setup_choice_phone), getString(R.string.setup_choice_phone_sub)) { showPhoneQr() },
             Option("ha", getString(R.string.setup_choice_ha), getString(R.string.setup_choice_ha_sub)) { go(Step.FIND_HA) },
             Option("web", getString(R.string.setup_choice_web), getString(R.string.setup_choice_web_sub)) { askForWebPage() },
         )
@@ -251,7 +265,7 @@ class SetupActivity : Activity() {
         val ip = io.github.mattgrechtech.openpane.control.KioskState.localIpv4() ?: "<tv-ip>"
         val address = "http://$ip:${app.settings[io.github.mattgrechtech.openpane.settings.Keys.API_PORT]}"
         val token = app.settings[io.github.mattgrechtech.openpane.settings.Keys.API_TOKEN]
-        Dialogs.qr(this, getString(R.string.setup_choice_phone), "$address/#token=$token", getString(R.string.setup_phone_caption, address))
+        phoneQr = Dialogs.qr(this, getString(R.string.setup_choice_phone), "$address/#token=$token", getString(R.string.setup_phone_caption, address))
     }
 
     private fun findHa(): List<Option> {

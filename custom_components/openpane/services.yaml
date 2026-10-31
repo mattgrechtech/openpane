@@ -160,3 +160,7 @@ post_note:
     text:
       required: true
       selector: { text: }
+
+next_item:
+  fields:
+    device_id: *tv

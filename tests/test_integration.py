@@ -173,6 +173,18 @@ async def test_remote_and_note_actions(hass: HomeAssistant, aioclient_mock: Aioh
     assert sent["/planner/note"] == {"text": "Back at 5"}
 
 
+async def test_signage_pages_and_next(hass: HomeAssistant, aioclient_mock: AiohttpClientMocker) -> None:
+    await _set_up(hass, aioclient_mock)
+    aioclient_mock.post(f"{BASE}/url", json={"ok": True})
+    aioclient_mock.post(f"{BASE}/next", json={"ok": True})
+    device = dr.async_get(hass).async_get_device(identifiers={(DOMAIN, "a1b2c3d4")})
+    await hass.services.async_call(DOMAIN, "open_url", {"device_id": device.id, "url": "kiosk:signage"}, blocking=True)
+    await hass.services.async_call(DOMAIN, "next_item", {"device_id": device.id}, blocking=True)
+    sent = {str(call[1]).rsplit("/api/v1", 1)[1]: call[2] for call in aioclient_mock.mock_calls if call[0] == "POST"}
+    assert sent["/url"] == {"url": "kiosk:signage"}
+    assert "/next" in sent
+
+
 async def test_wake_button(hass: HomeAssistant, aioclient_mock: AiohttpClientMocker) -> None:
     await _set_up(hass, aioclient_mock)
     aioclient_mock.post(f"{BASE}/wake", json={"ok": True})

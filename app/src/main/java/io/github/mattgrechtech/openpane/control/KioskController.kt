@@ -47,6 +47,10 @@ interface DashboardSurface {
     fun typeText(text: String, callback: (Boolean) -> Unit)
     /** A JPEG of the dashboard window as it is now (not other apps), or null. */
     fun screenshot(callback: (ByteArray?) -> Unit)
+    /** Signage or the photo frame is the page: it plays to nobody on purpose, so the screen never rests. */
+    fun playingMedia(): Boolean
+    /** Signage: the next item; the photo frame: the next picture. False if neither is on screen. */
+    fun nextMedia(): Boolean
 }
 
 /**
@@ -256,6 +260,7 @@ class KioskController(
         }
         "pointer" -> pointer(args)
         "remote" -> remote(args)
+        "next" -> if (surface?.nextMedia() == true) CommandResult.ok() else CommandResult.error(409, "signage or the photo frame isn't on screen")
         "listen" -> (context.applicationContext as io.github.mattgrechtech.openpane.KioskApp).voice.toggle()
             ?.let { CommandResult.error(409, it) } ?: CommandResult.ok()
         "install_update" -> CommandResult.ok(
@@ -280,8 +285,8 @@ class KioskController(
 
     private fun loadUrl(args: JSONObject): CommandResult {
         val url = args.optString("url").trim()
-        if (!url.startsWith("http://") && !url.startsWith("https://") && url != Keys.PLANNER_PAGE) {
-            return CommandResult.error(400, "url must start with http:// or https:// (or be ${Keys.PLANNER_PAGE})")
+        if (!url.startsWith("http://") && !url.startsWith("https://") && url !in Keys.BUILT_IN_PAGES) {
+            return CommandResult.error(400, "url must start with http:// or https:// (or be ${Keys.BUILT_IN_PAGES.joinToString(", ")})")
         }
         val current = surface
         if (current != null) current.loadUrl(url) else {
@@ -411,8 +416,9 @@ class KioskController(
     /** Called by the dashboard about every half minute while it's in front: rests the screen when due. */
     fun restTick(now: Long) {
         presence.restAfterMillis = (scene?.restAfterMinutes ?: settings[Keys.REST_AFTER_MINUTES]) * 60_000L
-        // A pop-up on screen counts as activity: never rest behind a doorbell camera.
-        if (popups.showing) presence.awake(now)
+        // A pop-up on screen counts as activity: never rest behind a doorbell camera. Signage and
+        // the photo frame are there for nobody in particular: they never rest either.
+        if (popups.showing || surface?.playingMedia() == true) presence.awake(now)
         if (!presence.restDue(now) || state.screen != KioskState.Screen.ON) return
         if (surface?.nightActive() == true) return
         var style = scene?.restStyle ?: settings[Keys.REST_STYLE]
@@ -422,11 +428,14 @@ class KioskController(
         state.update { resting(true) }
         when (style) {
             "dim" -> applyDark(KioskState.Screen.DIM, REST_DIM_LEVEL)
-            "page" -> Unit
+            "page", "photos" -> Unit
             else -> applyDark(KioskState.Screen.BLANK, 100)
         }
         surface?.restChanged(style)
     }
+
+    /** A photos rest with no photos yet falls back to the clock: black behind it, like the clock rest. */
+    fun setRestDark() = applyDark(KioskState.Screen.BLANK, 100)
 
     private fun applyDark(mode: KioskState.Screen, level: Int) {
         state.update { screen(mode, level) }

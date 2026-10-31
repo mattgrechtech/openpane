@@ -587,6 +587,7 @@ class SettingsActivity : Activity() {
         when (value) {
             "dim" -> R.string.value_rest_dim
             "clock" -> R.string.value_rest_clock
+            "photos" -> R.string.value_rest_photos
             "page" -> R.string.value_rest_page
             else -> R.string.value_rest_black
         }

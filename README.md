@@ -28,6 +28,7 @@ That's the dashboard, the pop-ups and remote control of the TV, without a second
 - **Remote-friendly:** the arrows jump between a page's buttons and OK presses them, so touch dashboards work with a remote. An on-screen pointer for anything else. Hold **OK** (or press Menu) for a quick menu. Works by touch on tablets.
 - **Several pages:** rotate through dashboards or web pages; the remote holds the current one. Automations can open a page and come back by themselves (`return_after`).
 - **Scenes by time of day:** the planner and a bright screen at breakfast, the cameras in the evening, dim and quick to rest at night. One line each.
+- **Signage and a photo frame:** a playlist of pictures, videos and pages with days and hours, kept on the device so it plays offline; your photos from Home Assistant's media while nobody's around. [More](docs/signage.md).
 - **Family planner:** a built-in week view of every Home Assistant calendar, in colour, with the shopping and chores lists beside it; tick items off by touch or remote. [More](docs/planner.md).
 - **Offline, calmly:** if Home Assistant or the network drops, the screen keeps the dashboard as it last was, dimmed, with the time and "Reconnecting", instead of an error page.
 
@@ -103,6 +104,7 @@ The app talks only to the addresses you give it (Home Assistant, the web pages y
 ## Docs
 
 - [Family planner](docs/planner.md): calendars and to-do lists on the TV or a wall tablet.
+- [Signage and the photo frame](docs/signage.md): playlists, offline copies, time windows, photos.
 - [Home Assistant set-up](docs/home-assistant.md): doorbell pop-ups with a camera picture, wake on motion, REST commands, MQTT, moving TvOverlay or ha-tv-kit pop-ups over.
 - [API](docs/api.md): REST routes, every setting, pop-up fields, MQTT topics and entities, adb, remote keys for your own pages.
 - [Troubleshooting](docs/troubleshooting.md): setup, sign-in, pop-ups, a forgotten PIN, updating and uninstalling.

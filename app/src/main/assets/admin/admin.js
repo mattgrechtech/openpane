@@ -10,6 +10,8 @@ const GROUPS = [
   ["Voice", ["voice", "voice_pipeline"]],
   ["Readability", ["ui_text_size", "ui_high_contrast"]],
   ["Shared screens", ["lock_mode", "lock_allowed", "page_bridge"]],
+  ["Signage", ["signage_playlist", "media_cache_mb"]],
+  ["Photo frame", ["photo_source", "photo_seconds", "photo_shuffle", "photo_clock"]],
   ["Family planner", ["planner_calendars", "planner_todos", "planner_board", "planner_days"]],
   ["Screen and remote", ["remote_mode", "keep_screen_on", "boot_start", "burn_in_guard", "screen_off_from", "screen_off_to"]],
   ["Wake on motion", ["rest_after_minutes", "rest_style", "motion_front", "motion_at_night"]],
@@ -24,6 +26,10 @@ const LABELS = {
   mode: "Shows", start_url: "Start page", ha_url: "Home Assistant address", auth_mode: "Sign-in",
   ha_long_lived_token: "Long-lived token", ha_kiosk_mode: "Hide HA header and sidebar", pages: "More pages (one per line)", scenes: "Scenes by time of day (one per line: 07:00 /page brightness=80 rest=clock rest_after=10)",
   planner_calendars: "Calendars (entity ids; empty = all)", planner_todos: "To-do lists (entity ids; empty = all)",
+  signage_playlist: "Playlist, one a line: seconds, then a picture, video or page (20 /local/menu.jpg · 0 /local/promo.mp4 sound=on · 60 /lovelace/specials hours=11:00-14:00 days=mon-fri)",
+  media_cache_mb: "Space kept on the TV for signage and photos (MB)",
+  photo_source: "Photos: a media folder (/media/local/photos), a media-source:// address, or pictures, one a line",
+  photo_seconds: "Seconds on each photo", photo_shuffle: "Shuffle", photo_clock: "Show the time",
   ui_text_size: "Text size on the TV's own screens", ui_high_contrast: "High contrast on the TV's own screens",
   lock_mode: "Lock mode: Back never leaves, other sites don't open, menu needs the PIN", lock_allowed: "Other sites allowed in lock mode (one per line)",
   page_bridge: "window.openPane for your own dashboard cards",
@@ -239,7 +245,7 @@ function field(item) {
     input = el("select", {}, ...item.choices.map((c) => el("option", { value: c, textContent: c, selected: c === value })));
   } else if (item.type === "integer") {
     input = el("input", { type: "number", value: value });
-  } else if (name === "pages" || name === "scenes" || name === "lock_allowed") {
+  } else if (name === "pages" || name === "scenes" || name === "lock_allowed" || name === "signage_playlist" || name === "photo_source") {
     input = el("textarea", { value: value });
   } else {
     input = el("input", { type: item.secret ? "password" : "text", value: item.secret ? "" : value, autocomplete: "off",

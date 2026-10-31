@@ -24,7 +24,7 @@ curl -X POST -H "Authorization: Bearer $TOKEN" -H "Content-Type: application/jso
 | Route | Body | What it does |
 |---|---|---|
 | `GET /state` | | Everything below under [State](#state). `POST` works too, for Home Assistant's `rest_command` |
-| `POST /url` | `{"url", "return_after"}` | Load a page (http/https only). `return_after` (seconds, 5–86400) goes back to the start page that long after, unless another page command comes first; also on `navigate` |
+| `POST /url` | `{"url", "return_after"}` | Load a page: http(s), or a built-in page (`kiosk:planner`, `kiosk:signage`, `kiosk:photos`). `return_after` (seconds, 5–86400) goes back to the start page that long after, unless another page command comes first; also on `navigate` |
 | `POST /navigate` | `{"path"}` | Go to an HA page without a reload, e.g. `/lovelace/1` (falls back to a full load) |
 | `POST /reload` | `{"hard": false}` | Reload; `hard` clears the cache first |
 | `POST /screen` | `{"mode": "on"\|"dim"\|"blank", "level": 50}` | Dim (5–95 %) or blank the dashboard with a black layer. The backlight stays on: TVs don't let apps control it |
@@ -34,6 +34,7 @@ curl -X POST -H "Authorization: Bearer $TOKEN" -H "Content-Type: application/jso
 | `POST /now_playing` | `{"entity": "media_player.kitchen", "corner", "size"}` | A pop-up that follows a Home Assistant media player: artwork, title, artist, progress, updated every 2 s, closed 30 s after it stops. Needs the TV's Home Assistant sign-in |
 | `POST /now_playing/stop` | | Close it |
 | `POST /pointer` | `{"enabled": true}` | On-screen pointer on/off (omit `enabled` to toggle) |
+| `POST /next` | | Signage: the next item; the photo frame: the next photo ([more](signage.md)) |
 | `POST /remote` | `{"key": "ok"}` or `{"text": "kitchen"}` | The phone remote: `key` is `up`, `down`, `left`, `right`, `ok`, `back`, `menu`, `play_pause`, `enter` or `backspace`, pressed as on the TV's remote; `text` (up to 500 characters) is typed into the page's focused field |
 | `POST /setup/signin` | `{"ha_url": "http://192.168.1.50:8123"}` | Starts signing the TV in to Home Assistant from a phone: answers `login_url`, Home Assistant's login page, with the TV as the client. After the login, Home Assistant sends the phone to the TV's `/setup/callback`, which finishes it (only a sign-in the TV started, within 10 minutes, with its random state) |
 | `POST /install_update` | | Installs the latest release at the next quiet moment (dashboard in front, nothing playing) after checking its checksum, package and signing key; Android asks to confirm on the screen. `/state` → `update.install` says how it's going |
@@ -72,13 +73,15 @@ The same names work in `POST /settings`, adb `CONFIGURE` and a settings export. 
 | `ha_kiosk_mode` | `true` | Hide Home Assistant's header and sidebar |
 | `pages` | | More pages to rotate through: one URL per line, or a JSON array |
 | `rotate_seconds` | `0` | Seconds on each page; `0` is off, else 10–86400 |
-| `scenes` | | Scenes by time of day, one per line: a time, then any of a page (a URL, a path on the HA server, or `kiosk:planner`), `brightness=0-100`, `rest=black\|dim\|clock`, `rest_after=minutes`. Example: `06:30 kiosk:planner brightness=90 rest=clock`. Each lasts until the next, past midnight too; what a scene leaves out comes from the settings above. A scene's page pauses rotation. `/state` reports the scene in force as `scene` |
+| `scenes` | | Scenes by time of day, one per line: a time, then any of a page (a URL, a path on the HA server, `kiosk:planner`, `kiosk:signage` or `kiosk:photos`), `brightness=0-100`, `rest=black\|dim\|clock\|photos`, `rest_after=minutes`. Example: `06:30 kiosk:planner brightness=90 rest=clock`. Each lasts until the next, past midnight too; what a scene leaves out comes from the settings above. A scene's page pauses rotation. `/state` reports the scene in force as `scene` |
 | `lock_mode` | `false` | For shared tablets: Back never leaves the app, links to other sites don't open, and the quick menu and settings need `settings_pin` (without a PIN the menu only offers reload and start page). Pair with `home_app` and Android's app pinning so Home can't leave either |
 | `lock_allowed` | | More sites links may open in lock mode, one address per line (the dashboard's pages and Home Assistant are always allowed) |
 | `page_bridge` | `false` | `window.openPane` for your own dashboard cards: see [Your own cards](#your-own-cards-windowopenpane) |
 | `ui_text_size` | `normal` | `normal`, `large` or `larger`: text on the app's own screens (set-up, settings, sign-in). The dashboard and pop-ups keep their own sizes |
 | `ui_high_contrast` | `false` | Black backgrounds, white text and a brighter highlight on the app's own screens |
 | `voice`, `voice_pipeline` | `false`, | Push-to-talk to Assist (tablets with a microphone): see [Voice](home-assistant.md#voice-talk-to-assist) |
+| `signage_playlist`, `media_cache_mb` | , `500` | [Signage](signage.md): a playlist of pictures, videos and pages with days and hours, kept on the device |
+| `photo_source`, `photo_seconds`, `photo_shuffle`, `photo_clock` | , `20`, `true`, `true` | The [photo frame](signage.md#photo-frame): media folders or pictures |
 | `planner_calendars`, `planner_todos`, `planner_board`, `planner_days` | all, all, none, `7` | What the [family planner](planner.md) shows |
 | `screen_off_from` / `screen_off_to` | `-1` / `7` | Hours (0–23) the screen goes black each night; `-1` is never |
 | `remote_mode` | `buttons` | `buttons` (jump between items), `pointer` (on-screen pointer), `page` (arrows go to the page) |
@@ -90,7 +93,7 @@ The same names work in `POST /settings`, adb `CONFIGURE` and a settings export. 
 | `burn_in_guard` | `false` | Move the page a few pixels every 2 minutes, against burn-in on OLED screens |
 | `check_updates` | `false` | Once a day, ask GitHub whether a newer release is out; shown in Settings, the admin page, `/state` (`update`) and the integration's update entity. Never installs anything |
 | `rest_after_minutes` | `0` | Rest (darken) the screen after this many minutes without motion, presence or the remote; `0` is never, else 1–240 |
-| `rest_style` | `black` | While resting: `black`, `dim` (80 %), `clock` (time and date on black, moving every minute) or `page` (shows `rest_page`) |
+| `rest_style` | `black` | While resting: `black`, `dim` (80 %), `clock` (time and date on black, moving every minute), `photos` (the [photo frame](signage.md#photo-frame)) or `page` (shows `rest_page`) |
 | `rest_page` | | The page shown while resting with `rest_style: page`: a photo frame or ambient dashboard. The dashboard comes back on wake |
 | `motion_front` | `unless_playing` | When motion brings the dashboard in front of another app: `unless_playing` (not while sound is playing), `always`, `never` (only wake the screen) |
 | `motion_at_night` | `false` | Whether motion wakes the screen during the night hours |

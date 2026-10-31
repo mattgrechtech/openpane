@@ -33,11 +33,16 @@ object Keys {
 
     private fun port(value: Int) = if (value in 1..65535) null else "must be a port number (1-65535)"
     private fun url(value: String) =
-        if (value.isEmpty() || value.startsWith("http://") || value.startsWith("https://") || value == PLANNER_PAGE) null
-        else "must start with http:// or https:// (or be $PLANNER_PAGE)"
+        if (value.isEmpty() || value.startsWith("http://") || value.startsWith("https://") || value in BUILT_IN_PAGES) null
+        else "must start with http:// or https:// (or be ${BUILT_IN_PAGES.joinToString(", ")})"
 
     /** The built-in family planner, usable wherever a page is: start page, pages, scenes. */
     const val PLANNER_PAGE = "kiosk:planner"
+    /** The signage player: [SIGNAGE_PLAYLIST] in a loop. */
+    const val SIGNAGE_PAGE = "kiosk:signage"
+    /** The photo frame: the pictures from [PHOTO_SOURCE]. */
+    const val PHOTOS_PAGE = "kiosk:photos"
+    val BUILT_IN_PAGES = setOf(PLANNER_PAGE, SIGNAGE_PAGE, PHOTOS_PAGE)
 
     // What the TV shows
     /** home_assistant: a Home Assistant dashboard (sign-in, picker, pop-up bridge); web: any web page. */
@@ -90,6 +95,17 @@ object Keys {
     val PLANNER_BOARD = Key("planner_board", "", check = { if (it.isEmpty() || Regex("todo\\.[a-z0-9_]{1,100}").matches(it)) null else "must be a todo entity id" })
     val PLANNER_DAYS = Key("planner_days", 7, check = { if (it in 1..14) null else "must be 1-14" })
 
+    // Signage (kiosk:signage) and the photo frame (kiosk:photos, or the "photos" rest)
+    /** One item a line: see [io.github.mattgrechtech.openpane.signage.Playlist]. */
+    val SIGNAGE_PLAYLIST = Key("signage_playlist", "", check = { io.github.mattgrechtech.openpane.signage.Playlist.problem(it) })
+    /** Media folders or pictures, one a line: see [io.github.mattgrechtech.openpane.signage.Photos]. */
+    val PHOTO_SOURCE = Key("photo_source", "", check = { io.github.mattgrechtech.openpane.signage.Photos.problem(it) })
+    val PHOTO_SECONDS = Key("photo_seconds", 20, check = { if (it in 5..3600) null else "must be 5-3600" })
+    val PHOTO_SHUFFLE = Key("photo_shuffle", true)
+    val PHOTO_CLOCK = Key("photo_clock", true)
+    /** The most the device keeps for signage and photos, in MB. */
+    val MEDIA_CACHE_MB = Key("media_cache_mb", 500, check = { if (it in 50..8000) null else "must be 50-8000" })
+
     /** Scenes by time of day, one per line: see [io.github.mattgrechtech.openpane.control.Scenes]. */
     val SCENES = Key("scenes", "", check = { io.github.mattgrechtech.openpane.control.Scenes.problem(it) })
     /** Seconds on each page before the next; 0 turns rotation off. */
@@ -110,7 +126,7 @@ object Keys {
     val REST_AFTER_MINUTES = Key("rest_after_minutes", 0, check = {
         if (it in 0..240) null else "must be 0 (never) or 1-240"
     })
-    /** black, dim (the page stays faintly visible), clock (a drifting clock on black) or page ([REST_PAGE]). */
+    /** black, dim (the page stays faintly visible), clock (a drifting clock on black), photos (the photo frame) or page ([REST_PAGE]). */
     val REST_STYLE = oneOf("rest_style", "black") { REST_STYLES }
     /** auto follows the device; tablets and wall displays may want portrait. */
     val ORIENTATION = oneOf("orientation", "auto") { ORIENTATIONS }
@@ -191,7 +207,7 @@ object Keys {
     val AUTH_MODES = listOf("none", "login", "token")
     val REMOTE_MODES = listOf("buttons", "pointer", "page")
     val UI_TEXT_SIZES = listOf("normal", "large", "larger")
-    val REST_STYLES = listOf("black", "dim", "clock", "page")
+    val REST_STYLES = listOf("black", "dim", "clock", "photos", "page")
     val ORIENTATIONS = listOf("auto", "landscape", "portrait", "reverse_landscape", "reverse_portrait")
     val MOTION_FRONTS = listOf("unless_playing", "always", "never")
 
@@ -209,7 +225,7 @@ object Keys {
 
     val ALL: List<Key<*>> = listOf(
         MODE, START_URL, HA_URL, AUTH_MODE, HA_KIOSK_MODE, KEEP_SCREEN_ON, BOOT_START, REMOTE_MODE,
-        PAGES, ROTATE_SECONDS, SCENES, PLANNER_CALENDARS, PLANNER_TODOS, PLANNER_BOARD, PLANNER_DAYS, VOICE, VOICE_PIPELINE, LOCK_MODE, LOCK_ALLOWED, PAGE_BRIDGE, UI_TEXT_SIZE, UI_HIGH_CONTRAST, SCREEN_OFF_FROM, SCREEN_OFF_TO,
+        PAGES, ROTATE_SECONDS, SCENES, PLANNER_CALENDARS, PLANNER_TODOS, PLANNER_BOARD, PLANNER_DAYS, SIGNAGE_PLAYLIST, PHOTO_SOURCE, PHOTO_SECONDS, PHOTO_SHUFFLE, PHOTO_CLOCK, MEDIA_CACHE_MB, VOICE, VOICE_PIPELINE, LOCK_MODE, LOCK_ALLOWED, PAGE_BRIDGE, UI_TEXT_SIZE, UI_HIGH_CONTRAST, SCREEN_OFF_FROM, SCREEN_OFF_TO,
         CHECK_UPDATES, REST_AFTER_MINUTES, REST_STYLE, REST_PAGE, MOTION_AT_NIGHT, MOTION_FRONT, BURN_IN_GUARD, ORIENTATION, HOME_APP, KEY_EVENTS, DO_NOT_DISTURB,
         POPUP_SIZE, POPUP_OPACITY, POPUP_TEXT_SIZE, POPUP_CORNER, POPUP_DURATION, POPUP_MAX_PER_CORNER, POPUP_TAKE_REMOTE,
         RELOAD_ON_NETWORK, RELOAD_ON_DISCONNECT_SECONDS, NIGHTLY_RELOAD_HOUR,

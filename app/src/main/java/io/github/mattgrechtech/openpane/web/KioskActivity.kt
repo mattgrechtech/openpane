@@ -110,6 +110,11 @@ class KioskActivity : Activity(), DashboardSurface {
     /** The page to go back to when a "page" rest ends. */
     private var restReturnUrl: String? = null
     private lateinit var clock: RestClock
+    private lateinit var stage: MediaStage
+    private lateinit var signage: SignageRunner
+    private lateinit var photoFrame: PhotoFrame
+    /** The photo frame is showing as the rest (not as the page). */
+    private var photoRest = false
     /** A wake command or motion keeps the night hours from darkening the screen until then. */
     private var nightWakeUntil = 0L
     /** When a wake started, until the dashboard draws its next frame; 0 when none is pending. */
@@ -153,6 +158,16 @@ class KioskActivity : Activity(), DashboardSurface {
 
         val match = FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
         root.addView(webFrame, match)
+        stage = MediaStage(this)
+        root.addView(stage.view, FrameLayout.LayoutParams(match))
+        signage = SignageRunner(
+            stage, { app.media }, app.settings,
+            openPage = { url -> loadInWebView(url) },
+            blankPage = { webView?.loadUrl(BLANK) },
+            online = { !networkLost },
+            nothingText = getString(R.string.signage_empty),
+        )
+        photoFrame = PhotoFrame(stage, { app.media }, app.settings, getString(R.string.photos_empty))
         root.addView(panel, FrameLayout.LayoutParams(match))
         root.addView(pointer.view, FrameLayout.LayoutParams(match))
         root.addView(navigator.view, FrameLayout.LayoutParams(match))
@@ -217,6 +232,7 @@ class KioskActivity : Activity(), DashboardSurface {
         KioskService.start(this)
         app.state.update { dashboardVisible(true) }
         app.controller.takePendingUrl()?.let { loadUrl(it) }
+        if (requestedUrl in MEDIA_PAGES && !signage.running && !photoFrame.running) requestedUrl?.let { open(it) }
         scheduleTick()
         scheduleRotation()
     }
@@ -228,6 +244,7 @@ class KioskActivity : Activity(), DashboardSurface {
         app.state.update { dashboardVisible(false) }
         main.removeCallbacks(tick)
         main.removeCallbacks(rotation)
+        stopMedia()
         // Another app is in front: stop spending CPU on a dashboard nobody sees.
         webView?.onPause()
     }
@@ -238,6 +255,8 @@ class KioskActivity : Activity(), DashboardSurface {
         app.settings.removeListener(settingsListener)
         app.controller.detach(this)
         app.controller.popups.detachDashboard(root)
+        stopMedia()
+        stage.release()
         destroyWebView()
         super.onDestroy()
     }
@@ -306,6 +325,7 @@ class KioskActivity : Activity(), DashboardSurface {
         view.webViewClient = Client()
         view.webChromeClient = object : WebChromeClient() {
             override fun onReceivedTitle(view: WebView, title: String?) {
+                if (view.url == BLANK) return
                 app.state.update { page(view.url ?: "", title ?: "") }
             }
         }
@@ -342,8 +362,38 @@ class KioskActivity : Activity(), DashboardSurface {
 
     /** Loads [url], adding external auth when the app manages HA sign-in. */
     private fun open(url: String) {
-        val view = webView ?: return
+        if (webView == null) return
         requestedUrl = url
+        when (url) {
+            Keys.SIGNAGE_PAGE -> {
+                stopMedia()
+                signage.start()
+                app.state.update { page(url, getString(R.string.signage_title)) }
+                return
+            }
+            Keys.PHOTOS_PAGE -> {
+                stopMedia()
+                webView?.loadUrl(BLANK)
+                photoFrame.start()
+                app.state.update { page(url, getString(R.string.photos_title)); media("photos") }
+                return
+            }
+        }
+        stopMedia()
+        loadInWebView(url)
+    }
+
+    /** Signage and the photo frame give the screen back to the WebView. */
+    private fun stopMedia() {
+        signage.stop()
+        photoFrame.stop()
+        photoRest = false
+        if (app.state.media != null) app.state.update { media(null) }
+    }
+
+    /** Loads [url] in the WebView, without changing what [requestedUrl] says the page is. */
+    private fun loadInWebView(url: String) {
+        val view = webView ?: return
         if (url == Keys.PLANNER_PAGE) {
             view.loadUrl(plannerAddress())
             return
@@ -372,7 +422,8 @@ class KioskActivity : Activity(), DashboardSurface {
             mainFrameFailed = false
             navigator.reset()
             bridge?.onPageStarted(url)
-            app.state.update {
+            // Signage's and the photo frame's empty page behind pictures: the state keeps saying signage.
+            if (url != BLANK) app.state.update {
                 page(url, "")
                 haConnection("unknown")
             }
@@ -401,7 +452,7 @@ class KioskActivity : Activity(), DashboardSurface {
                 retryDelayIndex = 0
                 lastGood = null
                 hidePanel(unless = Panel.SIGN_IN)
-                app.state.update { page(url, view.title ?: "") }
+                if (url != BLANK) app.state.update { page(url, view.title ?: "") }
             }
         }
 
@@ -429,6 +480,11 @@ class KioskActivity : Activity(), DashboardSurface {
     }
 
     private fun onMainFrameFailed(message: String) {
+        if (signage.running) {
+            app.state.update { error(message) }
+            signage.pageFailed()
+            return
+        }
         mainFrameFailed = true
         app.state.update { error(message) }
         val delay = RETRY_DELAYS_SECONDS[retryDelayIndex.coerceAtMost(RETRY_DELAYS_SECONDS.lastIndex)]
@@ -557,6 +613,8 @@ class KioskActivity : Activity(), DashboardSurface {
         relieveMemory()
         applyScene()
         app.selfUpdate.tick()
+        if (io.github.mattgrechtech.openpane.signage.MediaLibrary.wanted(app.settings)) app.media.tick()
+        if (signage.running && app.state.media != signage.nowShowing) app.state.update { media(signage.nowShowing) }
         app.controller.restTick(SystemClock.elapsedRealtime())
         scheduleTick()
     }
@@ -688,14 +746,34 @@ class KioskActivity : Activity(), DashboardSurface {
     }
 
     override fun restChanged(style: String?) {
-        clock.show(style == "clock")
-        if (style == "clock") window.attributes = window.attributes.apply { screenBrightness = CLOCK_BRIGHTNESS }
+        if (style == "photos" && !photoFrame.running) {
+            // Nothing to show yet: the clock instead.
+            photoRest = photoFrame.start(quiet = true)
+            if (photoRest) app.state.update { media("photos") }
+        }
+        if (style == null && photoRest) {
+            photoRest = false
+            photoFrame.stop()
+            app.state.update { media(null) }
+        }
+        val clockInstead = style == "photos" && !photoRest && !photoFrame.running
+        clock.show(style == "clock" || clockInstead)
+        if (clockInstead) app.controller.setRestDark()
+        if (style == "clock" || clockInstead) window.attributes = window.attributes.apply { screenBrightness = CLOCK_BRIGHTNESS }
         if (style == "page") {
             restReturnUrl = requestedUrl
             open(app.settings[Keys.REST_PAGE])
         } else if (style == null) {
             restReturnUrl?.let { url -> restReturnUrl = null; open(url) }
         }
+    }
+
+    override fun playingMedia(): Boolean = signage.running || (photoFrame.running && !photoRest)
+
+    override fun nextMedia(): Boolean = when {
+        signage.running -> { signage.skip(); true }
+        photoFrame.running -> { photoFrame.skip(); true }
+        else -> false
     }
 
     override fun nightActive(): Boolean {
@@ -723,7 +801,7 @@ class KioskActivity : Activity(), DashboardSurface {
         val now = SystemClock.elapsedRealtime()
         // A scene's own page holds the screen until the next scene.
         val busy = panel.isShowing || mainFrameFailed || app.state.screen == KioskState.Screen.BLANK || app.state.resting ||
-            appliedScene?.page != null
+            appliedScene?.page != null || playingMedia()
         if (pages.size > 1 && !busy && Schedule.rotationDue(now, pageShownAt, lastInteraction, app.settings[Keys.ROTATE_SECONDS])) {
             showPage(Schedule.nextIndex(pageIndex, pages.size), pages)
         }
@@ -948,6 +1026,12 @@ class KioskActivity : Activity(), DashboardSurface {
         // Any key wakes a dimmed or blank screen.
         if (event.action == KeyEvent.ACTION_DOWN && app.state.screen != KioskState.Screen.ON) {
             app.controller.setScreen(KioskState.Screen.ON, 0)
+            return true
+        }
+
+        // Signage and the photo frame: the right arrow moves on.
+        if (code == KeyEvent.KEYCODE_DPAD_RIGHT && playingMedia() && !panel.isShowing) {
+            if (event.action == KeyEvent.ACTION_DOWN) nextMedia()
             return true
         }
 
@@ -1202,5 +1286,7 @@ class KioskActivity : Activity(), DashboardSurface {
         const val ROTATION_CHECK_MILLIS = 5_000L
         val ARROWS = setOf(KeyEvent.KEYCODE_DPAD_LEFT, KeyEvent.KEYCODE_DPAD_RIGHT, KeyEvent.KEYCODE_DPAD_UP, KeyEvent.KEYCODE_DPAD_DOWN)
         val ROTATION_KEYS = setOf(Keys.PAGES.name, Keys.ROTATE_SECONDS.name)
+        val MEDIA_PAGES = setOf(Keys.SIGNAGE_PAGE, Keys.PHOTOS_PAGE)
+        const val BLANK = "about:blank"
     }
 }

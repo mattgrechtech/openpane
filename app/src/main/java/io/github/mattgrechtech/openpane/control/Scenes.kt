@@ -57,12 +57,12 @@ object Scenes {
             val name = part.substringBefore('=', "")
             val value = part.substringAfter('=', "")
             scene = when {
-                name.isEmpty() && (part.startsWith("http://") || part.startsWith("https://") || part.startsWith("/") || part == Keys.PLANNER_PAGE) ->
+                name.isEmpty() && (part.startsWith("http://") || part.startsWith("https://") || part.startsWith("/") || part in Keys.BUILT_IN_PAGES) ->
                     if (scene.page != null) return fail("has two pages") else scene.copy(page = part)
                 name == "brightness" -> value.toIntOrNull()?.takeIf { it in -1..100 }?.let { scene.copy(brightness = it) }
                     ?: return fail("brightness must be 0-100, or -1 for the device's own")
                 name == "rest" -> value.takeIf { it in Keys.REST_STYLES && it != "page" }?.let { scene.copy(restStyle = it) }
-                    ?: return fail("rest must be black, dim or clock")
+                    ?: return fail("rest must be black, dim, clock or photos")
                 name == "rest_after" -> value.toIntOrNull()?.takeIf { it in 0..240 }?.let { scene.copy(restAfterMinutes = it) }
                     ?: return fail("rest_after must be 0-240 minutes")
                 else -> return fail("doesn't know \"$part\"")

@@ -6,6 +6,8 @@ First public version. Pre-alpha: tested on two TCL Google TVs (Android 14), incl
 
 - Renamed from TV Kiosk to **OpenPane**: it's for tablets and wall displays as much as TVs. New package id `io.github.mattgrechtech.openpane`, integration domain `openpane` (actions `openpane.notify` and so on), events `openpane_action` and `openpane_key`, network announcement `_openpane._tcp`, MQTT base topic `openpane`. Nothing was released under the old name.
 
+- Signage (`kiosk:signage`, `signage_playlist`): pictures, videos and pages in a loop, each for its seconds and only on its days and hours. Pictures and videos are kept on the device (`media_cache_mb`), so they play offline; pages are skipped until the network is back. New action `openpane.next_item` (`POST /next`, or the right arrow).
+- Photo frame (`kiosk:photos`, or `rest_style: photos`): pictures from Home Assistant's media folders, photo integrations or addresses (`photo_source`), drawn natively with crossfades and a slow drift, with the time. Stored at screen size, the right way up.
 - Pop-ups can pause what's playing (`pause_media`, for the doorbell): Netflix, YouTube or live TV pause while it's up and resume when it closes, only if the pop-up paused them.
 - TCL and similar TVs: the app reports when the maker's app manager blocks it restarting after an update or boot (*Auto-start*, *Background service* in the admin page); provisioning allows it.
 - The OpenPane card for dashboards (comes with the integration, no resource to add): remote, wake, planner, pop-up and family-board note. New actions `openpane.remote` and `openpane.post_note`.

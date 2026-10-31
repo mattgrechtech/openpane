@@ -49,6 +49,9 @@ class KioskState {
     @Volatile var reloadCount: Int = 0
         private set
     /** The screen is dark because nobody has been around (wake on motion). */
+    /** Signage's or the photo frame's item on screen ("menu.jpg 2/5", "photos"), or null. */
+    @Volatile var media: String? = null
+        private set
     @Volatile var resting: Boolean = false
         private set
     /** The night hours have the screen dark. */
@@ -100,6 +103,7 @@ class KioskState {
         fun wakeTook(millis: Long) { lastWakeMillis = millis }
         fun brightness(level: Int) { brightness = level }
         fun scene(label: String?) { scene = label }
+        fun media(showing: String?) { media = showing }
         fun latest(version: String?, url: String?) { latestVersion = version; latestUrl = url }
         fun reloaded(reason: String) {
             lastReloadReason = reason
@@ -144,6 +148,7 @@ class KioskState {
             .put("dim_level", dimLevel)
             .put("brightness", brightness)
             .put("scene", scene)
+            .put("media", media)
             .put("update", latestVersion?.let { latest ->
                 JSONObject().put("latest", latest).put("url", latestUrl)
                     .put("available", UpdateCheck.isNewer(latest, BuildConfig.VERSION_NAME))

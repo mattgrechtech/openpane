@@ -31,6 +31,8 @@ class KioskApp : Application() {
         private set
     lateinit var phoneSignIn: io.github.mattgrechtech.openpane.web.PhoneSignIn
         private set
+    /** Signage's and the photo frame's copies: made on first use, so nothing runs when neither is set up. */
+    val media by lazy { io.github.mattgrechtech.openpane.signage.MediaLibrary(this, settings, auth) }
     val selfUpdate by lazy { io.github.mattgrechtech.openpane.control.SelfUpdate(this) }
     /** Created on first use: nothing about voice exists until someone switches it on and asks. */
     val voice by lazy {
@@ -67,7 +69,10 @@ class KioskApp : Application() {
             if (Keys.UI_HIGH_CONTRAST.name in changed) io.github.mattgrechtech.openpane.ui.TvUi.highContrast = settings[Keys.UI_HIGH_CONTRAST]
             if (changed.any { it in SERVICE_KEYS }) KioskService.start(this)
             if (Keys.HOME_APP.name in changed) applyHomeScreen()
+            if (changed.any { it in MEDIA_KEYS } && io.github.mattgrechtech.openpane.signage.MediaLibrary.wanted(settings)) media.refresh()
         }
+        // Ready before the first rest or signage page: fetch what's missing in the background.
+        if (io.github.mattgrechtech.openpane.signage.MediaLibrary.wanted(settings)) media.refresh()
     }
 
     private val updates = java.util.concurrent.Executors.newSingleThreadScheduledExecutor()
@@ -105,6 +110,7 @@ class KioskApp : Application() {
 
     companion object {
         private val SERVICE_KEYS = setOf(Keys.API_ENABLED.name, Keys.TVOVERLAY_COMPAT.name, Keys.MQTT_ENABLED.name)
+        private val MEDIA_KEYS = setOf(Keys.SIGNAGE_PLAYLIST.name, Keys.PHOTO_SOURCE.name, Keys.MEDIA_CACHE_MB.name)
 
         /** A new random token: 32 bytes as hex. */
         fun newToken(bytes: Int = 32): String {

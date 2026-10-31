@@ -281,7 +281,7 @@
         },
         "url": {
           "name": "URL",
-          "description": "http:// or https://, or kiosk:planner for the family planner."
+          "description": "http:// or https://, or kiosk:planner (family planner), kiosk:signage (signage) or kiosk:photos (photo frame)."
         },
         "return_after": {
           "name": "Back after",
@@ -442,6 +442,16 @@
         "text": {
           "name": "Note",
           "description": "Up to 200 characters."
+        }
+      }
+    },
+    "next_item": {
+      "name": "Next signage item or photo",
+      "description": "Moves signage to its next item, or the photo frame to its next photo.",
+      "fields": {
+        "device_id": {
+          "name": "Screens",
+          "description": "One or more screens."
         }
       }
     }

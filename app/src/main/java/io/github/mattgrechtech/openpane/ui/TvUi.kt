@@ -12,12 +12,31 @@ import android.widget.Button
 /** Shared look for a remote-driven UI: the focused control must be obvious from the sofa. */
 object TvUi {
 
-    val ACCENT = 0xFF0288D1.toInt()
-    val SUCCESS = 0xFF43A047.toInt()
-    val WARNING = 0xFFFFB300.toInt()
-    val SURFACE = 0xFF2A2D33.toInt()
-    val BACKGROUND = 0xFF121316.toInt()
-    val TEXT_SECONDARY = 0xFFBDBDBD.toInt()
+    /** High contrast: pure black, white text, a brighter accent. Set from the settings. */
+    @Volatile var highContrast = false
+
+    val ACCENT get() = if (highContrast) 0xFF4FC3F7.toInt() else 0xFF0288D1.toInt()
+    val SUCCESS get() = if (highContrast) 0xFF69F0AE.toInt() else 0xFF43A047.toInt()
+    val WARNING get() = if (highContrast) 0xFFFFD740.toInt() else 0xFFFFB300.toInt()
+    val SURFACE get() = if (highContrast) 0xFF000000.toInt() else 0xFF2A2D33.toInt()
+    val BACKGROUND get() = if (highContrast) 0xFF000000.toInt() else 0xFF121316.toInt()
+    val TEXT_SECONDARY get() = if (highContrast) 0xFFFFFFFF.toInt() else 0xFFBDBDBD.toInt()
+
+    /**
+     * [base] with the app's text size applied (on top of the system's own), for the app's own
+     * screens. The dashboard keeps its own size.
+     */
+    fun withTextSize(base: Context): Context {
+        val app = base.applicationContext as? io.github.mattgrechtech.openpane.KioskApp ?: return base
+        val factor = when (app.settings[io.github.mattgrechtech.openpane.settings.Keys.UI_TEXT_SIZE]) {
+            "large" -> 1.2f
+            "larger" -> 1.4f
+            else -> return base
+        }
+        val config = android.content.res.Configuration(base.resources.configuration)
+        config.fontScale = config.fontScale * factor
+        return base.createConfigurationContext(config)
+    }
 
     /** A button that fills with the accent colour and grows a white outline when focused. */
     fun button(context: Context, text: String, primary: Boolean = false, onClick: () -> Unit): Button =

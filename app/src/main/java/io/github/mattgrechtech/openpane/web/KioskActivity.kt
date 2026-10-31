@@ -87,6 +87,7 @@ class KioskActivity : Activity(), DashboardSurface {
     private var retryDelayIndex = 0
     private var mainFrameFailed = false
     private var networkLost = false
+    private var pageBridge: PageBridge? = null
     private lateinit var micButton: TextView
     /** When the current page started loading, for the page-load timing; 0 when none is pending. */
     private var pageStartedAt = 0L
@@ -312,6 +313,7 @@ class KioskActivity : Activity(), DashboardSurface {
         val haOrigin = app.settings.haBaseUrl()
         if (haOrigin != null) {
             bridge = HaBridge(view, haOrigin, app.auth, BridgeEvents()).also { it.install() }
+            pageBridge = if (app.settings[Keys.PAGE_BRIDGE]) PageBridge(view, haOrigin, app.controller).takeIf { it.install() } else null
         }
 
         webView = view
@@ -356,7 +358,13 @@ class KioskActivity : Activity(), DashboardSurface {
         override fun shouldOverrideUrlLoading(view: WebView, request: WebResourceRequest): Boolean {
             val scheme = request.url.scheme?.lowercase()
             // Stay in the WebView for web pages; never hand off to other apps (intent:, market:, ...).
-            return scheme != "http" && scheme != "https"
+            if (scheme != "http" && scheme != "https") return true
+            // Lock mode: a link to another site doesn't open (frames inside a card still load).
+            if (app.settings[Keys.LOCK_MODE] && request.isForMainFrame && !lockAllows(request.url.toString())) {
+                AppLog.i(TAG, "Lock mode: didn't open a link to ${request.url.host}")
+                return true
+            }
+            return false
         }
 
         override fun onPageStarted(view: WebView, url: String, favicon: Bitmap?) {
@@ -371,6 +379,8 @@ class KioskActivity : Activity(), DashboardSurface {
         }
 
         override fun onPageFinished(view: WebView, url: String) {
+            // WebViews without document-start scripts get window.openPane once the page has loaded.
+            if (pageBridge != null && Settings.originOf(url) == app.settings.haBaseUrl()) pageBridge?.injectNow()
             if (url.startsWith(plannerAddress())) {
                 // Only into our own page, checked by its address now: no other page gets the token.
                 val days = app.settings[Keys.PLANNER_DAYS]
@@ -1026,8 +1036,10 @@ class KioskActivity : Activity(), DashboardSurface {
     @Deprecated("Deprecated in Java")
     override fun onBackPressed() {
         val view = webView
+        // Lock mode: Back never leaves the app.
+        val locked = app.settings[Keys.LOCK_MODE]
         if (view == null) {
-            moveTaskToBack(true)
+            if (!locked) moveTaskToBack(true)
             return
         }
         // A pop-up closes first. A page running its own remote navigation gets Back as Escape.
@@ -1040,12 +1052,39 @@ class KioskActivity : Activity(), DashboardSurface {
             }
             navigator.closeDialog { closed ->
                 if (closed) return@closeDialog
-                if (view.canGoBack()) view.goBack() else moveTaskToBack(true)
+                if (view.canGoBack()) view.goBack() else if (!locked) moveTaskToBack(true)
             }
         }
     }
 
     private fun showQuickMenu() {
+        // Lock mode: the menu is behind the PIN (and without a PIN only reload and start page).
+        if (app.settings[Keys.LOCK_MODE]) {
+            val pin = app.settings[Keys.SETTINGS_PIN]
+            if (pin.isEmpty()) {
+                val pages = app.settings.pages()
+                Dialogs.list(this, getString(R.string.app_name), listOf(
+                    getString(R.string.menu_reload) to { reload(false, "menu") },
+                    getString(R.string.menu_start_page) to { if (pages.isNotEmpty()) showPage(0, pages) },
+                ))
+                return
+            }
+            Dialogs.requirePin(this, pin) { showFullQuickMenu() }
+            return
+        }
+        showFullQuickMenu()
+    }
+
+    /** Origins links may open in lock mode: the dashboard's pages, Home Assistant, the planner, and [Keys.LOCK_ALLOWED]. */
+    private fun lockAllows(url: String): Boolean {
+        val origin = Settings.originOf(url) ?: return false
+        val allowed = (app.settings.pages() + Keys.splitPages(app.settings[Keys.LOCK_ALLOWED]) + listOfNotNull(app.settings.haBaseUrl()))
+            .mapNotNull { Settings.originOf(it) }.toMutableSet()
+        allowed += "http://127.0.0.1:${app.settings[Keys.API_PORT]}"
+        return origin in allowed
+    }
+
+    private fun showFullQuickMenu() {
         val pointerLabel = getString(if (remoteMode == "pointer") R.string.menu_pointer_off else R.string.menu_pointer_on)
         val pages = app.settings.pages()
         val items = mutableListOf<Pair<String, () -> Unit>>(
@@ -1087,7 +1126,7 @@ class KioskActivity : Activity(), DashboardSurface {
         if (changed.contains(Keys.VOICE.name)) applyVoice()
         val reloadKeys = setOf(
             Keys.MODE.name, Keys.START_URL.name, Keys.HA_URL.name, Keys.AUTH_MODE.name,
-            Keys.HA_LONG_LIVED_TOKEN.name, Keys.HA_REFRESH_TOKEN.name,
+            Keys.HA_LONG_LIVED_TOKEN.name, Keys.HA_REFRESH_TOKEN.name, Keys.PAGE_BRIDGE.name,
         )
         if (changed.any { it in reloadKeys }) {
             app.auth.forgetCachedToken()

@@ -8,6 +8,9 @@ First public version. Pre-alpha: tested on two TCL Google TVs (Android 14), incl
 
 - Pop-ups can pause what's playing (`pause_media`, for the doorbell): Netflix, YouTube or live TV pause while it's up and resume when it closes, only if the pop-up paused them.
 - TCL and similar TVs: the app reports when the maker's app manager blocks it restarting after an update or boot (*Auto-start*, *Background service* in the admin page); provisioning allows it.
+- Lock mode (`lock_mode`, `lock_allowed`): Back never leaves, links to other sites don't open, and the quick menu and settings need the PIN.
+- Page bridge (`page_bridge`, off by default): `window.openPane` for dashboard cards on the Home Assistant address only (notify, clearPopup, wake, motion, screen, brightness, state, listen), through an origin-limited channel.
+- Readability: `ui_text_size` (normal, large, larger) and `ui_high_contrast` for the app's own screens, in the TV's settings and the admin page.
 - Voice (off by default): push-to-talk to Home Assistant's Assist on tablets: a mic button, the voice key or `listen` streams 16 kHz audio to the Assist pipeline over Home Assistant's WebSocket; the answer is spoken and shown as a pop-up. No speech model in the app; the microphone is open only while listening.
 - Calm updates: Install on the Update entity (or *Install update* in the admin page) installs the latest release at the next quiet moment, after checking its SHA-256, package and signing key; Android asks for one confirmation. Nothing installs by itself, and there's no update prompt otherwise.
 - Set up from a phone: the TV's first-run screen shows a code; the admin page signs the TV in to Home Assistant with the password typed on the phone (the TV is the login's client and receives the one-time code itself). `POST /setup/signin`.

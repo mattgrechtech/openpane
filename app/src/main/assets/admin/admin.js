@@ -8,6 +8,8 @@ const STORE = "openpane-token";
 const GROUPS = [
   ["What the TV shows", ["mode", "start_url", "ha_url", "auth_mode", "ha_long_lived_token", "ha_kiosk_mode", "pages", "rotate_seconds", "scenes"]],
   ["Voice", ["voice", "voice_pipeline"]],
+  ["Readability", ["ui_text_size", "ui_high_contrast"]],
+  ["Shared screens", ["lock_mode", "lock_allowed", "page_bridge"]],
   ["Family planner", ["planner_calendars", "planner_todos", "planner_board", "planner_days"]],
   ["Screen and remote", ["remote_mode", "keep_screen_on", "boot_start", "burn_in_guard", "screen_off_from", "screen_off_to"]],
   ["Wake on motion", ["rest_after_minutes", "rest_style", "motion_front", "motion_at_night"]],
@@ -22,6 +24,9 @@ const LABELS = {
   mode: "Shows", start_url: "Start page", ha_url: "Home Assistant address", auth_mode: "Sign-in",
   ha_long_lived_token: "Long-lived token", ha_kiosk_mode: "Hide HA header and sidebar", pages: "More pages (one per line)", scenes: "Scenes by time of day (one per line: 07:00 /page brightness=80 rest=clock rest_after=10)",
   planner_calendars: "Calendars (entity ids; empty = all)", planner_todos: "To-do lists (entity ids; empty = all)",
+  ui_text_size: "Text size on the TV's own screens", ui_high_contrast: "High contrast on the TV's own screens",
+  lock_mode: "Lock mode: Back never leaves, other sites don't open, menu needs the PIN", lock_allowed: "Other sites allowed in lock mode (one per line)",
+  page_bridge: "window.openPane for your own dashboard cards",
   voice: "Push-to-talk to Assist (tablets with a microphone)", voice_pipeline: "Assist pipeline id (empty = preferred)",
   planner_days: "Days shown (1-14)", planner_board: "Family board: a to-do list shown as notes (todo.…)",
   rotate_seconds: "Seconds on each page (0 = off)", remote_mode: "Remote", keep_screen_on: "Keep the screen on",
@@ -234,7 +239,7 @@ function field(item) {
     input = el("select", {}, ...item.choices.map((c) => el("option", { value: c, textContent: c, selected: c === value })));
   } else if (item.type === "integer") {
     input = el("input", { type: "number", value: value });
-  } else if (name === "pages" || name === "scenes") {
+  } else if (name === "pages" || name === "scenes" || name === "lock_allowed") {
     input = el("textarea", { value: value });
   } else {
     input = el("input", { type: item.secret ? "password" : "text", value: item.secret ? "" : value, autocomplete: "off",

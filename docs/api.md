@@ -73,6 +73,12 @@ The same names work in `POST /settings`, adb `CONFIGURE` and a settings export. 
 | `pages` | | More pages to rotate through: one URL per line, or a JSON array |
 | `rotate_seconds` | `0` | Seconds on each page; `0` is off, else 10–86400 |
 | `scenes` | | Scenes by time of day, one per line: a time, then any of a page (a URL, a path on the HA server, or `kiosk:planner`), `brightness=0-100`, `rest=black\|dim\|clock`, `rest_after=minutes`. Example: `06:30 kiosk:planner brightness=90 rest=clock`. Each lasts until the next, past midnight too; what a scene leaves out comes from the settings above. A scene's page pauses rotation. `/state` reports the scene in force as `scene` |
+| `lock_mode` | `false` | For shared tablets: Back never leaves the app, links to other sites don't open, and the quick menu and settings need `settings_pin` (without a PIN the menu only offers reload and start page). Pair with `home_app` and Android's app pinning so Home can't leave either |
+| `lock_allowed` | | More sites links may open in lock mode, one address per line (the dashboard's pages and Home Assistant are always allowed) |
+| `page_bridge` | `false` | `window.openPane` for your own dashboard cards: see [Your own cards](#your-own-cards-windowopenpane) |
+| `ui_text_size` | `normal` | `normal`, `large` or `larger`: text on the app's own screens (set-up, settings, sign-in). The dashboard and pop-ups keep their own sizes |
+| `ui_high_contrast` | `false` | Black backgrounds, white text and a brighter highlight on the app's own screens |
+| `voice`, `voice_pipeline` | `false`, | Push-to-talk to Assist (tablets with a microphone): see [Voice](home-assistant.md#voice-talk-to-assist) |
 | `planner_calendars`, `planner_todos`, `planner_board`, `planner_days` | all, all, none, `7` | What the [family planner](planner.md) shows |
 | `screen_off_from` / `screen_off_to` | `-1` / `7` | Hours (0–23) the screen goes black each night; `-1` is never |
 | `remote_mode` | `buttons` | `buttons` (jump between items), `pointer` (on-screen pointer), `page` (arrows go to the page) |
@@ -249,6 +255,24 @@ adb shell am broadcast -n $R -a $A.DIAGNOSTICS                  # also writes An
 ```
 
 `--es json_b64 <base64>` works wherever `--es json` does; the provisioning scripts use it because PowerShell 5.1 strips the quotes in JSON.
+
+## Your own cards: window.openPane
+
+With `page_bridge` on, pages on your Home Assistant address get `window.openPane`, so a custom card or a dashboard's own script can talk to the screen it's on:
+
+```js
+window.addEventListener("openpane-ready", () => console.log("on an OpenPane screen"));
+await window.openPane.notify({ title: "Pizza", countdown: 600 });   // any pop-up field
+await window.openPane.clearPopup("pizza");
+await window.openPane.wake(5);              // minutes the night screen stays off
+await window.openPane.motion(true);         // someone is here (false: they left)
+await window.openPane.screen("dim", 60);    // or "on", "blank"
+await window.openPane.brightness(70);
+const s = await window.openPane.state();    // screen, resting, night, present, brightness, scene, ...
+await window.openPane.listen();             // push-to-talk, if voice is on
+```
+
+Each call returns a promise that rejects with the reason if the command can't run. Only the Home Assistant address gets it, and only the page itself, not frames inside it: Android limits the channel to that origin, so a site embedded in a card can't use it. It needs Android System WebView 87 or newer. Off by default.
 
 ## Remote keys and your own pages
 

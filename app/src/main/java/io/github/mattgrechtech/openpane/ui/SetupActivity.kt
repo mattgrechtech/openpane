@@ -63,6 +63,9 @@ class SetupActivity : Activity() {
         if (step == Step.FIND_HA) render()
     }
 
+    override fun attachBaseContext(newBase: android.content.Context) =
+        super.attachBaseContext(io.github.mattgrechtech.openpane.ui.TvUi.withTextSize(newBase))
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         app = application as KioskApp

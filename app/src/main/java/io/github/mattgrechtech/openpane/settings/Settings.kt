@@ -58,6 +58,23 @@ object Keys {
     val PAGES = Key("pages", "", check = { value ->
         splitPages(value).firstNotNullOfOrNull { page -> url(page)?.let { "has a line that $it" } }
     })
+    // Readability of the app's own screens (set-up, settings, sign-in, messages); pop-ups have their own sizes.
+    val UI_TEXT_SIZE = oneOf("ui_text_size", "normal") { UI_TEXT_SIZES }
+    val UI_HIGH_CONTRAST = Key("ui_high_contrast", false)
+
+    // Shared screens
+    /**
+     * Lock mode for tablets in shared places (guests, kids, a shop): Back never leaves, links to
+     * other sites don't open, and the quick menu and settings need the PIN.
+     */
+    val LOCK_MODE = Key("lock_mode", false)
+    /** More sites links may open in lock mode, one address per line (the dashboard's own are always allowed). */
+    val LOCK_ALLOWED = Key("lock_allowed", "", check = { value ->
+        splitPages(value).firstNotNullOfOrNull { page -> url(page)?.let { "has a line that $it" } }
+    })
+    /** window.openPane for your own dashboard cards (Home Assistant's address only). Off by default. */
+    val PAGE_BRIDGE = Key("page_bridge", false)
+
     // Voice: push-to-talk to Home Assistant's Assist (tablets and panels with a microphone).
     /** Off by default: when off the microphone is never opened. */
     val VOICE = Key("voice", false)
@@ -173,6 +190,7 @@ object Keys {
     val POPUP_CORNERS = listOf("top_start", "top_end", "bottom_start", "bottom_end")
     val AUTH_MODES = listOf("none", "login", "token")
     val REMOTE_MODES = listOf("buttons", "pointer", "page")
+    val UI_TEXT_SIZES = listOf("normal", "large", "larger")
     val REST_STYLES = listOf("black", "dim", "clock", "page")
     val ORIENTATIONS = listOf("auto", "landscape", "portrait", "reverse_landscape", "reverse_portrait")
     val MOTION_FRONTS = listOf("unless_playing", "always", "never")
@@ -191,7 +209,7 @@ object Keys {
 
     val ALL: List<Key<*>> = listOf(
         MODE, START_URL, HA_URL, AUTH_MODE, HA_KIOSK_MODE, KEEP_SCREEN_ON, BOOT_START, REMOTE_MODE,
-        PAGES, ROTATE_SECONDS, SCENES, PLANNER_CALENDARS, PLANNER_TODOS, PLANNER_BOARD, PLANNER_DAYS, VOICE, VOICE_PIPELINE, SCREEN_OFF_FROM, SCREEN_OFF_TO,
+        PAGES, ROTATE_SECONDS, SCENES, PLANNER_CALENDARS, PLANNER_TODOS, PLANNER_BOARD, PLANNER_DAYS, VOICE, VOICE_PIPELINE, LOCK_MODE, LOCK_ALLOWED, PAGE_BRIDGE, UI_TEXT_SIZE, UI_HIGH_CONTRAST, SCREEN_OFF_FROM, SCREEN_OFF_TO,
         CHECK_UPDATES, REST_AFTER_MINUTES, REST_STYLE, REST_PAGE, MOTION_AT_NIGHT, MOTION_FRONT, BURN_IN_GUARD, ORIENTATION, HOME_APP, KEY_EVENTS, DO_NOT_DISTURB,
         POPUP_SIZE, POPUP_OPACITY, POPUP_TEXT_SIZE, POPUP_CORNER, POPUP_DURATION, POPUP_MAX_PER_CORNER, POPUP_TAKE_REMOTE,
         RELOAD_ON_NETWORK, RELOAD_ON_DISCONNECT_SECONDS, NIGHTLY_RELOAD_HOUR,

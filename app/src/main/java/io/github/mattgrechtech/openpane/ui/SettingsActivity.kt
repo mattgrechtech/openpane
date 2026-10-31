@@ -74,6 +74,9 @@ class SettingsActivity : Activity() {
 
     private val stateListener: () -> Unit = { main.post { updateRailStatus() } }
 
+    override fun attachBaseContext(newBase: android.content.Context) =
+        super.attachBaseContext(io.github.mattgrechtech.openpane.ui.TvUi.withTextSize(newBase))
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         app = application as KioskApp
@@ -504,6 +507,11 @@ class SettingsActivity : Activity() {
         Row.Value(getString(R.string.row_orientation), orientationLabel(app.settings[Keys.ORIENTATION])) {
             choose(getString(R.string.row_orientation), Keys.ORIENTATION, Keys.ORIENTATIONS.map { orientationLabel(it) to it })
         },
+        Row.Value(getString(R.string.row_text_size), textSizeLabel(app.settings[Keys.UI_TEXT_SIZE])) {
+            choose(getString(R.string.row_text_size), Keys.UI_TEXT_SIZE, Keys.UI_TEXT_SIZES.map { textSizeLabel(it) to it })
+        },
+        Row.Toggle(getString(R.string.row_high_contrast), getString(R.string.row_high_contrast_sub), Keys.UI_HIGH_CONTRAST),
+        Row.Toggle(getString(R.string.row_lock_mode), getString(R.string.row_lock_mode_sub), Keys.LOCK_MODE),
         Row.Toggle(getString(R.string.row_home_app), getString(R.string.row_home_app_sub), Keys.HOME_APP),
         Row.Toggle(getString(R.string.row_key_events), getString(R.string.row_key_events_sub), Keys.KEY_EVENTS),
         Row.Value(getString(R.string.row_remote_mode), remoteModeLabel(app.settings[Keys.REMOTE_MODE])) {
@@ -511,6 +519,12 @@ class SettingsActivity : Activity() {
         },
         Row.Info(getString(R.string.row_remote_help), getString(R.string.row_remote_help_sub)),
     ) + nightRows() + motionRows()
+
+    private fun textSizeLabel(value: String) = getString(when (value) {
+        "large" -> R.string.value_text_large
+        "larger" -> R.string.value_text_larger
+        else -> R.string.value_text_normal
+    })
 
     private fun nightRows(): List<Row> {
         val from = app.settings[Keys.SCREEN_OFF_FROM]

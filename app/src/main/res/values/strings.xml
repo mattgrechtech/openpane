@@ -260,6 +260,14 @@
     <!-- First-run setup -->
     <string name="setup_welcome_title">Set up this TV</string>
     <string name="setup_welcome_message">What should this TV show? You can change this later in Settings.</string>
+    <string name="row_text_size">Text size</string>
+    <string name="value_text_normal">Normal</string>
+    <string name="value_text_large">Large</string>
+    <string name="value_text_larger">Larger</string>
+    <string name="row_high_contrast">High contrast</string>
+    <string name="row_high_contrast_sub">Black backgrounds and white text on these screens (the dashboard keeps its own look). Reopen settings to see it.</string>
+    <string name="row_lock_mode">Lock mode</string>
+    <string name="row_lock_mode_sub">For shared tablets: Back never leaves, other sites don\'t open, and this menu needs the settings PIN. Set a PIN first.</string>
     <string name="voice_button">Talk to Home Assistant</string>
     <string name="setup_choice_phone">Set up from your phone</string>
     <string name="setup_choice_phone_sub">Scan a code, then sign in to Home Assistant on your phone. No typing with the remote.</string>

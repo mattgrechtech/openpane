@@ -61,8 +61,10 @@ class KioskApp : Application() {
         KioskService.start(this)
         applyHomeScreen()
         scheduleUpdateCheck()
+        io.github.mattgrechtech.openpane.ui.TvUi.highContrast = settings[Keys.UI_HIGH_CONTRAST]
         // Turning a control channel on or off starts or stops the service.
         settings.addListener { changed ->
+            if (Keys.UI_HIGH_CONTRAST.name in changed) io.github.mattgrechtech.openpane.ui.TvUi.highContrast = settings[Keys.UI_HIGH_CONTRAST]
             if (changed.any { it in SERVICE_KEYS }) KioskService.start(this)
             if (Keys.HOME_APP.name in changed) applyHomeScreen()
         }

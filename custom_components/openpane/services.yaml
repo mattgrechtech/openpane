@@ -143,3 +143,20 @@ launch_app:
     package:
       required: true
       selector: { text: }
+
+remote:
+  fields:
+    device_id: *tv
+    key:
+      selector:
+        select:
+          options: [up, down, left, right, ok, back, menu, play_pause, enter, backspace]
+    text:
+      selector: { text: }
+
+post_note:
+  fields:
+    device_id: *tv
+    text:
+      required: true
+      selector: { text: }

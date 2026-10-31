@@ -1,7 +1,9 @@
 {
   "domain": "openpane",
   "name": "OpenPane",
-  "codeowners": ["@mattgrechtech"],
+  "codeowners": [
+    "@mattgrechtech"
+  ],
   "config_flow": true,
   "documentation": "https://github.com/mattgrechtech/openpane/blob/main/docs/home-assistant.md#the-openpane-integration",
   "integration_type": "device",
@@ -9,5 +11,11 @@
   "issue_tracker": "https://github.com/mattgrechtech/openpane/issues",
   "requirements": [],
   "version": "0.1.0",
-  "zeroconf": ["_openpane._tcp.local."]
+  "zeroconf": [
+    "_openpane._tcp.local."
+  ],
+  "after_dependencies": [
+    "frontend",
+    "http"
+  ]
 }

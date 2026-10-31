@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import json
+
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
@@ -82,6 +84,11 @@ SERVICES: dict[str, tuple[str, dict]] = {
         vol.Optional("size"): vol.In(["small", "medium", "large"]),
     }),
     "now_playing_stop": ("now_playing/stop", {}),
+    "remote": ("remote", {
+        vol.Exclusive("key", "what"): vol.In(["up", "down", "left", "right", "ok", "back", "menu", "play_pause", "enter", "backspace"]),
+        vol.Exclusive("text", "what"): vol.All(cv.string, vol.Length(min=1, max=500)),
+    }),
+    "post_note": ("planner/note", {vol.Required("text"): vol.All(cv.string, vol.Length(min=1, max=200))}),
     # The same settings on every TV given: a fleet in one action. Only these keys change.
     "apply_settings": ("settings", {vol.Required("settings"): dict}),
 }
@@ -109,7 +116,26 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             schema=vol.Schema({**_TARGET, **fields}),
             supports_response=SupportsResponse.OPTIONAL,
         )
+    await _register_card(hass)
     return True
+
+
+CARD_URL = "/openpane/openpane-card.js"
+
+
+async def _register_card(hass: HomeAssistant) -> None:
+    """Serves the OpenPane card and adds it to every dashboard: no resource to add by hand."""
+    if hass.http is None:  # No web server (tests, safe mode): nothing to serve.
+        return
+    from pathlib import Path
+
+    from homeassistant.components.frontend import add_extra_js_url
+    from homeassistant.components.http import StaticPathConfig
+
+    path = Path(__file__).parent / "frontend" / "openpane-card.js"
+    await hass.http.async_register_static_paths([StaticPathConfig(CARD_URL, str(path), cache_headers=False)])
+    version = json.loads((Path(__file__).parent / "manifest.json").read_text(encoding="utf-8")).get("version", "0")
+    add_extra_js_url(hass, f"{CARD_URL}?v={version}")
 
 
 def _coordinators(hass: HomeAssistant, device_ids: list[str]) -> list[OpenPaneCoordinator]:

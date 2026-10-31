@@ -8,6 +8,7 @@ First public version. Pre-alpha: tested on two TCL Google TVs (Android 14), incl
 
 - Pop-ups can pause what's playing (`pause_media`, for the doorbell): Netflix, YouTube or live TV pause while it's up and resume when it closes, only if the pop-up paused them.
 - TCL and similar TVs: the app reports when the maker's app manager blocks it restarting after an update or boot (*Auto-start*, *Background service* in the admin page); provisioning allows it.
+- The OpenPane card for dashboards (comes with the integration, no resource to add): remote, wake, planner, pop-up and family-board note. New actions `openpane.remote` and `openpane.post_note`.
 - Lock mode (`lock_mode`, `lock_allowed`): Back never leaves, links to other sites don't open, and the quick menu and settings need the PIN.
 - Page bridge (`page_bridge`, off by default): `window.openPane` for dashboard cards on the Home Assistant address only (notify, clearPopup, wake, motion, screen, brightness, state, listen), through an origin-limited channel.
 - Readability: `ui_text_size` (normal, large, larger) and `ui_high_contrast` for the app's own screens, in the TV's settings and the admin page.

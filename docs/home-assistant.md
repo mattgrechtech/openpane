@@ -210,6 +210,20 @@ actions:
     data: { command: navigate, args: { path: /lovelace/cameras, return_after: 120 } }
 ```
 
+## The OpenPane card
+
+The integration adds a dashboard card: a remote (arrows, OK, Back), Wake, a button that opens the planner for 10 minutes, a box to send a pop-up, and one to post to the family board. Nothing to install: it comes with the integration.
+
+Edit a dashboard → Add card → search **OpenPane**, or in YAML:
+
+```yaml
+type: custom:openpane-card
+entity: sensor.living_room_tv_page   # any entity of the screen
+title: Living room TV                # optional
+```
+
+The same actions are there for automations: `openpane.remote` (a `key`, or `text` to type) and `openpane.post_note`.
+
 ## Voice: talk to Assist
 
 On a tablet or wall panel with a microphone, OpenPane can be a push-to-talk Assist device: tap the mic button (or press the remote's voice key, or send `listen` from an automation), speak, and Home Assistant answers out loud. "Listening…", what it heard and the answer show as a pop-up.

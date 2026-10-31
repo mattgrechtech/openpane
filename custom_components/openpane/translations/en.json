@@ -412,6 +412,38 @@
           "description": "One or more TVs."
         }
       }
+    },
+    "remote": {
+      "name": "Remote",
+      "description": "Press a remote key on the screen, or type into its selected text field.",
+      "fields": {
+        "device_id": {
+          "name": "Screens",
+          "description": "One or more screens."
+        },
+        "key": {
+          "name": "Key",
+          "description": "The key to press."
+        },
+        "text": {
+          "name": "Text",
+          "description": "Text to type into the field selected on the screen."
+        }
+      }
+    },
+    "post_note": {
+      "name": "Post a note",
+      "description": "Add a note to the family board on the planner.",
+      "fields": {
+        "device_id": {
+          "name": "Screens",
+          "description": "One or more screens."
+        },
+        "text": {
+          "name": "Note",
+          "description": "Up to 200 characters."
+        }
+      }
     }
   },
   "issues": {

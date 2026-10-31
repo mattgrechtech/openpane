@@ -161,6 +161,18 @@ async def test_update_install_asks_the_tv(hass: HomeAssistant, aioclient_mock: A
     assert any(str(call[1]).endswith("/install_update") for call in aioclient_mock.mock_calls)
 
 
+async def test_remote_and_note_actions(hass: HomeAssistant, aioclient_mock: AiohttpClientMocker) -> None:
+    await _set_up(hass, aioclient_mock)
+    aioclient_mock.post(f"{BASE}/remote", json={"ok": True})
+    aioclient_mock.post(f"{BASE}/planner/note", json={"ok": True})
+    device = dr.async_get(hass).async_get_device(identifiers={(DOMAIN, "a1b2c3d4")})
+    await hass.services.async_call(DOMAIN, "remote", {"device_id": device.id, "key": "ok"}, blocking=True)
+    await hass.services.async_call(DOMAIN, "post_note", {"device_id": device.id, "text": "Back at 5"}, blocking=True)
+    sent = {str(call[1]).rsplit("/api/v1", 1)[1]: call[2] for call in aioclient_mock.mock_calls if call[0] == "POST"}
+    assert sent["/remote"] == {"key": "ok"}
+    assert sent["/planner/note"] == {"text": "Back at 5"}
+
+
 async def test_wake_button(hass: HomeAssistant, aioclient_mock: AiohttpClientMocker) -> None:
     await _set_up(hass, aioclient_mock)
     aioclient_mock.post(f"{BASE}/wake", json={"ok": True})

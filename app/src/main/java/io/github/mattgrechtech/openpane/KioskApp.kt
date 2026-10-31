@@ -32,6 +32,14 @@ class KioskApp : Application() {
     lateinit var phoneSignIn: io.github.mattgrechtech.openpane.web.PhoneSignIn
         private set
     val selfUpdate by lazy { io.github.mattgrechtech.openpane.control.SelfUpdate(this) }
+    /** Created on first use: nothing about voice exists until someone switches it on and asks. */
+    val voice by lazy {
+        io.github.mattgrechtech.openpane.web.Voice(this, settings, auth) { title, message, done ->
+            val popup = org.json.JSONObject().put("id", "assist").put("title", title).put("message", message)
+                .put("duration", if (done) 8 else 15).put("priority", "high")
+            android.os.Handler(android.os.Looper.getMainLooper()).post { controller.execute("notify", popup) }
+        }
+    }
 
     override fun onCreate() {
         super.onCreate()

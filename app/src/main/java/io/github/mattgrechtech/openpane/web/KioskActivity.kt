@@ -87,6 +87,7 @@ class KioskActivity : Activity(), DashboardSurface {
     private var retryDelayIndex = 0
     private var mainFrameFailed = false
     private var networkLost = false
+    private lateinit var micButton: TextView
     /** When the current page started loading, for the page-load timing; 0 when none is pending. */
     private var pageStartedAt = 0L
     /** The scene by time of day last put in place (null: none). */
@@ -157,6 +158,23 @@ class KioskActivity : Activity(), DashboardSurface {
         root.addView(dim, FrameLayout.LayoutParams(match))
         clock = RestClock(this)
         root.addView(clock.view, FrameLayout.LayoutParams(match))
+        micButton = TextView(this).apply {
+            text = "🎤"
+            textSize = 26f
+            gravity = Gravity.CENTER
+            contentDescription = getString(R.string.voice_button)
+            background = android.graphics.drawable.GradientDrawable().apply {
+                shape = android.graphics.drawable.GradientDrawable.OVAL
+                setColor(0xCC1F2937.toInt())
+            }
+            elevation = dp(6).toFloat()
+            isFocusable = false
+            visibility = View.GONE
+            setOnClickListener { listen() }
+        }
+        root.addView(micButton, FrameLayout.LayoutParams(dp(64), dp(64), Gravity.BOTTOM or Gravity.END).apply {
+            setMargins(0, 0, dp(24), dp(24))
+        })
         setContentView(root)
 
         applyWindowFlags()
@@ -191,6 +209,7 @@ class KioskActivity : Activity(), DashboardSurface {
     override fun onResume() {
         super.onResume()
         resumed = true
+        applyVoice()
         app.controller.popups.dashboardInFront = true
         webView?.onResume()
         // The service may have been refused while the app was in the background (Android 12+).
@@ -829,6 +848,22 @@ class KioskActivity : Activity(), DashboardSurface {
 
     override fun navigateHa(path: String): Boolean = bridge?.navigate(path) ?: false
 
+    /** Shows the mic button when voice is on, and asks for the microphone once if needed. */
+    private fun applyVoice() {
+        val on = app.settings[Keys.VOICE]
+        micButton.visibility = if (on) View.VISIBLE else View.GONE
+        if (on && !app.voice.hasMicPermission() && Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            requestPermissions(arrayOf(android.Manifest.permission.RECORD_AUDIO), MIC_REQUEST)
+        }
+    }
+
+    private fun listen() {
+        lastInteraction = SystemClock.elapsedRealtime()
+        app.voice.toggle()?.let { problem ->
+            app.controller.execute("notify", org.json.JSONObject().put("id", "assist").put("title", "Assist").put("message", problem).put("duration", 6))
+        }
+    }
+
     override fun remoteKey(code: Int) {
         // Through the same path as the TV's remote: wakes a rest, moves the highlight, long-press rules.
         val now = SystemClock.uptimeMillis()
@@ -887,6 +922,11 @@ class KioskActivity : Activity(), DashboardSurface {
 
     override fun dispatchKeyEvent(event: KeyEvent): Boolean {
         val code = event.keyCode
+        // The remote's or keyboard's voice key talks to Home Assistant when voice is on.
+        if (app.settings[Keys.VOICE] && (code == KeyEvent.KEYCODE_VOICE_ASSIST || code == KeyEvent.KEYCODE_SEARCH)) {
+            if (event.action == KeyEvent.ACTION_UP) listen()
+            return true
+        }
         if (event.action == KeyEvent.ACTION_DOWN) {
             lastInteraction = SystemClock.elapsedRealtime()
             // A key during a rest only wakes the screen.
@@ -1044,6 +1084,7 @@ class KioskActivity : Activity(), DashboardSurface {
         }
         if (changed.contains(Keys.SCREEN_OFF_FROM.name) || changed.contains(Keys.SCREEN_OFF_TO.name)) nightScreen()
         if (changed.contains(Keys.SCENES.name)) applyScene(force = true)
+        if (changed.contains(Keys.VOICE.name)) applyVoice()
         val reloadKeys = setOf(
             Keys.MODE.name, Keys.START_URL.name, Keys.HA_URL.name, Keys.AUTH_MODE.name,
             Keys.HA_LONG_LIVED_TOKEN.name, Keys.HA_REFRESH_TOKEN.name,
@@ -1112,6 +1153,7 @@ class KioskActivity : Activity(), DashboardSurface {
         const val TAG = "KioskActivity"
         val RETRY_DELAYS_SECONDS = intArrayOf(5, 10, 20, 30, 60)
         const val TICK_MILLIS = 30_000L
+        const val MIC_REQUEST = 41
         const val BURN_IN_DP = 4
         const val IDLE_FOR_RELOAD_MILLIS = 10 * 60_000L
         const val MEMORY_RELOAD_GAP_MILLIS = 30 * 60_000L

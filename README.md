@@ -51,6 +51,7 @@ That's the dashboard, the pop-ups and remote control of the TV, without a second
 
 **Easy to look after**
 - **Web admin page:** scan the QR code in the TV's settings and manage it from your phone: status, controls, pop-ups, every setting, the log, export and import. No app, nothing in the cloud.
+- **Voice on tablets:** push-to-talk to Home Assistant's Assist, which works on plain `http://` set-ups where the browser's mic button can't.
 - **Phone remote:** arrows, OK, Back and Menu in the admin page, and a box to **type into the TV** (search, Wi-Fi passwords, sign-ins) instead of the on-screen keyboard.
 - **Stays up:** retries failed loads; replaces a crashed or frozen WebView; reloads when the network comes back, when HA stays unreachable, when memory runs low while nobody is looking, and optionally every night; restarts itself after a crash.
 - A settings PIN, a log and diagnostics with passwords and tokens blanked, set-up over adb in one script, and an opt-in check for new releases.

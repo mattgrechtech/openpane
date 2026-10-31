@@ -58,6 +58,12 @@ object Keys {
     val PAGES = Key("pages", "", check = { value ->
         splitPages(value).firstNotNullOfOrNull { page -> url(page)?.let { "has a line that $it" } }
     })
+    // Voice: push-to-talk to Home Assistant's Assist (tablets and panels with a microphone).
+    /** Off by default: when off the microphone is never opened. */
+    val VOICE = Key("voice", false)
+    /** An Assist pipeline id; empty uses Home Assistant's preferred one. */
+    val VOICE_PIPELINE = Key("voice_pipeline", "")
+
     // Family planner (kiosk:planner)
     /** Calendars on the planner, entity ids separated by commas or lines; empty means all. */
     val PLANNER_CALENDARS = Key("planner_calendars", "", check = { list("calendar", it) })
@@ -185,7 +191,7 @@ object Keys {
 
     val ALL: List<Key<*>> = listOf(
         MODE, START_URL, HA_URL, AUTH_MODE, HA_KIOSK_MODE, KEEP_SCREEN_ON, BOOT_START, REMOTE_MODE,
-        PAGES, ROTATE_SECONDS, SCENES, PLANNER_CALENDARS, PLANNER_TODOS, PLANNER_BOARD, PLANNER_DAYS, SCREEN_OFF_FROM, SCREEN_OFF_TO,
+        PAGES, ROTATE_SECONDS, SCENES, PLANNER_CALENDARS, PLANNER_TODOS, PLANNER_BOARD, PLANNER_DAYS, VOICE, VOICE_PIPELINE, SCREEN_OFF_FROM, SCREEN_OFF_TO,
         CHECK_UPDATES, REST_AFTER_MINUTES, REST_STYLE, REST_PAGE, MOTION_AT_NIGHT, MOTION_FRONT, BURN_IN_GUARD, ORIENTATION, HOME_APP, KEY_EVENTS, DO_NOT_DISTURB,
         POPUP_SIZE, POPUP_OPACITY, POPUP_TEXT_SIZE, POPUP_CORNER, POPUP_DURATION, POPUP_MAX_PER_CORNER, POPUP_TAKE_REMOTE,
         RELOAD_ON_NETWORK, RELOAD_ON_DISCONNECT_SECONDS, NIGHTLY_RELOAD_HOUR,

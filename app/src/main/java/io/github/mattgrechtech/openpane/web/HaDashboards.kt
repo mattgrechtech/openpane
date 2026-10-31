@@ -83,9 +83,22 @@ class MiniWebSocket private constructor(private val socket: Socket) : AutoClosea
     private val input: InputStream = socket.getInputStream()
     private val output: OutputStream = socket.getOutputStream()
 
-    fun sendText(text: String) {
-        output.write(encodeFrame(OPCODE_TEXT, text.toByteArray(Charsets.UTF_8)))
+    // Voice sends audio from one thread while another reads (and answers pings): one writer at a time.
+    private val writeLock = Any()
+
+    fun sendText(text: String) = write(OPCODE_TEXT, text.toByteArray(Charsets.UTF_8))
+
+    /** A binary message (Assist audio: the handler id byte, then the audio). */
+    fun sendBinary(bytes: ByteArray) = write(OPCODE_BINARY, bytes)
+
+    private fun write(opcode: Int, payload: ByteArray) = synchronized(writeLock) {
+        output.write(encodeFrame(opcode, payload))
         output.flush()
+    }
+
+    /** How long a read may wait before failing, in milliseconds. */
+    fun setReadTimeout(millis: Int) {
+        socket.soTimeout = millis
     }
 
     /** The next complete text message. Answers pings; throws when the server closes. */
@@ -99,10 +112,7 @@ class MiniWebSocket private constructor(private val socket: Socket) : AutoClosea
                     if (message.size() > MAX_MESSAGE) throw IOException("Message too large")
                     if (frame.fin) return String(message.toByteArray(), Charsets.UTF_8)
                 }
-                OPCODE_PING -> {
-                    output.write(encodeFrame(OPCODE_PONG, frame.payload))
-                    output.flush()
-                }
+                OPCODE_PING -> write(OPCODE_PONG, frame.payload)
                 OPCODE_CLOSE -> throw IOException("Home Assistant closed the connection")
                 else -> Unit // pong, binary: not used here
             }
@@ -110,10 +120,7 @@ class MiniWebSocket private constructor(private val socket: Socket) : AutoClosea
     }
 
     override fun close() {
-        runCatching {
-            output.write(encodeFrame(OPCODE_CLOSE, ByteArray(0)))
-            output.flush()
-        }
+        runCatching { write(OPCODE_CLOSE, ByteArray(0)) }
         runCatching { socket.close() }
     }
 
@@ -122,6 +129,7 @@ class MiniWebSocket private constructor(private val socket: Socket) : AutoClosea
     companion object {
         const val OPCODE_CONTINUATION = 0x0
         const val OPCODE_TEXT = 0x1
+        const val OPCODE_BINARY = 0x2
         const val OPCODE_CLOSE = 0x8
         const val OPCODE_PING = 0x9
         const val OPCODE_PONG = 0xA

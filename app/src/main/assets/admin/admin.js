@@ -7,6 +7,7 @@ const STORE = "openpane-token";
 
 const GROUPS = [
   ["What the TV shows", ["mode", "start_url", "ha_url", "auth_mode", "ha_long_lived_token", "ha_kiosk_mode", "pages", "rotate_seconds", "scenes"]],
+  ["Voice", ["voice", "voice_pipeline"]],
   ["Family planner", ["planner_calendars", "planner_todos", "planner_board", "planner_days"]],
   ["Screen and remote", ["remote_mode", "keep_screen_on", "boot_start", "burn_in_guard", "screen_off_from", "screen_off_to"]],
   ["Wake on motion", ["rest_after_minutes", "rest_style", "motion_front", "motion_at_night"]],
@@ -21,6 +22,7 @@ const LABELS = {
   mode: "Shows", start_url: "Start page", ha_url: "Home Assistant address", auth_mode: "Sign-in",
   ha_long_lived_token: "Long-lived token", ha_kiosk_mode: "Hide HA header and sidebar", pages: "More pages (one per line)", scenes: "Scenes by time of day (one per line: 07:00 /page brightness=80 rest=clock rest_after=10)",
   planner_calendars: "Calendars (entity ids; empty = all)", planner_todos: "To-do lists (entity ids; empty = all)",
+  voice: "Push-to-talk to Assist (tablets with a microphone)", voice_pipeline: "Assist pipeline id (empty = preferred)",
   planner_days: "Days shown (1-14)", planner_board: "Family board: a to-do list shown as notes (todo.…)",
   rotate_seconds: "Seconds on each page (0 = off)", remote_mode: "Remote", keep_screen_on: "Keep the screen on",
   boot_start: "Start when the TV starts", burn_in_guard: "Burn-in guard", screen_off_from: "Night: black from hour (-1 = never)",

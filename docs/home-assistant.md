@@ -210,6 +210,16 @@ actions:
     data: { command: navigate, args: { path: /lovelace/cameras, return_after: 120 } }
 ```
 
+## Voice: talk to Assist
+
+On a tablet or wall panel with a microphone, OpenPane can be a push-to-talk Assist device: tap the mic button (or press the remote's voice key, or send `listen` from an automation), speak, and Home Assistant answers out loud. "Listening…", what it heard and the answer show as a pop-up.
+
+- Turn on `voice` (admin page → Settings → Voice); the tablet asks once for the microphone.
+- It uses Home Assistant's preferred Assist pipeline, or the one in `voice_pipeline`. Speech-to-text and the spoken answer run in Home Assistant (Home Assistant Cloud, or local Whisper and Piper): there's no speech model in the app, and audio goes only to your Home Assistant.
+- The microphone is open only while it's listening (up to 12 seconds, ending when you stop talking). Off by default; when off, it's never opened.
+- Why not Home Assistant's own mic button? Browsers only allow the microphone on secure (https) pages, so it doesn't work on most local `http://` set-ups. OpenPane records natively instead.
+- Not for TVs: their remotes' mics belong to Google, and TV sound causes false triggers. A wake word ("Okay Nabu") for tablets is planned as an optional add-on.
+
 ## Wall tablet battery care
 
 A tablet on charge all day wears its battery out, and an old one can swell. With the OpenPane integration, a tablet shows its battery level, charging and battery temperature (TVs don't have one). The battery care blueprint keeps it between two levels (30-80 % by default) with a smart plug on the charger, pauses charging if the battery gets hot, and always charges if it gets very low.

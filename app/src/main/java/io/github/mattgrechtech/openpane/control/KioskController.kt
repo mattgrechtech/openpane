@@ -256,6 +256,8 @@ class KioskController(
         }
         "pointer" -> pointer(args)
         "remote" -> remote(args)
+        "listen" -> (context.applicationContext as io.github.mattgrechtech.openpane.KioskApp).voice.toggle()
+            ?.let { CommandResult.error(409, it) } ?: CommandResult.ok()
         "install_update" -> CommandResult.ok(
             JSONObject().put("install", (context.applicationContext as io.github.mattgrechtech.openpane.KioskApp).selfUpdate.request())
         )

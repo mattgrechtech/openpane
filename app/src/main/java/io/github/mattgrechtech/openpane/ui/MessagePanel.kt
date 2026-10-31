@@ -142,7 +142,8 @@ class MessagePanel(context: Context) : FrameLayout(context) {
         const val ICON_WARNING = "⚠️"
         const val ICON_KEY = "🔑"
         const val ICON_DONE = "✅"
-        private const val SOLID = 0xF2101114.toInt()
+        // Opaque: an error page's text behind it would show through and overlap the message.
+        private const val SOLID = 0xFF101114.toInt()
         private const val OVER_PICTURE = 0xB3101114.toInt()
     }
 }

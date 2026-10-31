@@ -99,6 +99,8 @@ class MediaCache(
         if (removed > 0) onChanged()
         var full = false
         for ((name, item) in names) {
+            // A newer list for this group came in: start over with it instead of finishing this one.
+            if (synchronized(pending) { group in pending }) return
             val file = File(dir, name)
             val meta = File(dir, name + META)
             val json = runCatching { JSONObject(meta.readText()) }.getOrNull()

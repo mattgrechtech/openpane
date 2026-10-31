@@ -62,6 +62,23 @@ async def test_discovered_tv_asks_only_for_the_token(hass: HomeAssistant, aiocli
     assert result["data"] == {CONF_HOST: HOST, CONF_PORT: 2424, CONF_TOKEN: "secret"}
 
 
+async def test_typed_in_tv_wins_over_a_waiting_discovery(hass: HomeAssistant, aioclient_mock: AiohttpClientMocker) -> None:
+    aioclient_mock.get(f"{BASE}/state", json=STATE)
+    info = ZeroconfServiceInfo(
+        ip_address=ip_address(HOST), ip_addresses=[ip_address(HOST)], hostname="tv.local.", name="x",
+        port=2424, type="_openpane._tcp.local.", properties={"id": "a1b2c3d4"},
+    )
+    await hass.config_entries.flow.async_init(DOMAIN, context={"source": config_entries.SOURCE_ZEROCONF}, data=info)
+    result = await hass.config_entries.flow.async_init(DOMAIN, context={"source": config_entries.SOURCE_USER})
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_HOST: HOST, CONF_PORT: 2424, CONF_TOKEN: "secret"}
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    await hass.async_block_till_done()
+    # The discovered one closes: the TV is set up.
+    assert not hass.config_entries.flow.async_progress_by_handler(DOMAIN)
+
+
 async def test_rediscovery_never_moves_the_tv(hass: HomeAssistant) -> None:
     entry = MockConfigEntry(domain=DOMAIN, unique_id="a1b2c3d4", data={CONF_HOST: "192.168.1.61", CONF_PORT: 2424, CONF_TOKEN: "t"})
     entry.add_to_hass(hass)

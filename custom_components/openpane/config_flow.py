@@ -100,7 +100,8 @@ class OpenPaneConfigFlow(ConfigFlow, domain=DOMAIN):
         state = state or {}
         device_id = state.get("device_id")
         if device_id:
-            await self.async_set_unique_id(device_id)
+            # A typed-in set-up wins over the same TV found on the network and still waiting.
+            await self.async_set_unique_id(device_id, raise_on_progress=False)
             self._abort_if_unique_id_configured(updates={CONF_HOST: data[CONF_HOST], CONF_PORT: data[CONF_PORT]})
         title = state.get("device_name") or state.get("model") or data[CONF_HOST]
         return self.async_create_entry(title=title, data=data)

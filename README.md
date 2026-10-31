@@ -5,7 +5,7 @@
 ## Home Assistant on your TV or tablet, in one app
 
 1. **Install OpenPane** on the TV or tablet ([Install](#install)).
-2. **Open it and follow setup with the remote.** It finds Home Assistant on your network, you sign in once, and you pick a dashboard from a list. No URLs to type.
+2. **Open it and set it up from your phone, or with the remote.** Choose *Set up from your phone*, scan the code, and sign in to Home Assistant on your phone: no typing with the remote. Or follow setup with the remote: it finds Home Assistant on your network, you sign in once, and you pick a dashboard from a list.
 3. **Add pop-ups.** Home Assistant can show a pop-up on the TV over whatever is playing, for example a doorbell press with a picture from the camera: [Doorbell pop-up with a camera picture](docs/home-assistant.md#doorbell-pop-up-with-a-camera-picture).
 
 That's the dashboard, the pop-ups and remote control of the TV, without a second app. Tested with a Ring doorbell (Home Assistant's Ring integration) on one TV; any camera Home Assistant shows should work the same way.

@@ -75,7 +75,7 @@ class HaAuth(private val settings: Settings) {
             HaUrls.formBody(
                 "grant_type" to "refresh_token",
                 "refresh_token" to refreshToken,
-                "client_id" to HaUrls.clientId(base),
+                "client_id" to settings[Keys.HA_CLIENT_ID].ifEmpty { HaUrls.clientId(base) },
             ),
         )
         val token = Token(response.getString("access_token"), response.optInt("expires_in", 1800))
@@ -87,13 +87,13 @@ class HaAuth(private val settings: Settings) {
 
     /** Finishes the sign-in: trades the code from the login redirect for a refresh token. */
     @Throws(Failure::class)
-    fun completeLogin(base: String, code: String) = synchronized(lock) {
+    fun completeLogin(base: String, code: String, clientId: String = HaUrls.clientId(base)) = synchronized(lock) {
         val response = postToken(
             base,
             HaUrls.formBody(
                 "grant_type" to "authorization_code",
                 "code" to code,
-                "client_id" to HaUrls.clientId(base),
+                "client_id" to clientId,
             ),
         )
         val refreshToken = response.optString("refresh_token")
@@ -101,6 +101,8 @@ class HaAuth(private val settings: Settings) {
         settings.edit {
             put(Keys.HA_REFRESH_TOKEN, refreshToken)
             put(Keys.AUTH_MODE, "login")
+            // Empty for the usual sign-in on the TV (the client is the HA address itself).
+            put(Keys.HA_CLIENT_ID, if (clientId == HaUrls.clientId(base)) "" else clientId)
         }
         cached = Token(response.getString("access_token"), response.optInt("expires_in", 1800))
         cachedUntilElapsed = SystemClock.elapsedRealtime() + (cached!!.expiresInSeconds - 60).coerceAtLeast(30) * 1000L
@@ -121,6 +123,7 @@ class HaAuth(private val settings: Settings) {
         settings.edit {
             clear(Keys.HA_REFRESH_TOKEN)
             clear(Keys.HA_CREDENTIAL_ORIGIN)
+            clear(Keys.HA_CLIENT_ID)
         }
         cached = null
         cachedUntilElapsed = 0

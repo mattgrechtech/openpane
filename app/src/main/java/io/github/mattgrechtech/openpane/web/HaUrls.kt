@@ -58,5 +58,5 @@ object HaUrls {
         }
     }
 
-    private fun enc(value: String): String = URLEncoder.encode(value, "UTF-8")
+    fun enc(value: String): String = URLEncoder.encode(value, "UTF-8")
 }

@@ -356,6 +356,14 @@ document.addEventListener("DOMContentLoaded", () => {
   for (const button of document.querySelectorAll("[data-key]")) button.addEventListener("click", () => key(button.dataset.key));
   document.addEventListener("keydown", keyboardRemote);
   $("open-planner").addEventListener("click", openPlanner);
+  $("signin-form").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    try {
+      const answer = await api("/setup/signin", { ha_url: $("signin-url").value.trim() });
+      // Home Assistant's own login page; it sends this phone back to the TV afterwards.
+      location.href = answer.login_url;
+    } catch (err) { toast(err.message); }
+  });
   $("note-form").addEventListener("submit", async (e) => {
     e.preventDefault();
     try { await api("/planner/note", { text: $("note-text").value }); $("note-text").value = ""; toast("Posted"); } catch (err) { toast(err.message); }

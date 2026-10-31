@@ -29,6 +29,8 @@ class KioskApp : Application() {
         private set
     lateinit var planner: io.github.mattgrechtech.openpane.web.Planner
         private set
+    lateinit var phoneSignIn: io.github.mattgrechtech.openpane.web.PhoneSignIn
+        private set
 
     override fun onCreate() {
         super.onCreate()
@@ -42,6 +44,7 @@ class KioskApp : Application() {
         auth = HaAuth(settings)
         val ha = HaApi(settings, auth)
         planner = io.github.mattgrechtech.openpane.web.Planner(settings, ha)
+        phoneSignIn = io.github.mattgrechtech.openpane.web.PhoneSignIn(settings, auth)
         controller.eventListeners += { type, data -> ha.fire(type, data) }
         controller.cameraStream = ha::cameraStream
         controller.haState = ha::state

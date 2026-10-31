@@ -235,6 +235,7 @@ class SetupActivity : Activity() {
         intro("📺", R.string.setup_welcome_title, getString(R.string.setup_welcome_message))
         showStatus(null, false)
         val list = mutableListOf(
+            Option("phone", getString(R.string.setup_choice_phone), getString(R.string.setup_choice_phone_sub)) { showPhoneQr() },
             Option("ha", getString(R.string.setup_choice_ha), getString(R.string.setup_choice_ha_sub)) { go(Step.FIND_HA) },
             Option("web", getString(R.string.setup_choice_web), getString(R.string.setup_choice_web_sub)) { askForWebPage() },
         )
@@ -242,6 +243,15 @@ class SetupActivity : Activity() {
             list += Option("keep", getString(R.string.setup_keep), getString(R.string.setup_keep_sub)) { finish() }
         }
         return list
+    }
+
+    /** A QR code that opens the admin page on a phone, connected, to sign in and set up from there. */
+    private fun showPhoneQr() {
+        val app = application as io.github.mattgrechtech.openpane.KioskApp
+        val ip = io.github.mattgrechtech.openpane.control.KioskState.localIpv4() ?: "<tv-ip>"
+        val address = "http://$ip:${app.settings[io.github.mattgrechtech.openpane.settings.Keys.API_PORT]}"
+        val token = app.settings[io.github.mattgrechtech.openpane.settings.Keys.API_TOKEN]
+        Dialogs.qr(this, getString(R.string.setup_choice_phone), "$address/#token=$token", getString(R.string.setup_phone_caption, address))
     }
 
     private fun findHa(): List<Option> {

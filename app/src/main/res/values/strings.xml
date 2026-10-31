@@ -260,6 +260,9 @@
     <!-- First-run setup -->
     <string name="setup_welcome_title">Set up this TV</string>
     <string name="setup_welcome_message">What should this TV show? You can change this later in Settings.</string>
+    <string name="setup_choice_phone">Set up from your phone</string>
+    <string name="setup_choice_phone_sub">Scan a code, then sign in to Home Assistant on your phone. No typing with the remote.</string>
+    <string name="setup_phone_caption">Scan with your phone\'s camera (same Wi-Fi as the TV), then use Sign in to Home Assistant. Or open %1$s.</string>
     <string name="setup_choice_ha">🏠   Home Assistant</string>
     <string name="setup_choice_ha_sub">A dashboard from your Home Assistant, with pop-ups and control from automations</string>
     <string name="setup_choice_web">🌐   A web page</string>

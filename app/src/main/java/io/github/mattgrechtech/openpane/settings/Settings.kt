@@ -155,6 +155,8 @@ object Keys {
     val HA_REFRESH_TOKEN = Key("ha_refresh_token", "", secret = true)
     /** The Home Assistant address the refresh or long-lived token belongs to (internal). */
     val HA_CREDENTIAL_ORIGIN = Key("ha_credential_origin", "")
+    /** The client the refresh token was issued to, when not the HA address itself (signed in from a phone). Internal. */
+    val HA_CLIENT_ID = Key("ha_client_id", "")
     val SETTINGS_PIN = Key("settings_pin", "", secret = true, check = {
         if (it.isEmpty() || (it.length in 4..8 && it.all(Char::isDigit))) null else "must be 4-8 digits"
     })
@@ -190,11 +192,11 @@ object Keys {
         API_ENABLED, API_PORT, TVOVERLAY_COMPAT, TVOVERLAY_PORT,
         MQTT_ENABLED, MQTT_HOST, MQTT_PORT, MQTT_TLS, MQTT_USER, MQTT_BASE_TOPIC, MQTT_DISCOVERY_PREFIX,
         DEVICE_NAME, DEVICE_ID,
-        API_TOKEN, MQTT_PASSWORD, HA_LONG_LIVED_TOKEN, HA_REFRESH_TOKEN, SETTINGS_PIN, HA_CREDENTIAL_ORIGIN,
+        API_TOKEN, MQTT_PASSWORD, HA_LONG_LIVED_TOKEN, HA_REFRESH_TOKEN, SETTINGS_PIN, HA_CREDENTIAL_ORIGIN, HA_CLIENT_ID,
     )
 
     /** Keys that are internal state, not user settings: never imported. */
-    val NOT_IMPORTABLE: Set<Key<*>> = setOf(DEVICE_ID, HA_REFRESH_TOKEN, HA_CREDENTIAL_ORIGIN)
+    val NOT_IMPORTABLE: Set<Key<*>> = setOf(DEVICE_ID, HA_REFRESH_TOKEN, HA_CREDENTIAL_ORIGIN, HA_CLIENT_ID)
 
     fun byName(name: String): Key<*>? = ALL.firstOrNull { it.name == name }
 }
@@ -264,6 +266,7 @@ class Settings(private val plain: KeyValueStore, private val secrets: KeyValueSt
         clear(Keys.HA_REFRESH_TOKEN)
         clear(Keys.HA_LONG_LIVED_TOKEN)
         clear(Keys.HA_CREDENTIAL_ORIGIN)
+        clear(Keys.HA_CLIENT_ID)
     }
 
     /** Every page the dashboard shows: the start page (HA's home page if unset), then [Keys.PAGES]. */

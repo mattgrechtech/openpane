@@ -33,6 +33,10 @@ class ApiHandler(
     private val plannerNote: (String) -> JSONObject = { JSONObject().put("ok", false) },
     /** A JPEG of the dashboard, or null and why. Blocking. */
     private val screenshot: () -> Pair<ByteArray?, String?> = { null to "not available" },
+    /** Starts a phone sign-in to an HA address for a phone that reached the TV at an origin; HA's login URL. */
+    private val signInStart: (String, String) -> String = { _, _ -> throw IllegalStateException("not available") },
+    /** Finishes it with HA's code and state; null on success, else what went wrong. Blocking. */
+    private val signInFinish: (String?, String?) -> String? = { _, _ -> "not available" },
     private val clock: () -> Long = System::currentTimeMillis,
 ) : (Request) -> Response {
 
@@ -42,6 +46,15 @@ class ApiHandler(
 
     override fun invoke(request: Request): Response {
         hostProblem(request, allowedHosts())?.let { return it }
+
+        // Home Assistant sends the phone back here after a sign-in. No token (it's a redirect from
+        // HA), but only a sign-in this TV started, with its single-use random state, is accepted.
+        if (request.path == SIGN_IN_CALLBACK) {
+            if (request.method != "GET") return error(405, "use GET")
+            val problem = signInFinish(request.query["code"], request.query["state"])
+            val page = if (problem == null) SIGNED_IN_PAGE else SIGN_IN_FAILED_PAGE.replace("{problem}", htmlEscape(problem))
+            return withPageHeaders(Response(if (problem == null) 200 else 400, page, "text/html"))
+        }
 
         // The admin page itself is public (it asks for the token); everything it does goes through the API.
         if (!request.path.startsWith(PREFIX)) {
@@ -76,6 +89,16 @@ class ApiHandler(
             val log = all.optJSONArray("log") ?: org.json.JSONArray()
             val text = (maxOf(0, log.length() - wanted) until log.length()).joinToString("\n") { log.optString(it) }
             return HttpServer.Response(200, text, "text/plain")
+        }
+        if (route == "/setup/signin") {
+            if (request.method != "POST") return error(405, "use POST")
+            val args = body(request) ?: return error(400, "body must be a JSON object")
+            val host = request.header("host") ?: return error(400, "Host header required")
+            return try {
+                json(200, JSONObject().put("ok", true).put("login_url", signInStart(args.optString("ha_url"), "http://$host")))
+            } catch (e: IllegalArgumentException) {
+                error(400, e.message ?: "bad address")
+            }
         }
         if (route == "/screenshot") {
             if (request.method != "GET") return error(405, "use GET")
@@ -159,6 +182,19 @@ class ApiHandler(
             "Referrer-Policy" to "no-referrer",
         )
         private const val MAX_FAILURES = 10
+        const val SIGN_IN_CALLBACK = "/setup/callback"
+
+        private fun htmlEscape(text: String) =
+            text.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;").replace("\"", "&quot;")
+
+        private const val PAGE_HEAD = "<!doctype html><html lang=\"en\"><head><meta charset=\"utf-8\">" +
+            "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\"><title>OpenPane</title>" +
+            "<link rel=\"stylesheet\" href=\"/admin.css\"></head><body><main class=\"narrow\"><section class=\"panel\">"
+        private const val SIGNED_IN_PAGE = PAGE_HEAD +
+            "<h1>Signed in</h1><p>The TV is signed in to Home Assistant and opens your dashboard by itself.</p>" +
+            "<p><a href=\"/\">Back to the admin page</a> to choose a dashboard or change settings.</p></section></main></body></html>"
+        private const val SIGN_IN_FAILED_PAGE = PAGE_HEAD +
+            "<h1>Not signed in</h1><p>{problem}</p><p><a href=\"/\">Back to the admin page</a></p></section></main></body></html>"
         private const val WINDOW_MILLIS = 60_000L
 
         /** REST route -> controller command. */

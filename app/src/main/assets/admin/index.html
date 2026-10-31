@@ -43,6 +43,12 @@
   </section>
 
   <section id="control" class="panel" hidden>
+    <h2>Home Assistant sign-in</h2>
+    <form id="signin-form" class="row">
+      <input id="signin-url" type="url" placeholder="http://192.168.1.50:8123" aria-label="Home Assistant address" required>
+      <button type="submit" class="primary">Sign in to Home Assistant</button>
+    </form>
+    <p class="muted small">Signs the TV in with your Home Assistant account, typed here on your phone. Use a Home Assistant user made for the TV if you like.</p>
     <h2>Remote</h2>
     <div class="remote" aria-label="Remote control">
       <button data-key="up" class="r-up" aria-label="Up">▲</button>

@@ -342,7 +342,8 @@ class TargetNavigator(context: Context, private val webView: () -> WebView?) {
   while (a && a.shadowRoot && a.shadowRoot.activeElement) a = a.shadowRoot.activeElement;
   if (!a || a === document.body || a === document.documentElement) return '';
   for (var n = a; n; ) {
-    if (n.getAttribute && n.getAttribute('data-openpane-keys') === 'page') return 'all';
+    /* data-tvkiosk-keys: the name before the rename, still on some ha-tv-kit panels. */
+    if (n.getAttribute && (n.getAttribute('data-openpane-keys') === 'page' || n.getAttribute('data-tvkiosk-keys') === 'page')) return 'all';
     n = n.parentNode;
     if (n && n.nodeType === 11) n = n.host;
   }

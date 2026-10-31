@@ -15,6 +15,8 @@
     <!-- Android 14+: lets wake on motion turn the screen on. -->
     <uses-permission android:name="android.permission.TURN_SCREEN_ON" />
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+    <!-- Installs a release only when asked, after checking it; Android asks the user to confirm. -->
+    <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
@@ -96,6 +98,10 @@
                 android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
                 android:value="Local network control of a Home Assistant dashboard on a TV: REST API, MQTT and pop-ups over other apps" />
         </service>
+
+        <receiver
+            android:name=".control.InstallResultReceiver"
+            android:exported="false" />
 
         <receiver
             android:name=".service.BootReceiver"

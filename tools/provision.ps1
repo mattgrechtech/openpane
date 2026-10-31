@@ -45,6 +45,7 @@ Write-Host 'Allowing pop-ups over other apps and background start ...'
 adb -s $target shell appops set $pkg SYSTEM_ALERT_WINDOW allow
 adb -s $target shell appops set $pkg TURN_SCREEN_ON allow 2>$null  # Android 14+: wake on motion turns the screen on
 adb -s $target shell appops set $pkg AUTO_START allow 2>$null  # TCL: lets boot and updates restart it
+adb -s $target shell appops set $pkg REQUEST_INSTALL_PACKAGES allow 2>$null  # lets you install updates from Home Assistant (Android still asks)
 Write-Host 'Excluding it from battery optimisation (keeps the service running) ...'
 adb -s $target shell dumpsys deviceidle whitelist "+$pkg" | Out-Null
 

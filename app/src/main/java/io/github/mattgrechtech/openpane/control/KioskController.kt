@@ -256,6 +256,9 @@ class KioskController(
         }
         "pointer" -> pointer(args)
         "remote" -> remote(args)
+        "install_update" -> CommandResult.ok(
+            JSONObject().put("install", (context.applicationContext as io.github.mattgrechtech.openpane.KioskApp).selfUpdate.request())
+        )
         "notify" -> notify(args)
         "notify_clear" -> {
             popups.clear(args.optString("id").ifEmpty { null })

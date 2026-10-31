@@ -2,6 +2,10 @@
 
 How a version gets from `main` to an APK people can install. The first time includes creating the signing key.
 
+## How updates reach screens
+
+Calmly, by design. The update check is opt-in (`check_updates`) and asks GitHub once a day. Nothing installs by itself: someone presses **Install** on the TV's Update entity in Home Assistant (or *Install update* in the admin page). The TV then waits for a quiet moment (the dashboard in front, nothing playing), downloads the release's APK, checks its SHA-256 against the release's `.sha256` file, that it's OpenPane, newer, and signed with the same key, and Android asks for one confirmation on the screen. Allowing OpenPane to install apps is a one-time step (`appops set <package> REQUEST_INSTALL_PACKAGES allow`, which the provisioning script does).
+
 ## Release policy
 
 What users can expect, and what the maintainer commits to:

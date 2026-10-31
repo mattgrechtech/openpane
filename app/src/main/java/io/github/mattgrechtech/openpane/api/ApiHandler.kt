@@ -212,6 +212,7 @@ class ApiHandler(
             "/do_not_disturb" to "do_not_disturb",
             "/pointer" to "pointer",
             "/remote" to "remote",
+            "/install_update" to "install_update",
             "/notify" to "notify",
             "/notify/clear" to "notify_clear",
             "/launch" to "launch",

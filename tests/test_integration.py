@@ -149,6 +149,18 @@ async def test_tablet_battery(hass: HomeAssistant, aioclient_mock: AiohttpClient
     assert hass.states.get("binary_sensor.living_room_tv_charging").state == "on"
 
 
+async def test_update_install_asks_the_tv(hass: HomeAssistant, aioclient_mock: AiohttpClientMocker) -> None:
+    aioclient_mock.get(f"{BASE}/state", json={**STATE, "update": {"latest": "0.2.0", "url": "x", "available": True, "install": "idle"}})
+    entry = MockConfigEntry(domain=DOMAIN, unique_id="a1b2c3d4", title="Living room TV",
+                            data={CONF_HOST: HOST, CONF_PORT: 2424, CONF_TOKEN: "secret"})
+    entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+    aioclient_mock.post(f"{BASE}/install_update", json={"ok": True, "install": "waiting for a quiet moment"})
+    await hass.services.async_call("update", "install", {"entity_id": "update.living_room_tv_openpane_app"}, blocking=True)
+    assert any(str(call[1]).endswith("/install_update") for call in aioclient_mock.mock_calls)
+
+
 async def test_wake_button(hass: HomeAssistant, aioclient_mock: AiohttpClientMocker) -> None:
     await _set_up(hass, aioclient_mock)
     aioclient_mock.post(f"{BASE}/wake", json={"ok": True})

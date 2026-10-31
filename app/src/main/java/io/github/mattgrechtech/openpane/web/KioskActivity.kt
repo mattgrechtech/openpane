@@ -527,6 +527,7 @@ class KioskActivity : Activity(), DashboardSurface {
         burnInGuard()
         relieveMemory()
         applyScene()
+        app.selfUpdate.tick()
         app.controller.restTick(SystemClock.elapsedRealtime())
         scheduleTick()
     }

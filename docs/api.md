@@ -36,6 +36,7 @@ curl -X POST -H "Authorization: Bearer $TOKEN" -H "Content-Type: application/jso
 | `POST /pointer` | `{"enabled": true}` | On-screen pointer on/off (omit `enabled` to toggle) |
 | `POST /remote` | `{"key": "ok"}` or `{"text": "kitchen"}` | The phone remote: `key` is `up`, `down`, `left`, `right`, `ok`, `back`, `menu`, `play_pause`, `enter` or `backspace`, pressed as on the TV's remote; `text` (up to 500 characters) is typed into the page's focused field |
 | `POST /setup/signin` | `{"ha_url": "http://192.168.1.50:8123"}` | Starts signing the TV in to Home Assistant from a phone: answers `login_url`, Home Assistant's login page, with the TV as the client. After the login, Home Assistant sends the phone to the TV's `/setup/callback`, which finishes it (only a sign-in the TV started, within 10 minutes, with its random state) |
+| `POST /install_update` | | Installs the latest release at the next quiet moment (dashboard in front, nothing playing) after checking its checksum, package and signing key; Android asks to confirm on the screen. `/state` → `update.install` says how it's going |
 | `GET /screenshot` | | A JPEG of what the dashboard shows (half size), or 409 while another app is in front. Only OpenPane's own window: Android doesn't let apps see other apps |
 | `GET /planner?days=7` | | The [family planner](planner.md)'s data: calendars, events and open to-do items |
 | `POST /planner/note` | `{"text": "Back at 5"}` | Posts a note to the family board (`planner_board`) |

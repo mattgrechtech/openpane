@@ -178,7 +178,7 @@ async function refreshState() {
     card("Versions", "OpenPane " + s.app_version + " · WebView " + s.webview_version + " · Android " + s.android_version),
     card("Device", (s.manufacturer || "") + " " + (s.model || "") + " · " + (s.ip || "")),
     s.update
-      ? card("Updates", s.update.available ? "OpenPane " + s.update.latest + " is out" : "up to date", s.update.available ? "warn" : "ok")
+      ? card("Updates", s.update.available ? "OpenPane " + s.update.latest + " is out (Control → Install update)" + (s.update.install && s.update.install !== "idle" ? ": " + s.update.install : "") : "up to date", s.update.available ? "warn" : "ok")
       : card("Updates", "not checked (Settings → check_updates)"),
   ];
   $("cards").replaceChildren(...cards);

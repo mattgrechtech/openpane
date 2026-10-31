@@ -147,6 +147,7 @@ class KioskState {
             .put("update", latestVersion?.let { latest ->
                 JSONObject().put("latest", latest).put("url", latestUrl)
                     .put("available", UpdateCheck.isNewer(latest, BuildConfig.VERSION_NAME))
+                    .put("install", SelfUpdate.status)
             } ?: JSONObject.NULL)
             .put("resting", resting)
             .put("night", nightDark)

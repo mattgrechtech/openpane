@@ -31,6 +31,7 @@ class KioskApp : Application() {
         private set
     lateinit var phoneSignIn: io.github.mattgrechtech.openpane.web.PhoneSignIn
         private set
+    val selfUpdate by lazy { io.github.mattgrechtech.openpane.control.SelfUpdate(this) }
 
     override fun onCreate() {
         super.onCreate()

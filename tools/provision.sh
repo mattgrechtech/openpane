@@ -50,6 +50,7 @@ echo "Allowing pop-ups over other apps and background start ..."
 a shell appops set "$pkg" SYSTEM_ALERT_WINDOW allow
 a shell appops set "$pkg" TURN_SCREEN_ON allow 2>/dev/null || true  # Android 14+: wake on motion turns the screen on
 a shell appops set "$pkg" AUTO_START allow 2>/dev/null || true  # TCL: lets boot and updates restart it
+a shell appops set "$pkg" REQUEST_INSTALL_PACKAGES allow 2>/dev/null || true  # lets you install updates from Home Assistant (Android still asks)
 echo "Excluding it from battery optimisation (keeps the service running) ..."
 a shell dumpsys deviceidle whitelist "+$pkg" >/dev/null || true
 

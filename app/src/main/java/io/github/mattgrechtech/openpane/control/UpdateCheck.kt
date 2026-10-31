@@ -7,7 +7,8 @@ import java.net.URL
 
 /**
  * The opt-in update check: once a day, asks GitHub for the latest release and reports it. It
- * never downloads or installs anything; updating stays the user's choice. Off by default.
+ * never downloads or installs anything by itself: installing is [SelfUpdate], only when asked.
+ * Off by default.
  */
 object UpdateCheck {
 
@@ -15,7 +16,8 @@ object UpdateCheck {
     private const val LATEST = "https://api.github.com/repos/mattgrechtech/openpane/releases/latest"
     private const val TAG = "UpdateCheck"
 
-    class Release(val version: String, val url: String)
+    /** A release: its version, page, and (for installing) its APK and SHA-256 file. */
+    class Release(val version: String, val url: String, val apkUrl: String? = null, val shaUrl: String? = null)
 
     /** The latest published release, or null if GitHub can't be reached. Call off the main thread. */
     fun latest(): Release? = try {
@@ -26,7 +28,12 @@ object UpdateCheck {
             connection.setRequestProperty("Accept", "application/vnd.github+json")
             if (connection.responseCode != 200) null
             else JSONObject(connection.inputStream.bufferedReader().readText()).let {
-                Release(it.optString("tag_name").removePrefix("v"), it.optString("html_url"))
+                val assets = it.optJSONArray("assets")
+                fun asset(suffix: String): String? = (0 until (assets?.length() ?: 0))
+                    .map { i -> assets!!.getJSONObject(i) }
+                    .firstOrNull { a -> a.optString("name").endsWith(suffix) }
+                    ?.optString("browser_download_url")?.takeIf { url -> url.startsWith("https://github.com/") }
+                Release(it.optString("tag_name").removePrefix("v"), it.optString("html_url"), asset(".apk"), asset(".apk.sha256"))
             }
         } finally {
             connection.disconnect()

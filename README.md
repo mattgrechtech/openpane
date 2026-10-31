@@ -52,7 +52,7 @@ That's the dashboard, the pop-ups and remote control of the TV, without a second
 
 **Easy to look after**
 - **Web admin page:** scan the QR code in the TV's settings and manage it from your phone: status, controls, pop-ups, every setting, the log, export and import. No app, nothing in the cloud.
-- **Voice on tablets:** push-to-talk to Home Assistant's Assist, which works on plain `http://` set-ups where the browser's mic button can't.
+- **Voice on tablets:** push-to-talk to Home Assistant's Assist, which works on plain `http://` set-ups where the browser's mic button can't. The voice build adds a wake word ("Okay Nabu", "Hey Jarvis"), recognised on the device. Tablets also get a speaker for `tts.speak` and announcements.
 - **Lock mode for shared tablets:** Back never leaves, links to other sites don't open, the menu needs a PIN. Plus bigger text and high contrast for the app's own screens.
 - **Your own cards can drive the screen** (`window.openPane`, opt-in): pop-ups, wake, presence, state, voice.
 - **Phone remote:** arrows, OK, Back and Menu in the admin page, and a box to **type into the TV** (search, Wi-Fi passwords, sign-ins) instead of the on-screen keyboard.

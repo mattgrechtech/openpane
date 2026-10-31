@@ -599,7 +599,10 @@ class KioskController(
                 .setContentType(AudioAttributes.CONTENT_TYPE_SPEECH)
                 .build()
         )
-        mp.setOnPreparedListener { it.start() }
+        mp.setOnPreparedListener {
+            it.start()
+            if (player === it) state.update { soundPlaying(true) }
+        }
         mp.setOnCompletionListener { if (player === it) stopSound() }
         mp.setOnErrorListener { p, what, extra ->
             state.update { error("Sound failed ($what/$extra): $url") }
@@ -645,11 +648,13 @@ class KioskController(
     }
 
     private fun stopSound() {
+        val wasPlaying = player != null
         player?.let {
             runCatching { it.stop() }
             it.release()
         }
         player = null
+        if (wasPlaying && state.soundPlaying) state.update { soundPlaying(false) }
     }
 
     companion object {

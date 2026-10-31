@@ -6,7 +6,7 @@
 # Example:
 #   ./tools/provision.sh 192.168.1.60 "http://192.168.1.50:8123/house?tv=1"
 #
-# Default APK: the debug build (app/build/outputs/apk/debug/app-debug.apk).
+# Default APK: the debug build (app/build/outputs/apk/standard/debug/app-standard-debug.apk).
 # Prints the API token at the end: store it in Home Assistant's secrets.yaml, nowhere else.
 set -euo pipefail
 
@@ -25,10 +25,10 @@ done
 root="$(cd "$(dirname "$0")/.." && pwd)"
 pkg="io.github.mattgrechtech.openpane"
 if [ "$release" = 1 ]; then
-  apk="${apk:-$root/app/build/outputs/apk/release/app-release.apk}"
+  apk="${apk:-$root/app/build/outputs/apk/standard/release/app-standard-release.apk}"
 else
   pkg="$pkg.debug"
-  apk="${apk:-$root/app/build/outputs/apk/debug/app-debug.apk}"
+  apk="${apk:-$root/app/build/outputs/apk/standard/debug/app-standard-debug.apk}"
 fi
 ns="io.github.mattgrechtech.openpane"
 receiver="$pkg/$ns.service.ProvisionReceiver"

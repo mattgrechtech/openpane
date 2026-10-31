@@ -45,7 +45,7 @@ Nothing to install: the repo includes the Gradle wrapper (`gradlew`, `gradlew.ba
 
 ```powershell
 .\gradlew.bat test            # unit tests (settings, HTTP server, API auth, pop-ups, MQTT discovery, HA URLs)
-.\gradlew.bat assembleDebug   # app\build\outputs\apk\debug\app-debug.apk
+.\gradlew.bat assembleDebug   # app\build\outputs\apk\standard\debug\app-standard-debug.apk (and voice\ for the voice build)
 ```
 
 The first run downloads Gradle and the libraries and takes a few minutes; later builds take seconds.
@@ -102,7 +102,7 @@ keyAlias=release
 keyPassword=...
 ```
 
-or set the environment variables `TVKIOSK_KEYSTORE`, `TVKIOSK_KEYSTORE_PASSWORD`, `TVKIOSK_KEY_ALIAS` and `TVKIOSK_KEY_PASSWORD`. `.\gradlew.bat assembleRelease` then writes `app/build/outputs/apk/release/app-release.apk`. Without a key it writes an unsigned APK, which Android won't install.
+or set the environment variables `TVKIOSK_KEYSTORE`, `TVKIOSK_KEYSTORE_PASSWORD`, `TVKIOSK_KEY_ALIAS` and `TVKIOSK_KEY_PASSWORD`. `.\gradlew.bat assembleRelease` then writes `app/build/outputs/apk/standard/release/app-standard-release.apk` (and `voice/release/app-voice-release.apk`, the voice build). Without a key it writes an unsigned APK, which Android won't install.
 
 GitHub builds a signed APK for every version tag (`v0.1.0`) when the repository has these secrets: `KEYSTORE_BASE64` (the .jks file, base64), `KEYSTORE_PASSWORD`, `KEY_ALIAS`, `KEY_PASSWORD`. See `.github/workflows/release.yml`, and [releasing.md](releasing.md) for the whole release checklist.
 

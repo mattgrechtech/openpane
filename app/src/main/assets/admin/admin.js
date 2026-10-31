@@ -7,7 +7,7 @@ const STORE = "openpane-token";
 
 const GROUPS = [
   ["What the TV shows", ["mode", "start_url", "ha_url", "auth_mode", "ha_long_lived_token", "ha_kiosk_mode", "pages", "rotate_seconds", "scenes"]],
-  ["Voice", ["voice", "voice_pipeline"]],
+  ["Voice", ["voice", "voice_pipeline", "wake_word"]],
   ["Readability", ["ui_text_size", "ui_high_contrast"]],
   ["Shared screens", ["lock_mode", "lock_allowed", "page_bridge"]],
   ["Signage", ["signage_playlist", "media_cache_mb"]],
@@ -34,6 +34,7 @@ const LABELS = {
   lock_mode: "Lock mode: Back never leaves, other sites don't open, menu needs the PIN", lock_allowed: "Other sites allowed in lock mode (one per line)",
   page_bridge: "window.openPane for your own dashboard cards",
   voice: "Push-to-talk to Assist (tablets with a microphone)", voice_pipeline: "Assist pipeline id (empty = preferred)",
+  wake_word: "Wake word, hands-free (the voice build, tablets only)",
   planner_days: "Days shown (1-14)", planner_board: "Family board: a to-do list shown as notes (todo.…)",
   rotate_seconds: "Seconds on each page (0 = off)", remote_mode: "Remote", keep_screen_on: "Keep the screen on",
   boot_start: "Start when the TV starts", burn_in_guard: "Burn-in guard", screen_off_from: "Night: black from hour (-1 = never)",

@@ -1,5 +1,6 @@
 package io.github.mattgrechtech.openpane.control
 
+import io.github.mattgrechtech.openpane.BuildConfig
 import io.github.mattgrechtech.openpane.diag.AppLog
 import org.json.JSONObject
 import java.net.HttpURLConnection
@@ -19,6 +20,13 @@ object UpdateCheck {
     /** A release: its version, page, and (for installing) its APK and SHA-256 file. */
     class Release(val version: String, val url: String, val apkUrl: String? = null, val shaUrl: String? = null)
 
+    /**
+     * Whether a release file is this build's APK: `openpane-v1.2.3.apk` for the standard build,
+     * `openpane-voice-v1.2.3.apk` for the voice build (and their `.sha256` files).
+     */
+    fun isThisBuild(name: String, prefix: String = BuildConfig.APK_PREFIX): Boolean =
+        name.startsWith(prefix) && name.getOrNull(prefix.length)?.isDigit() == true
+
     /** The latest published release, or null if GitHub can't be reached. Call off the main thread. */
     fun latest(): Release? = try {
         val connection = URL(LATEST).openConnection() as HttpURLConnection
@@ -31,7 +39,7 @@ object UpdateCheck {
                 val assets = it.optJSONArray("assets")
                 fun asset(suffix: String): String? = (0 until (assets?.length() ?: 0))
                     .map { i -> assets!!.getJSONObject(i) }
-                    .firstOrNull { a -> a.optString("name").endsWith(suffix) }
+                    .firstOrNull { a -> a.optString("name").let { n -> isThisBuild(n) && n.endsWith(suffix) } }
                     ?.optString("browser_download_url")?.takeIf { url -> url.startsWith("https://github.com/") }
                 Release(it.optString("tag_name").removePrefix("v"), it.optString("html_url"), asset(".apk"), asset(".apk.sha256"))
             }

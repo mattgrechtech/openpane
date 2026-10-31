@@ -4,6 +4,8 @@ import android.app.ActivityManager
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
+import android.content.pm.PackageManager
+import android.media.AudioManager
 import android.os.BatteryManager
 import android.os.Build
 import android.os.Debug
@@ -73,6 +75,12 @@ class KioskState {
     /** Dashboard brightness 0-100, or -1 for the device's own setting. */
     @Volatile var brightness: Int = -1
         private set
+    /** The wake word it's listening for (voice build), or null. */
+    @Volatile var wakeWord: String? = null
+        private set
+    /** A sound or announcement from Home Assistant is playing (`POST /sound`). */
+    @Volatile var soundPlaying: Boolean = false
+        private set
     /** The scene by time of day in force ("07:00"), or null. */
     @Volatile var scene: String? = null
         private set
@@ -104,6 +112,8 @@ class KioskState {
         fun brightness(level: Int) { brightness = level }
         fun scene(label: String?) { scene = label }
         fun media(showing: String?) { media = showing }
+        fun soundPlaying(playing: Boolean) { soundPlaying = playing }
+        fun wakeWord(word: String?) { wakeWord = word }
         fun latest(version: String?, url: String?) { latestVersion = version; latestUrl = url }
         fun reloaded(reason: String) {
             lastReloadReason = reason
@@ -111,6 +121,12 @@ class KioskState {
             reloadCount++
         }
     }
+
+    /** Media volume 0-100, or null when it can't be read. */
+    private fun volume(context: Context): Any = runCatching {
+        val audio = context.getSystemService(AudioManager::class.java)
+        audio.getStreamVolume(AudioManager.STREAM_MUSIC) * 100 / audio.getStreamMaxVolume(AudioManager.STREAM_MUSIC).coerceAtLeast(1)
+    }.getOrElse { JSONObject.NULL }
 
     /** A full snapshot, including values read from the system at call time. */
     /**
@@ -149,6 +165,10 @@ class KioskState {
             .put("brightness", brightness)
             .put("scene", scene)
             .put("media", media)
+            .put("sound_playing", soundPlaying)
+            .put("wake_word", wakeWord ?: JSONObject.NULL)
+            .put("volume", volume(context))
+            .put("tv", context.packageManager.hasSystemFeature(PackageManager.FEATURE_LEANBACK))
             .put("update", latestVersion?.let { latest ->
                 JSONObject().put("latest", latest).put("url", latestUrl)
                     .put("available", UpdateCheck.isNewer(latest, BuildConfig.VERSION_NAME))

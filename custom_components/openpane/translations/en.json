@@ -150,6 +150,11 @@
       "screen_picture": {
         "name": "Screen"
       }
+    },
+    "media_player": {
+      "speaker": {
+        "name": "Speaker"
+      }
     }
   },
   "services": {

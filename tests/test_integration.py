@@ -149,6 +149,47 @@ async def test_tablet_battery(hass: HomeAssistant, aioclient_mock: AiohttpClient
     assert hass.states.get("binary_sensor.living_room_tv_charging").state == "on"
 
 
+async def _set_up_with(hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, **state) -> MockConfigEntry:
+    aioclient_mock.get(f"{BASE}/state", json={**STATE, **state})
+    entry = MockConfigEntry(domain=DOMAIN, unique_id="a1b2c3d4", title="Living room TV",
+                            data={CONF_HOST: HOST, CONF_PORT: 2424, CONF_TOKEN: "secret"})
+    entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+    return entry
+
+
+async def test_speaker_on_tablets_only(hass: HomeAssistant, aioclient_mock: AiohttpClientMocker) -> None:
+    await _set_up_with(hass, aioclient_mock, tv=True)
+    assert hass.states.get("media_player.living_room_tv_speaker") is None
+
+
+async def test_no_speaker_on_older_apps(hass: HomeAssistant, aioclient_mock: AiohttpClientMocker) -> None:
+    await _set_up(hass, aioclient_mock)
+    assert hass.states.get("media_player.living_room_tv_speaker") is None
+
+
+async def test_tablet_speaker_plays_and_sets_volume(hass: HomeAssistant, aioclient_mock: AiohttpClientMocker) -> None:
+    await _set_up_with(hass, aioclient_mock, tv=False, volume=40, sound_playing=False)
+    speaker = "media_player.living_room_tv_speaker"
+    state = hass.states.get(speaker)
+    assert state.state == "idle"
+    assert state.attributes["volume_level"] == 0.4
+    aioclient_mock.post(f"{BASE}/sound", json={"ok": True})
+    aioclient_mock.post(f"{BASE}/volume", json={"ok": True})
+    aioclient_mock.post(f"{BASE}/sound/stop", json={"ok": True})
+    await hass.services.async_call("media_player", "play_media", {
+        "entity_id": speaker, "media_content_type": "music",
+        "media_content_id": "http://192.168.1.50:8123/api/tts_proxy/abc.mp3", "announce": True,
+    }, blocking=True)
+    await hass.services.async_call("media_player", "volume_set", {"entity_id": speaker, "volume_level": 0.7}, blocking=True)
+    await hass.services.async_call("media_player", "media_stop", {"entity_id": speaker}, blocking=True)
+    sent = {str(call[1]).rsplit("/api/v1", 1)[1]: call[2] for call in aioclient_mock.mock_calls if call[0] == "POST"}
+    assert sent["/sound"] == {"url": "http://192.168.1.50:8123/api/tts_proxy/abc.mp3"}
+    assert sent["/volume"] == {"level": 70}
+    assert "/sound/stop" in sent
+
+
 async def test_update_install_asks_the_tv(hass: HomeAssistant, aioclient_mock: AiohttpClientMocker) -> None:
     aioclient_mock.get(f"{BASE}/state", json={**STATE, "update": {"latest": "0.2.0", "url": "x", "available": True, "install": "idle"}})
     entry = MockConfigEntry(domain=DOMAIN, unique_id="a1b2c3d4", title="Living room TV",

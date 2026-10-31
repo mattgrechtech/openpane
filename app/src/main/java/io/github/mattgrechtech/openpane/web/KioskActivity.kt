@@ -9,6 +9,7 @@ import android.graphics.Color
 import android.net.ConnectivityManager
 import android.net.Network
 import android.content.pm.ActivityInfo
+import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
 import android.os.Handler
@@ -47,6 +48,8 @@ import io.github.mattgrechtech.openpane.settings.Settings
 import io.github.mattgrechtech.openpane.ui.Dialogs
 import io.github.mattgrechtech.openpane.ui.MessagePanel
 import io.github.mattgrechtech.openpane.ui.SettingsActivity
+import io.github.mattgrechtech.openpane.wake.WakeWordListener
+import io.github.mattgrechtech.openpane.wake.WakeWords
 import io.github.mattgrechtech.openpane.ui.SetupActivity
 import java.util.Calendar
 import io.github.mattgrechtech.openpane.diag.AppLog
@@ -99,6 +102,9 @@ class KioskActivity : Activity(), DashboardSurface {
     private var heartbeatPending = 0
     private var lastNightlyReloadDay = -1
     private var resumed = false
+    /** Hands-free listening (voice build only), and the word it's listening for. */
+    private var wakeWord: WakeWordListener? = null
+    private var wakeWordListening: String? = null
 
     /** Which of [Settings.pages] is showing, when it changed, and when the remote was last used. */
     private var pageIndex = 0
@@ -226,6 +232,7 @@ class KioskActivity : Activity(), DashboardSurface {
         super.onResume()
         resumed = true
         applyVoice()
+        applyWakeWord()
         app.controller.popups.dashboardInFront = true
         webView?.onResume()
         // The service may have been refused while the app was in the background (Android 12+).
@@ -245,11 +252,13 @@ class KioskActivity : Activity(), DashboardSurface {
         main.removeCallbacks(tick)
         main.removeCallbacks(rotation)
         stopMedia()
+        applyWakeWord()
         // Another app is in front: stop spending CPU on a dashboard nobody sees.
         webView?.onPause()
     }
 
     override fun onDestroy() {
+        wakeWord?.stop()
         main.removeCallbacksAndMessages(null)
         unregisterNetworkCallback()
         app.settings.removeListener(settingsListener)
@@ -945,6 +954,34 @@ class KioskActivity : Activity(), DashboardSurface {
         }
     }
 
+    /**
+     * Hands-free: listens for the wake word while the dashboard is in front, then asks Assist. Only
+     * in the voice build, with voice on and a word chosen, and never on a TV (its sound would set it
+     * off). The microphone is Assist's while it listens; the wake word waits until it's done.
+     */
+    private fun applyWakeWord() {
+        val word = app.settings[Keys.WAKE_WORD]
+        val wanted = WakeWords.available && resumed && word != "off" && app.settings[Keys.VOICE] &&
+            !packageManager.hasSystemFeature(PackageManager.FEATURE_LEANBACK) &&
+            app.voice.hasMicPermission() && !app.voice.busy
+        if (!wanted || wakeWordListening != word || wakeWord?.running != true) {
+            wakeWord?.stop()
+            wakeWordListening = null
+        }
+        if (wanted && wakeWordListening == null) {
+            val listener = wakeWord ?: WakeWords.create(this) { main.post { listen() } }?.also { wakeWord = it } ?: return
+            // However Assist is asked (mic button, wake word, an automation), it gets the microphone.
+            app.voice.beforeListening = {
+                wakeWord?.stop()
+                main.post { wakeWordListening = null; app.state.update { wakeWord(null) } }
+            }
+            app.voice.onFinished = { main.postDelayed({ applyWakeWord() }, WAKE_WORD_PAUSE_MILLIS) }
+            listener.start(word)
+            wakeWordListening = word
+        }
+        app.state.update { wakeWord(wakeWordListening) }
+    }
+
     private fun listen() {
         lastInteraction = SystemClock.elapsedRealtime()
         app.voice.toggle()?.let { problem ->
@@ -1208,6 +1245,7 @@ class KioskActivity : Activity(), DashboardSurface {
         if (changed.contains(Keys.SCREEN_OFF_FROM.name) || changed.contains(Keys.SCREEN_OFF_TO.name)) nightScreen()
         if (changed.contains(Keys.SCENES.name)) applyScene(force = true)
         if (changed.contains(Keys.VOICE.name)) applyVoice()
+        if (changed.contains(Keys.VOICE.name) || changed.contains(Keys.WAKE_WORD.name)) applyWakeWord()
         val reloadKeys = setOf(
             Keys.MODE.name, Keys.START_URL.name, Keys.HA_URL.name, Keys.AUTH_MODE.name,
             Keys.HA_LONG_LIVED_TOKEN.name, Keys.HA_REFRESH_TOKEN.name, Keys.PAGE_BRIDGE.name,
@@ -1277,6 +1315,8 @@ class KioskActivity : Activity(), DashboardSurface {
         val RETRY_DELAYS_SECONDS = intArrayOf(5, 10, 20, 30, 60)
         const val TICK_MILLIS = 30_000L
         const val MIC_REQUEST = 41
+        /** After Assist answers, before listening for the wake word again (its reply can echo). */
+        const val WAKE_WORD_PAUSE_MILLIS = 1500L
         const val BURN_IN_DP = 4
         const val IDLE_FOR_RELOAD_MILLIS = 10 * 60_000L
         const val MEMORY_RELOAD_GAP_MILLIS = 30 * 60_000L

@@ -11,7 +11,7 @@ Three options. **The OpenPane integration is the easiest:** it finds the TV, nee
 The TV becomes a device with:
 
 - **Actions** for one or more TVs: `openpane.notify` (every pop-up field, including `camera`, `sound`, `tts` and buttons), `openpane.clear_popup`, `openpane.navigate` and `openpane.open_url` (with `return_after`), `openpane.motion`, `openpane.wake`, `openpane.speak`, `openpane.play_sound`, `openpane.launch_app`.
-- **Entities:** a Pop-up notify entity (for `notify.send_message`), Wake / Motion / Reload / Start page / Stop sound buttons, a Screen select, a Brightness number, a *Someone present* switch, Dashboard in front / Screen resting / Someone present sensors, the page, screen state, last motion, and diagnostics (memory, wake time, WebView version, HA connection).
+- **Entities:** a Pop-up notify entity (for `notify.send_message`), Wake / Motion / Reload / Start page / Stop sound buttons, a Screen select, a Brightness number, a *Someone present* switch, Dashboard in front / Screen resting / Someone present sensors, the page, screen state, last motion, and diagnostics (memory, wake time, WebView version, HA connection). Tablets and wall panels (not TVs) also get a **Speaker** media player: see [Announcements on a tablet](#announcements-on-a-tablet).
 
 ```yaml
 action: openpane.notify
@@ -232,7 +232,21 @@ On a tablet or wall panel with a microphone, OpenPane can be a push-to-talk Assi
 - It uses Home Assistant's preferred Assist pipeline, or the one in `voice_pipeline`. Speech-to-text and the spoken answer run in Home Assistant (Home Assistant Cloud, or local Whisper and Piper): there's no speech model in the app, and audio goes only to your Home Assistant.
 - The microphone is open only while it's listening (up to 12 seconds, ending when you stop talking). Off by default; when off, it's never opened.
 - Why not Home Assistant's own mic button? Browsers only allow the microphone on secure (https) pages, so it doesn't work on most local `http://` set-ups. OpenPane records natively instead.
-- Not for TVs: their remotes' mics belong to Google, and TV sound causes false triggers. A wake word ("Okay Nabu") for tablets is planned as an optional add-on.
+- Not for TVs: their remotes' mics belong to Google, and TV sound causes false triggers.
+
+### Hands-free: a wake word
+
+The **voice build** (`openpane-voice-<version>.apk` on the releases page) can listen for a wake word, then ask Assist as if you'd pressed the mic button. It's a separate download so the standard app stays small: the voice build adds about 6 MB (the models and TensorFlow Lite) and runs on ARM devices, which is nearly every tablet and panel. Install it over the standard app; your settings stay.
+
+1. Turn on `voice`, as above.
+2. Set `wake_word` (admin page → Settings → Voice) to `okay_nabu`, `hey_jarvis` or `hey_mycroft`. Off by default.
+3. Say "Okay Nabu" (or your word), wait for "Listening…", then ask.
+
+- **On the device, nothing sent:** the wake word is recognised on the tablet by a small model ([microWakeWord](https://github.com/esphome/micro-wake-word-models), the same ones Home Assistant Voice uses). Audio reaches Home Assistant only after the wake word, exactly as with the mic button.
+- **While the dashboard is in front.** It listens while OpenPane is on screen, resting included, and stops when another app is in front or the screen is off. The state's `wake_word` says what it's listening for.
+- **Tablets and wall panels only.** On a TV it stays off, whatever the setting.
+- **Cost:** one low-priority thread with the microphone open while it listens; when `wake_word` is off, none of it runs or loads.
+- Not yet tested or measured on a real tablet. [Device reports](https://github.com/mattgrechtech/openpane/issues/new?template=device_report.yml) welcome.
 
 ### Using Jarvis (or any AI assistant)
 
@@ -263,7 +277,26 @@ sequence:
       duration: 30
 ```
 
-The assistant's own announcements, the ones it makes without being asked, go to media players, and OpenPane doesn't have one yet; use the script above for those you want on the panel. A JARVIS dashboard panel can also be shown with `openpane.navigate`, though heavy 3D panels may be slow on cheap tablets.
+**Its own announcements.** The ones the assistant makes without being asked (briefings, reminders, the doorbell) go to media players. Pick the tablet's **Speaker** (see below) under the JARVIS integration's *Announcement Speakers*. A JARVIS dashboard panel can also be shown with `openpane.navigate`, though heavy 3D panels may be slow on cheap tablets.
+
+**Hands-free.** In the voice build, set `wake_word` to `hey_jarvis` (see [Hands-free: a wake word](#hands-free-a-wake-word)).
+
+## Announcements on a tablet
+
+On a tablet or wall panel, the integration adds a **Speaker** media player (for example `media_player.kitchen_panel_speaker`). Anything that announces through a media player can use it: `tts.speak`, Music Assistant's announcements, the JARVIS integration's *Announcement Speakers*, or a sound from your media folder.
+
+```yaml
+action: tts.speak
+target:
+  entity_id: tts.piper
+data:
+  media_player_entity_id: media_player.kitchen_panel_speaker
+  message: The washing is done
+```
+
+- It plays announcements and sounds, and sets the volume. It isn't a music player: for music, use a speaker.
+- TVs don't get one: a TV's sound belongs to what's on it. Use `openpane.notify` with `tts` there instead.
+- It shows *playing* while a sound plays, and the device's media volume. Needs this version of the app on the tablet.
 
 ## Wall tablet battery care
 

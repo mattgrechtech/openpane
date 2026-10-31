@@ -85,6 +85,11 @@ object Keys {
     val VOICE = Key("voice", false)
     /** An Assist pipeline id; empty uses Home Assistant's preferred one. */
     val VOICE_PIPELINE = Key("voice_pipeline", "")
+    /**
+     * Hands-free: listen for a wake word and then ask Assist (the voice build only, tablets only).
+     * "off" by default; when off the microphone stays closed until someone presses the mic button.
+     */
+    val WAKE_WORD = oneOf("wake_word", "off") { listOf("off") + io.github.mattgrechtech.openpane.wake.WakeWords.WORDS }
 
     // Family planner (kiosk:planner)
     /** Calendars on the planner, entity ids separated by commas or lines; empty means all. */
@@ -225,7 +230,7 @@ object Keys {
 
     val ALL: List<Key<*>> = listOf(
         MODE, START_URL, HA_URL, AUTH_MODE, HA_KIOSK_MODE, KEEP_SCREEN_ON, BOOT_START, REMOTE_MODE,
-        PAGES, ROTATE_SECONDS, SCENES, PLANNER_CALENDARS, PLANNER_TODOS, PLANNER_BOARD, PLANNER_DAYS, SIGNAGE_PLAYLIST, PHOTO_SOURCE, PHOTO_SECONDS, PHOTO_SHUFFLE, PHOTO_CLOCK, MEDIA_CACHE_MB, VOICE, VOICE_PIPELINE, LOCK_MODE, LOCK_ALLOWED, PAGE_BRIDGE, UI_TEXT_SIZE, UI_HIGH_CONTRAST, SCREEN_OFF_FROM, SCREEN_OFF_TO,
+        PAGES, ROTATE_SECONDS, SCENES, PLANNER_CALENDARS, PLANNER_TODOS, PLANNER_BOARD, PLANNER_DAYS, SIGNAGE_PLAYLIST, PHOTO_SOURCE, PHOTO_SECONDS, PHOTO_SHUFFLE, PHOTO_CLOCK, MEDIA_CACHE_MB, VOICE, VOICE_PIPELINE, WAKE_WORD, LOCK_MODE, LOCK_ALLOWED, PAGE_BRIDGE, UI_TEXT_SIZE, UI_HIGH_CONTRAST, SCREEN_OFF_FROM, SCREEN_OFF_TO,
         CHECK_UPDATES, REST_AFTER_MINUTES, REST_STYLE, REST_PAGE, MOTION_AT_NIGHT, MOTION_FRONT, BURN_IN_GUARD, ORIENTATION, HOME_APP, KEY_EVENTS, DO_NOT_DISTURB,
         POPUP_SIZE, POPUP_OPACITY, POPUP_TEXT_SIZE, POPUP_CORNER, POPUP_DURATION, POPUP_MAX_PER_CORNER, POPUP_TAKE_REMOTE,
         RELOAD_ON_NETWORK, RELOAD_ON_DISCONNECT_SECONDS, NIGHTLY_RELOAD_HOUR,

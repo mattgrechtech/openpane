@@ -6,6 +6,9 @@ First public version. Pre-alpha: tested on two TCL Google TVs (Android 14), incl
 
 - Renamed from TV Kiosk to **OpenPane**: it's for tablets and wall displays as much as TVs. New package id `io.github.mattgrechtech.openpane`, integration domain `openpane` (actions `openpane.notify` and so on), events `openpane_action` and `openpane_key`, network announcement `_openpane._tcp`, MQTT base topic `openpane`. Nothing was released under the old name.
 
+- Wake word, in a separate **voice build** (`openpane-voice-*.apk`): say "Okay Nabu", "Hey Jarvis" or "Hey Mycroft" (`wake_word`) and the tablet asks Assist, hands-free. Recognised on the device with microWakeWord's models; tablets only, off by default. The standard build has none of it.
+- Tablets and wall panels get a **Speaker** media player in the integration, so `tts.speak`, Music Assistant and the JARVIS integration can announce on them. The state adds `tv`, `volume`, `sound_playing` and `wake_word`.
+- Docs: using Jarvis or any AI assistant with push-to-talk.
 - Signage (`kiosk:signage`, `signage_playlist`): pictures, videos and pages in a loop, each for its seconds and only on its days and hours. Pictures and videos are kept on the device (`media_cache_mb`), so they play offline; pages are skipped until the network is back. New action `openpane.next_item` (`POST /next`, or the right arrow).
 - Photo frame (`kiosk:photos`, or `rest_style: photos`): pictures from Home Assistant's media folders, photo integrations or addresses (`photo_source`), drawn natively with crossfades and a slow drift, with the time. Stored at screen size, the right way up.
 - Pop-ups can pause what's playing (`pause_media`, for the doorbell): Netflix, YouTube or live TV pause while it's up and resume when it closes, only if the pop-up paused them.

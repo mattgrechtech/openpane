@@ -6,7 +6,7 @@
   .\tools\provision.ps1 -Tv 192.168.1.60 -StartUrl "http://192.168.1.50:8123/house?tv=1"
 
 .NOTES
-  Default APK: the debug build (app\build\outputs\apk\debug\app-debug.apk). Add -Release for a
+  Default APK: the debug build (app\build\outputs\apk\standard\debug\app-standard-debug.apk). Add -Release for a
   release build. Prints the API token at the end: store it in Home Assistant's secrets.yaml only.
 #>
 param(
@@ -24,7 +24,7 @@ if ($Release) {
     if (-not $Apk) { $Apk = Join-Path $root 'app\build\outputs\apk\release\app-release.apk' }
 } else {
     $pkg = "$ns.debug"
-    if (-not $Apk) { $Apk = Join-Path $root 'app\build\outputs\apk\debug\app-debug.apk' }
+    if (-not $Apk) { $Apk = Join-Path $root 'app\build\outputs\apk\standard\debug\app-standard-debug.apk' }
 }
 $receiver = "$pkg/$ns.service.ProvisionReceiver"
 

@@ -35,6 +35,12 @@ class Voice(
 ) {
 
     @Volatile private var running = false
+    /** A request is in progress (the microphone is Assist's until it ends). */
+    val busy: Boolean get() = running
+    /** Called just before the microphone opens for a request (the wake word lets go of it). */
+    @Volatile var beforeListening: (() -> Unit)? = null
+    /** Called on the voice thread when a request has ended: the wake word can listen again. */
+    @Volatile var onFinished: (() -> Unit)? = null
     @Volatile private var stopRequested = false
     private var conversationId: String? = null
     private var conversationAt = 0L
@@ -53,6 +59,7 @@ class Voice(
         }
         running = true
         stopRequested = false
+        beforeListening?.invoke()
         Thread({ run() }, "voice").start()
         return null
     }
@@ -163,6 +170,7 @@ class Voice(
         } finally {
             runCatching { record?.release() }
             running = false
+            onFinished?.invoke()
         }
     }
 

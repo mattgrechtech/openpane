@@ -66,6 +66,21 @@ android {
         }
     }
 
+    // The standard build has no wake word; the voice build adds it (models and TensorFlow Lite's
+    // native library, about 6 MB more). ARM only: that's every TV, tablet and panel it targets. Same app id, so one replaces the other and keeps its settings.
+    flavorDimensions += "build"
+    productFlavors {
+        create("standard") {
+            dimension = "build"
+            buildConfigField("String", "APK_PREFIX", "\"openpane-v\"")
+        }
+        create("voice") {
+            dimension = "build"
+            buildConfigField("String", "APK_PREFIX", "\"openpane-voice-v\"")
+            ndk { abiFilters += listOf("armeabi-v7a", "arm64-v8a") }
+        }
+    }
+
     compileOptions {
         // java.time and java.util.Base64 on Android 7 (API 24-25).
         isCoreLibraryDesugaringEnabled = true
@@ -91,6 +106,7 @@ dependencies {
     implementation("androidx.webkit:webkit:1.12.1")
     implementation("org.eclipse.paho:org.eclipse.paho.client.mqttv3:1.2.5")
     implementation("com.google.zxing:core:3.5.3")
+    "voiceImplementation"("org.tensorflow:tensorflow-lite:2.16.1")
 
     testImplementation("junit:junit:4.13.2")
     // Android's org.json is a stub in local unit tests; this is the real implementation.

@@ -6,3 +6,7 @@
 -keepclassmembers class * {
     @android.webkit.JavascriptInterface <methods>;
 }
+
+# TensorFlow Lite (voice build only) is reached from its native code.
+-keep class org.tensorflow.lite.** { *; }
+-dontwarn org.tensorflow.lite.**

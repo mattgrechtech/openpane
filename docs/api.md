@@ -80,6 +80,7 @@ The same names work in `POST /settings`, adb `CONFIGURE` and a settings export. 
 | `ui_text_size` | `normal` | `normal`, `large` or `larger`: text on the app's own screens (set-up, settings, sign-in). The dashboard and pop-ups keep their own sizes |
 | `ui_high_contrast` | `false` | Black backgrounds, white text and a brighter highlight on the app's own screens |
 | `voice`, `voice_pipeline` | `false`, | Push-to-talk to Assist (tablets with a microphone): see [Voice](home-assistant.md#voice-talk-to-assist) |
+| `wake_word` | `off` | The voice build only: `okay_nabu`, `hey_jarvis` or `hey_mycroft` listens hands-free (tablets, not TVs): see [Hands-free](home-assistant.md#hands-free-a-wake-word) |
 | `signage_playlist`, `media_cache_mb` | , `500` | [Signage](signage.md): a playlist of pictures, videos and pages with days and hours, kept on the device |
 | `photo_source`, `photo_seconds`, `photo_shuffle`, `photo_clock` | , `20`, `true`, `true` | The [photo frame](signage.md#photo-frame): media folders or pictures |
 | `planner_calendars`, `planner_todos`, `planner_board`, `planner_days` | all, all, none, `7` | What the [family planner](planner.md) shows |

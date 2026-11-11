@@ -54,7 +54,11 @@ class OpenPaneConfigFlow(ConfigFlow, domain=DOMAIN):
         device_id = discovery_info.properties.get("id")
         if not device_id:
             return self.async_abort(reason="not_openpane")
-        self._host = str(discovery_info.ip_address)
+        # The TV's IPv4 address: an IPv6 link-local one can't be used without its interface.
+        ipv4 = next((ip for ip in discovery_info.ip_addresses if ip.version == 4), None)
+        if ipv4 is None:
+            return self.async_abort(reason="no_ipv4")
+        self._host = str(ipv4)
         self._port = discovery_info.port or DEFAULT_PORT
         self._name = discovery_info.properties.get("name") or "OpenPane"
         await self.async_set_unique_id(device_id)

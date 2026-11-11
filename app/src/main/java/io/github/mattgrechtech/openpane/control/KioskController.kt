@@ -263,9 +263,8 @@ class KioskController(
         "next" -> if (surface?.nextMedia() == true) CommandResult.ok() else CommandResult.error(409, "signage or the photo frame isn't on screen")
         "listen" -> (context.applicationContext as io.github.mattgrechtech.openpane.KioskApp).voice.toggle()
             ?.let { CommandResult.error(409, it) } ?: CommandResult.ok()
-        "install_update" -> CommandResult.ok(
-            JSONObject().put("install", (context.applicationContext as io.github.mattgrechtech.openpane.KioskApp).selfUpdate.request())
-        )
+        "install_update" -> (context.applicationContext as io.github.mattgrechtech.openpane.KioskApp).selfUpdate.request()
+            ?.let { CommandResult.error(409, it) } ?: CommandResult.ok(JSONObject().put("install", SelfUpdate.status))
         "notify" -> notify(args)
         "notify_clear" -> {
             popups.clear(args.optString("id").ifEmpty { null })

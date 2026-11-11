@@ -20,7 +20,9 @@ class OpenPaneApi:
 
     def __init__(self, session: aiohttp.ClientSession, host: str, port: int, token: str) -> None:
         self._session = session
-        self._base = f"http://{host}:{port}/api/v1"
+        # An IPv6 address needs brackets in a URL.
+        address = f"[{host}]" if ":" in host and not host.startswith("[") else host
+        self._base = f"http://{address}:{port}/api/v1"
         self._headers = {"Authorization": f"Bearer {token}"}
 
     async def state(self) -> dict[str, Any]:
@@ -58,7 +60,12 @@ class OpenPaneApi:
                     raise OpenPaneAuthError("the TV refused the token")
                 if response.status == 421:
                     raise OpenPaneError("use the TV's IP address, not a host name")
-                data = await response.json(content_type=None)
+                try:
+                    data = await response.json(content_type=None)
+                except ValueError as err:
+                    raise OpenPaneError(f"not an OpenPane answer (HTTP {response.status})") from err
+                if not isinstance(data, dict):
+                    raise OpenPaneError(f"not an OpenPane answer (HTTP {response.status})")
                 if response.status >= 400:
                     raise OpenPaneError(data.get("error") or f"the TV answered {response.status}")
                 return data

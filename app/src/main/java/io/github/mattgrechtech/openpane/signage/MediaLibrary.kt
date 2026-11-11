@@ -47,7 +47,7 @@ class MediaLibrary(context: Context, private val settings: Settings, private val
             val base = settings.haBaseUrl() ?: return
             val token = token() ?: return
             try {
-                single + Photos.browse(base, token, folders) { key -> cache.file(key) != null }
+                single + Photos.browse(base, token, folders) { key -> cache.file(PHOTOS, key) != null }
             } catch (e: Exception) {
                 // Offline or signed out: the pictures already here keep showing.
                 AppLog.w(TAG, "Can't list the photo folders: ${e.message ?: e.javaClass.simpleName}")
@@ -72,7 +72,7 @@ class MediaLibrary(context: Context, private val settings: Settings, private val
 
     private fun token(): String? = runCatching { auth.accessToken(force = false).accessToken }.getOrNull()
 
-    fun signageFile(item: Playlist.Item): File? = cache.file(item.source)
+    fun signageFile(item: Playlist.Item): File? = cache.file(SIGNAGE, item.source)
 
     fun photos(): List<File> = cache.files(PHOTOS)
 

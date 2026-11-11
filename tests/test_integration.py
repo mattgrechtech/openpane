@@ -2,10 +2,13 @@
 
 from ipaddress import ip_address
 
+import aiohttp
+import pytest
 from homeassistant import config_entries
 from homeassistant.const import CONF_HOST, CONF_PORT, CONF_TOKEN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 from pytest_homeassistant_custom_component.common import MockConfigEntry
@@ -121,6 +124,47 @@ async def test_notify_action_reaches_the_tv(hass: HomeAssistant, aioclient_mock:
     )
     sent = [call for call in aioclient_mock.mock_calls if str(call[1]).endswith("/notify")]
     assert sent[0][2] == {"title": "Front door", "sound": "doorbell", "actions": [{"label": "Unlock", "event": "unlock_front"}]}
+
+
+async def test_one_tv_off_doesnt_stop_the_others(hass: HomeAssistant, aioclient_mock: AiohttpClientMocker) -> None:
+    await _set_up(hass, aioclient_mock)
+    other_base = "http://192.168.1.61:2424/api/v1"
+    aioclient_mock.get(f"{other_base}/state", json={**STATE, "device_id": "e5f6", "device_name": "Kitchen tablet"})
+    other = MockConfigEntry(domain=DOMAIN, unique_id="e5f6", title="Kitchen tablet",
+                            data={CONF_HOST: "192.168.1.61", CONF_PORT: 2424, CONF_TOKEN: "secret"})
+    other.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(other.entry_id)
+    await hass.async_block_till_done()
+    aioclient_mock.post(f"{BASE}/settings", exc=aiohttp.ClientError("off"))
+    aioclient_mock.post(f"{other_base}/settings", json={"ok": True, "applied": ["rest_after_minutes"]})
+    registry = dr.async_get(hass)
+    first = registry.async_get_device(identifiers={(DOMAIN, "a1b2c3d4")})
+    second = registry.async_get_device(identifiers={(DOMAIN, "e5f6")})
+    with pytest.raises(HomeAssistantError, match="Living room TV"):
+        await hass.services.async_call(
+            DOMAIN, "apply_settings", {"device_id": [first.id, second.id], "settings": {"rest_after_minutes": 5}}, blocking=True,
+        )
+    assert any(str(call[1]).startswith(other_base) and str(call[1]).endswith("/settings") for call in aioclient_mock.mock_calls)
+
+
+async def test_non_json_answer_is_a_clear_error(hass: HomeAssistant, aioclient_mock: AiohttpClientMocker) -> None:
+    aioclient_mock.get(f"{BASE}/state", text="<html>not here</html>", status=200)
+    result = await hass.config_entries.flow.async_init(DOMAIN, context={"source": config_entries.SOURCE_USER})
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_HOST: HOST, CONF_PORT: 2424, CONF_TOKEN: "secret"}
+    )
+    assert result["errors"] == {"base": "cannot_connect"}
+
+
+async def test_discovery_uses_the_ipv4_address(hass: HomeAssistant, aioclient_mock: AiohttpClientMocker) -> None:
+    aioclient_mock.get(f"{BASE}/state", json=STATE)
+    info = ZeroconfServiceInfo(
+        ip_address=ip_address("fe80::1"), ip_addresses=[ip_address("fe80::1"), ip_address(HOST)], hostname="tv.local.",
+        name="x", port=2424, type="_openpane._tcp.local.", properties={"id": "a1b2c3d4"},
+    )
+    result = await hass.config_entries.flow.async_init(DOMAIN, context={"source": config_entries.SOURCE_ZEROCONF}, data=info)
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {CONF_TOKEN: "secret"})
+    assert result["data"][CONF_HOST] == HOST
 
 
 async def test_health_repairs(hass: HomeAssistant, aioclient_mock: AiohttpClientMocker) -> None:

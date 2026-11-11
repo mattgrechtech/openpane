@@ -68,8 +68,8 @@ class MediaCache(
         }
     }
 
-    /** The stored file for [key], or null if it isn't here (yet). */
-    fun file(key: String): File? = File(dir, name(key)).takeIf { it.isFile }
+    /** The stored file for [key] in [group], or null if it isn't here (yet). */
+    fun file(group: String, key: String): File? = File(dir, name(group, key)).takeIf { it.isFile }
 
     /** Every stored file of [group], oldest first: the photo frame's pictures, even offline. */
     fun files(group: String): List<File> = metas().filter { it.second.optString("group") == group }
@@ -84,7 +84,7 @@ class MediaCache(
 
     private fun syncNow(group: String, wanted: List<Wanted>) {
         dir.mkdirs()
-        val names = wanted.associateBy { name(it.key) }
+        val names = wanted.associateBy { name(group, it.key) }
         // Gone from the playlist or album: delete.
         var removed = 0
         for ((meta, json) in metas()) {
@@ -219,9 +219,13 @@ class MediaCache(
         private const val MAX_FILE_BYTES = 300L * 1_048_576
         private const val JPEG_QUALITY = 88
 
-        /** A file name for [key] that can't collide or reach outside the folder. */
-        fun name(key: String): String {
-            val hash = MessageDigest.getInstance("SHA-256").digest(key.toByteArray()).joinToString("") { "%02x".format(it) }.take(32)
+        /**
+         * A file name for [key] in [group] that can't collide or reach outside the folder. Each group
+         * has its own copy, so the same picture in signage and the photo frame can't be deleted by one
+         * while the other still wants it.
+         */
+        fun name(group: String, key: String): String {
+            val hash = MessageDigest.getInstance("SHA-256").digest("$group\n$key".toByteArray()).joinToString("") { "%02x".format(it) }.take(32)
             return hash + if (Playlist.kindOf(key) == Playlist.Kind.VIDEO) ".video" else ".jpg"
         }
 

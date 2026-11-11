@@ -48,9 +48,14 @@ class PhotosTest {
 
     @Test
     fun cacheNamesStayInsideTheFolder() {
-        val name = MediaCache.name("../../etc/passwd")
+        val name = MediaCache.name("photos", "../../etc/passwd")
         assertEquals(36, name.length)
-        assertNotEquals(MediaCache.name("/local/a.jpg"), MediaCache.name("/local/b.jpg"))
-        assertEquals(".video", MediaCache.name("/local/a.mp4").takeLast(6))
+        assertNotEquals(MediaCache.name("photos", "/local/a.jpg"), MediaCache.name("photos", "/local/b.jpg"))
+        assertEquals(".video", MediaCache.name("signage", "/local/a.mp4").takeLast(6))
+    }
+
+    @Test
+    fun signageAndPhotosKeepTheirOwnCopies() {
+        assertNotEquals(MediaCache.name("signage", "/local/a.jpg"), MediaCache.name("photos", "/local/a.jpg"))
     }
 }

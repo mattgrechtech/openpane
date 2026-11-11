@@ -28,15 +28,15 @@ class SelfUpdate(private val context: Context) {
     @Volatile private var wanted = false
     @Volatile private var busy = false
 
-    /** Asks for the latest release to be installed at the next quiet moment. */
-    fun request(): String {
+    /** Asks for the latest release to be installed at the next quiet moment; null if it will be, else why not. */
+    fun request(): String? {
         if (!canInstall()) {
             status = "needs permission: allow OpenPane to install apps (adb: appops set ${context.packageName} REQUEST_INSTALL_PACKAGES allow)"
             return status
         }
         wanted = true
         status = "waiting for a quiet moment (dashboard in front, nothing playing)"
-        return status
+        return null
     }
 
     /** Called about every half minute while the dashboard is in front. */
@@ -82,7 +82,11 @@ class SelfUpdate(private val context: Context) {
         val installed = context.packageManager.getPackageInfo(context.packageName, signingFlags())
         if (archive.packageName != context.packageName) throw IllegalStateException("a different app")
         if (versionCode(archive) <= versionCode(installed)) throw IllegalStateException("not newer than what's installed")
-        if (signers(archive) != signers(installed) || signers(installed).isEmpty()) {
+        val archiveSigners = signers(archive)
+        // Before Android 9 an APK file's signatures can't be read here; Android's own installer
+        // still refuses an update signed with a different key, so that check stands in.
+        val unreadable = Build.VERSION.SDK_INT < Build.VERSION_CODES.P && archiveSigners.isEmpty()
+        if (!unreadable && (archiveSigners != signers(installed) || signers(installed).isEmpty())) {
             throw IllegalStateException("not signed with the same key as this app")
         }
 

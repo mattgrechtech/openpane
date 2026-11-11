@@ -108,11 +108,17 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             key: value for key, value in call.data.items() if key != "device_id"
         }
         results = {}
+        failed = []
+        # Every TV gets its turn: one that's off doesn't stop the others.
         for coordinator in _coordinators(hass, call.data["device_id"]):
+            title = coordinator.config_entry.title
             try:
-                results[coordinator.config_entry.title] = await coordinator.command(route, args)
+                results[title] = await coordinator.command(route, args)
             except OpenPaneError as err:
-                raise HomeAssistantError(f"{coordinator.config_entry.title}: {err}") from err
+                failed.append(f"{title}: {err}")
+        if failed:
+            done = f" (done on {', '.join(results)})" if results else ""
+            raise HomeAssistantError("; ".join(failed) + done)
         return results if call.return_response else None
 
     for name, (_, fields) in SERVICES.items():

@@ -33,6 +33,7 @@
     "abort": {
       "already_configured": "This TV is already set up.",
       "not_openpane": "That isn't an OpenPane TV.",
+      "no_ipv4": "The TV was found only by an IPv6 address. Add it by hand with its IPv4 address.",
       "reauth_successful": "The new token works."
     }
   },

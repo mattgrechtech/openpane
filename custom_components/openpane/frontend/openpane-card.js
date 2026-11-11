@@ -37,12 +37,21 @@ class OpenPaneCard extends HTMLElement {
     return entry && entry.device_id ? this._hass.devices[entry.device_id] : null;
   }
 
+  /** Calls an openpane action on this screen; resolves true if it worked (errors show in the status). */
   _call(service, data) {
+    const status = this.shadowRoot.getElementById("status");
     const device = this._device();
-    if (!device) return Promise.reject(new Error("That entity isn't part of an OpenPane screen"));
-    return this._hass.callService("openpane", service, { device_id: [device.id], ...data }).catch((err) => {
-      this.shadowRoot.getElementById("status").textContent = err.message || String(err);
-    });
+    if (!device) {
+      status.textContent = "That entity isn't part of an OpenPane screen";
+      return Promise.resolve(false);
+    }
+    return this._hass.callService("openpane", service, { device_id: [device.id], ...data }).then(
+      () => true,
+      (err) => {
+        status.textContent = err.message || String(err);
+        return false;
+      },
+    );
   }
 
   _build() {
@@ -83,12 +92,12 @@ class OpenPaneCard extends HTMLElement {
     root.getElementById("popup").addEventListener("submit", (e) => {
       e.preventDefault();
       const input = root.getElementById("popup-text");
-      this._call("notify", { title: input.value, duration: 15 }).then(() => { input.value = ""; });
+      this._call("notify", { title: input.value, duration: 15 }).then((ok) => { if (ok) input.value = ""; });
     });
     root.getElementById("note").addEventListener("submit", (e) => {
       e.preventDefault();
       const input = root.getElementById("note-text");
-      this._call("post_note", { text: input.value }).then(() => { input.value = ""; });
+      this._call("post_note", { text: input.value }).then((ok) => { if (ok) input.value = ""; });
     });
   }
 }

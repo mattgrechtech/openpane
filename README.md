@@ -99,7 +99,7 @@ The only conditions are the usual Apache ones: keep the licence and notices, and
 
 ## Privacy
 
-The app talks only to the addresses you give it (Home Assistant, the web pages you choose, your MQTT broker) and to devices on your network that use its API. While its API is on, it announces itself on your local network (mDNS: its name, id and version) so Home Assistant can find it. It has no accounts, no analytics, no crash reporting and no Google services. The only internet address it ever contacts by itself is GitHub, once a day, and only if you turn on *Check for updates*. Sign-in tokens and passwords are stored encrypted on the TV. See [SECURITY.md](SECURITY.md) for what listens on the network and how it's protected.
+The app talks only to the addresses you give it (Home Assistant, the web pages you choose, your MQTT broker) and to devices on your network that use its API. While its API is on, it announces itself on your local network (mDNS: its name, id and version) so Home Assistant can find it. It has no accounts, no analytics, no crash reporting and no Google services. The only internet address it ever contacts by itself is GitHub, once a day, and only if you turn on *Check for updates*. Sign-in tokens and passwords are stored encrypted on the TV. It asks for the microphone only if you turn on voice, and installs its own updates only when you ask (Android confirms on the screen). See [SECURITY.md](SECURITY.md) for what listens on the network, every permission and how it's protected.
 
 ## Docs
 

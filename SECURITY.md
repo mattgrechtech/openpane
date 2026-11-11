@@ -14,14 +14,28 @@ Never forward these ports from the internet. Put visitors and untrusted gadgets 
 
 ## What it can't do, by design
 
-- No remote shell, no running scripts in the page, no installing or removing apps, no file access.
+- No remote shell, no running scripts in the page, no file access. It never installs or removes other apps; it can update itself (below).
 - The adb set-up receiver requires a permission only adb and the system hold.
 - The bridge that gives Home Assistant's frontend its sign-in token only answers pages on your HA address. With current WebViews the WebView enforces this; on old ones every call checks the page's origin.
 - The TV's Home Assistant sign-in stays with the server that issued it. If the HA address changes (in setup, by hand, or by someone with the API token), the old sign-in is forgotten, never sent to the new address.
 - The token-less TvOverlay-compatible port only accepts `application/json` bodies, so a web page someone opens can't post pop-ups to it.
 - The API answers one request per connection within 10 seconds, at most three connections per address. Pictures in pop-ups are scaled down as they load, so a huge image can't run the TV out of memory.
 - Web pages can't open other apps (`intent:` links are blocked) and can't read files on the TV.
-- No cloud, no analytics, no crash reporting to anyone.
+- No cloud, no analytics, no crash reporting to anyone. The one exception is opt-in: with *Check for updates* on, it asks GitHub for the latest release once a day.
+
+## Updating itself
+
+Off until asked. *Check for updates* (off by default) asks GitHub's release API for the latest version. Installing happens only when someone asks (Home Assistant's Update entity, the admin page or the API, all needing the token), at a quiet moment. The app downloads the APK from GitHub over https, checks its SHA-256 against the release's checksum file, checks that it's this app, newer, and signed with the same key, then hands it to Android, which asks for a confirmation on the screen. It needs *Install unknown apps* allowed for OpenPane (`REQUEST_INSTALL_PACKAGES`); without it, nothing installs.
+
+## Permissions
+
+| Permission | Why |
+|---|---|
+| Internet, network and Wi-Fi state | The dashboard, the API, MQTT |
+| Display over other apps | Pop-ups over whatever is playing, bringing the dashboard forward |
+| Turn screen on, wake lock, run at boot, foreground service, notifications | Wake on motion and staying running on TVs |
+| Install unknown apps (`REQUEST_INSTALL_PACKAGES`) | Installing its own updates, only when asked (above) |
+| Microphone (`RECORD_AUDIO`) | Push-to-talk to Assist, and the wake word in the voice build. Asked for only when voice is turned on; off by default. Audio goes only to your Home Assistant, and the wake word listens on the device |
 
 ## Acting in Home Assistant
 

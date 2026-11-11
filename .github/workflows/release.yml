@@ -2,7 +2,7 @@ name: Release
 
 # A version tag (v0.1.0) builds a signed APK and attaches it to a draft GitHub release.
 # Needs the repository secrets KEYSTORE_BASE64, KEYSTORE_PASSWORD, KEY_ALIAS and KEY_PASSWORD
-# (see docs/build-setup.md). The draft is published by hand after a check on a TV.
+# (see docs/releasing.md). The draft is published by hand after a check on a TV.
 on:
   push:
     tags: ["v*"]
@@ -28,12 +28,12 @@ jobs:
       - name: Build the signed APKs
         env:
           KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
-          TVKIOSK_KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
-          TVKIOSK_KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
-          TVKIOSK_KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+          OPENPANE_KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          OPENPANE_KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          OPENPANE_KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
         run: |
           echo "$KEYSTORE_BASE64" | base64 -d > "$RUNNER_TEMP/release.jks"
-          export TVKIOSK_KEYSTORE="$RUNNER_TEMP/release.jks"
+          export OPENPANE_KEYSTORE="$RUNNER_TEMP/release.jks"
           ./gradlew testStandardReleaseUnitTest testVoiceReleaseUnitTest assembleRelease
           rm "$RUNNER_TEMP/release.jks"
           # The standard build, and the voice build (wake word) as its own file.

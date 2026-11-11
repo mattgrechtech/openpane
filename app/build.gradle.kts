@@ -9,7 +9,7 @@ plugins {
 val appVersion = "0.1.0"
 
 /**
- * Release signing, from keystore.properties (git-ignored) or TVKIOSK_* environment variables
+ * Release signing, from keystore.properties (git-ignored) or OPENPANE_* environment variables
  * (used by the GitHub release workflow). Without either, release builds are left unsigned.
  */
 val signing: Map<String, String>? = run {
@@ -19,12 +19,12 @@ val signing: Map<String, String>? = run {
         return@run props.stringPropertyNames().associateWith { props.getProperty(it) }
     }
     val env = System.getenv()
-    val store = env["TVKIOSK_KEYSTORE"] ?: return@run null
+    val store = env["OPENPANE_KEYSTORE"] ?: return@run null
     mapOf(
         "storeFile" to store,
-        "storePassword" to env["TVKIOSK_KEYSTORE_PASSWORD"].orEmpty(),
-        "keyAlias" to env["TVKIOSK_KEY_ALIAS"].orEmpty(),
-        "keyPassword" to env["TVKIOSK_KEY_PASSWORD"].orEmpty(),
+        "storePassword" to env["OPENPANE_KEYSTORE_PASSWORD"].orEmpty(),
+        "keyAlias" to env["OPENPANE_KEY_ALIAS"].orEmpty(),
+        "keyPassword" to env["OPENPANE_KEY_PASSWORD"].orEmpty(),
     )
 }
 

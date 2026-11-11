@@ -43,11 +43,11 @@ Every release must be signed with the same key, or Android won't install it over
    git tag v0.1.0
    git push origin v0.1.0
    ```
-   The **Release** workflow checks the tag matches `appVersion`, runs the tests, builds the signed APK and creates a **draft** release with `openpane-v0.1.0.apk` and its `.sha256`.
+   The **Release** workflow checks the tag matches `appVersion`, runs the tests, builds the signed APKs and creates a **draft** release with `openpane-v0.1.0.apk`, the voice build `openpane-voice-v0.1.0.apk` (wake word), and a `.sha256` for each.
 5. Download the APK from the draft and check it on a TV:
    - `adb install -r openpane-v0.1.0.apk`;
    - setup finds Home Assistant, signs in and lists dashboards;
    - a pop-up from Home Assistant shows, with its picture.
 6. Publish the draft (edit the release → paste the changelog section → Publish).
 
-If the workflow fails at "Build the signed APK", a secret is missing or a password is wrong; fix the secret, delete the tag (`git push origin :v0.1.0`, `git tag -d v0.1.0`) and tag again.
+If the workflow fails at "Build the signed APKs", a secret is missing or a password is wrong; fix the secret, delete the tag (`git push origin :v0.1.0`, `git tag -d v0.1.0`) and tag again.
